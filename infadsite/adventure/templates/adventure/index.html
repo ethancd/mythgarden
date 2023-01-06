@@ -1,0 +1,9 @@
+{% if first_quandaries_list %}
+    <ul>
+    {% for quandary in first_quandaries_list %}
+        <li><a href="{% url 'adventure:quandary_card' quandary.id %}">{{ quandary.quandary_text }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No quandaries are available.</p>
+{% endif %}

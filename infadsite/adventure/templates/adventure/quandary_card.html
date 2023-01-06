@@ -1,0 +1,7 @@
+<p>{{ quandary.description }}</p>
+<h1>{{ quandary.quandary_text }}</h1>
+<ul>
+{% for answer in quandary.answers.all %}
+    <li>{{ answer.answer_text }}</li>
+{% endfor %}
+</ul>
