@@ -1,0 +1,9 @@
+<!-- A template that takes in a hero and displays their answers_given -->
+
+<h1>{{ hero.moniker }}</h1>
+<ul>
+{% for answer in hero.answers_given.all %}
+    <li>{{ answer.answer_text }}</li>
+{% endfor %}
+</ul>
+
