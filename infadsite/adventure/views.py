@@ -21,6 +21,12 @@ class QuandaryCardView(generic.DetailView):
     model = Quandary
     template_name = 'adventure/quandary_card.html'
 
+    def get_queryset(self):
+        """
+        Excludes any quandaries that don't have any answers.
+        """
+        return Quandary.objects.filter(answers__isnull=False).distinct()
+
 
 class JourneyView(generic.DetailView):
     model = Hero

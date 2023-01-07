@@ -179,3 +179,22 @@ class QuandaryIndexViewTests(TestCase):
             response.context['first_quandaries_list'],
             [q1, q2]
         )
+
+
+class QuandaryCardViewTests(TestCase):
+    def test_quandary_without_answers(self):
+        """
+        Quandaries without any answers aren't displayed on the card page.
+        """
+        q = create_quandary(quandary_text="What is the sound of one hand clapping?", answer_count=0)
+        response = self.client.get(reverse('adventure:quandary_card', args=(q.id,)))
+        self.assertEqual(response.status_code, 404)
+
+    def test_quandary_with_answers(self):
+        """
+        Quandaries with any answers are displayed on the card page.
+        """
+        q = create_quandary(quandary_text="What is your name?", answer_count=3)
+        response = self.client.get(reverse('adventure:quandary_card', args=(q.id,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, q.quandary_text)

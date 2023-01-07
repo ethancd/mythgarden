@@ -1,6 +1,7 @@
 from django.db import models
+from django.contrib import admin
 
-# Create your models here.
+
 class Quandary(models.Model):
     quandary_text = models.CharField(max_length=255)
     description = models.CharField(max_length=1023, blank=True, default='')
@@ -9,8 +10,14 @@ class Quandary(models.Model):
     def __str__(self):
         return self.quandary_text
 
+    @admin.display(
+        boolean=True,
+        ordering='description',
+        description='Flavor text?',
+    )
     def has_description(self):
         return self.description != ""
+
 
 class Answer(models.Model):
     quandary = models.ForeignKey(Quandary, related_name='answers', on_delete=models.CASCADE)
@@ -19,6 +26,7 @@ class Answer(models.Model):
 
     def __str__(self):
         return self.answer_text
+
 
 class Hero(models.Model):
     moniker = models.CharField(max_length=255)

@@ -1,0 +1,8 @@
+li a {
+    color: green;
+}
+
+body {
+    background: white url("images/crystal-bunny-nonprofit-logo.png") no-repeat;
+    background-size: contain;
+}

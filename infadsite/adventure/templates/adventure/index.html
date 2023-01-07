@@ -1,3 +1,7 @@
+{% load static %}
+
+<link rel="stylesheet" href="{% static 'adventure/style.css' %}">
+
 {% if first_quandaries_list %}
     <ul>
     {% for quandary in first_quandaries_list %}
