@@ -1,5 +1,3 @@
-<p>{{ quandary.description }}</p>
-
 <form action="{% url 'adventure:choose' quandary.id %}" method="post">
 {% csrf_token %}
 <fieldset>

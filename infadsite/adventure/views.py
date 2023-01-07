@@ -2,20 +2,20 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views import generic
+from django import forms
 
 from .models import Quandary, Answer, Hero
 
 
-class IndexView(generic.ListView):
-    template_name = 'adventure/index.html'
-    context_object_name = 'first_quandaries_list'
+def home(request):
+    template_name = 'adventure/home.html'
+    context = {
+        'initial_quandary_id': 1,
+    }
+    return render(request, template_name, context)
 
-    def get_queryset(self):
-        """Return the first five published quandaries that have any answers."""
-        quandaries = Quandary.objects.filter(answers__isnull=False).distinct()
-
-        return quandaries.order_by('created_at')[:5]
-
+# class QuandaryForm(forms.Form):
+#     answer = forms.ModelChoiceField(queryset=Answer.objects.all())
 
 class QuandaryCardView(generic.DetailView):
     model = Quandary

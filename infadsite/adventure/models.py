@@ -4,7 +4,8 @@ from django.contrib import admin
 
 class Quandary(models.Model):
     quandary_text = models.CharField(max_length=255)
-    description = models.CharField(max_length=1023, blank=True, default='')
+    parent_answer = models.ForeignKey('Answer', related_name='child_quandary', on_delete=models.SET_NULL, null=True)
+    landscape = models.ForeignKey('Landscape', on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -20,8 +21,8 @@ class Quandary(models.Model):
 
 
 class Answer(models.Model):
-    quandary = models.ForeignKey(Quandary, related_name='answers', on_delete=models.CASCADE)
     answer_text = models.CharField(max_length=255)
+    quandary = models.ForeignKey(Quandary, related_name='answers', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -31,7 +32,24 @@ class Answer(models.Model):
 class Hero(models.Model):
     moniker = models.CharField(max_length=255)
     answers_given = models.ManyToManyField(Answer, related_name='heroes')
+    portrait = models.ForeignKey('Portrait', related_name='heroes', on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.moniker
+
+
+class Landscape(models.Model):
+    image = models.ImageField(upload_to='landscapes/', null=True, blank=True)
+    keywords = models.TextField(null=False)
+
+    def __str__(self):
+        return self.keywords
+
+
+class Portrait(models.Model):
+    image = models.ImageField(upload_to='portraits/', null=True, blank=True)
+    keywords = models.TextField(null=False)
+
+    def __str__(self):
+        return self.keywords
