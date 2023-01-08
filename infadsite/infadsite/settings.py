@@ -63,9 +63,16 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django_settings_export.settings_export',
             ],
         },
     },
+]
+
+INITIAL_QUANDARY_ID = 1;
+
+SETTINGS_EXPORT = [
+    'INITIAL_QUANDARY_ID',
 ]
 
 WSGI_APPLICATION = 'infadsite.wsgi.application'

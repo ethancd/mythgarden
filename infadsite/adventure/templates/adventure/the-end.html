@@ -1,0 +1,14 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'adventure/style.css' %}">
+
+{% if hero %}
+    <h1>Congratulations, {{hero.moniker}}!</h1>
+{% else %}
+    <h1>Congratulations, Hero!</h1>
+{% endif %}
+<p>You've done the impossible and reached the end of the test content I just wrote. This concludes your Infinite Adventure!</p>
+
+
+<a class="go-button" href="{% url 'adventure:quandary' pk=settings.INITIAL_QUANDARY_ID %}">Start another journey</a>
+
+<img src="{% static 'adventure/images/crystal-bunny-nonprofit-logo.png' %}">

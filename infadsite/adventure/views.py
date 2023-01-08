@@ -9,9 +9,18 @@ from .models import Quandary, Answer, Hero
 
 def home(request):
     template_name = 'adventure/home.html'
+    return render(request, template_name)
+
+def theEnd(request, hero_id):
+    try:
+        hero = Hero.objects.get(pk=hero_id)
+    except (KeyError, Hero.DoesNotExist):
+        hero = None
+
     context = {
-        'initial_quandary_id': 1,
+        'hero': hero
     }
+    template_name = 'adventure/the-end.html'
     return render(request, template_name, context)
 
 # class QuandaryForm(forms.Form):
@@ -33,7 +42,6 @@ ANSWER_FORM_PREFIX = 'answer_'
 def choose(request, quandary_id):
     quandary = get_object_or_404(Quandary, pk=quandary_id)
     try:
-        print(request.POST)
         answers = [key for key, value in request.POST.items() if key.startswith(ANSWER_FORM_PREFIX)]
         if len(answers) == 0:
             raise KeyError
@@ -47,6 +55,8 @@ def choose(request, quandary_id):
             'error_message': "Oops, didn't get a proper answer on our end.",
         })
     else:
-        next_quandary = selected_answer.child_quandary
-
-        return HttpResponseRedirect(reverse('adventure:quandary', args=(next_quandary.id,)))
+        if selected_answer.child_quandary:
+            return HttpResponseRedirect(reverse('adventure:quandary', args=(selected_answer.child_quandary.id,)))
+        else:
+            hero = Hero.objects.create(moniker=selected_answer.answer_text)
+            return HttpResponseRedirect(reverse('adventure:the-end', args=(hero.id,)))
