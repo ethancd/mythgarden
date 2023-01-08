@@ -47,6 +47,6 @@ def choose(request, quandary_id):
             'error_message': "Oops, didn't get a proper answer on our end.",
         })
     else:
-        next_quandary = selected_answer.child_quandary.get()
+        next_quandary = selected_answer.child_quandary
 
         return HttpResponseRedirect(reverse('adventure:quandary', args=(next_quandary.id,)))

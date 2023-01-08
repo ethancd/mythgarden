@@ -4,7 +4,7 @@ from django.contrib import admin
 
 class Quandary(models.Model):
     quandary_text = models.CharField(max_length=255)
-    landscape = models.ForeignKey('Landscape', on_delete=models.SET_NULL, null=True)
+    landscape = models.ForeignKey('Landscape', on_delete=models.SET_NULL, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -14,7 +14,7 @@ class Quandary(models.Model):
 class Answer(models.Model):
     answer_text = models.CharField(max_length=255)
     quandary = models.ForeignKey(Quandary, related_name='answers', on_delete=models.CASCADE)
-    child_quandary = models.ForeignKey(Quandary, related_name='parent_answer', on_delete=models.SET_NULL, null=True)
+    child_quandary = models.ForeignKey(Quandary, related_name='parent_answer', on_delete=models.SET_NULL, blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -25,7 +25,7 @@ class Answer(models.Model):
 class Hero(models.Model):
     moniker = models.CharField(max_length=255)
     answers_given = models.ManyToManyField(Answer, related_name='heroes')
-    portrait = models.ForeignKey('Portrait', related_name='heroes', on_delete=models.SET_NULL, null=True)
+    portrait = models.ForeignKey('Portrait', related_name='heroes', on_delete=models.SET_NULL, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
