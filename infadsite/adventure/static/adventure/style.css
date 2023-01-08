@@ -5,6 +5,13 @@ h1 {
     text-stroke: 2px black;
 }
 
+h2 {
+    font-size: 48px;
+    text-align:center;
+    color: navy;
+    text-stroke: 2px black;
+}
+
 .go-button {
     margin: 20px auto;
     display: block;
@@ -27,4 +34,18 @@ h1 {
     background-color: darkslateblue;
     box-shadow: 0 5px 15px black;
     color: white;
+}
+
+.choice-button {
+    margin: 20px auto;
+    display: block;
+    width: max-content;
+    padding: 20px;
+    background-color: rebeccapurple;
+    border: 0;
+    border-radius: 20px;
+    text-decoration: none;
+    color: gold;
+    font-size: 36px;
+    transition: all 0.1s ease-in-out;
 }

@@ -1,0 +1,13 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'adventure/style.css' %}">
+
+<form action="{% url 'adventure:choose' quandary.id %}" method="post">
+    {% csrf_token %}
+
+    <h2>{{ quandary.quandary_text }}</h2>
+    {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+    {% for answer in quandary.answers.all %}
+        <input class="choice-button" type="submit" name="answer_{{ answer.id }}" value="{{ answer.answer_text }}">
+    {% endfor %}
+
+</form>

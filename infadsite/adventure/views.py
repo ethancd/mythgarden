@@ -17,15 +17,10 @@ def home(request):
 # class QuandaryForm(forms.Form):
 #     answer = forms.ModelChoiceField(queryset=Answer.objects.all())
 
-class QuandaryCardView(generic.DetailView):
-    model = Quandary
-    template_name = 'adventure/quandary_card.html'
 
-    def get_queryset(self):
-        """
-        Excludes any quandaries that don't have any answers.
-        """
-        return Quandary.objects.filter(answers__isnull=False).distinct()
+class QuandaryView(generic.DetailView):
+    model = Quandary
+    template_name = 'adventure/quandary.html'
 
 
 class JourneyView(generic.DetailView):
@@ -33,24 +28,25 @@ class JourneyView(generic.DetailView):
     template_name = 'adventure/journey.html'
 
 
+ANSWER_FORM_PREFIX = 'answer_'
+
 def choose(request, quandary_id):
     quandary = get_object_or_404(Quandary, pk=quandary_id)
     try:
-        selected_answer = quandary.answers.get(pk=request.POST['answer'])
+        print(request.POST)
+        answers = [key for key, value in request.POST.items() if key.startswith(ANSWER_FORM_PREFIX)]
+        if len(answers) == 0:
+            raise KeyError
+        if len(answers) == 1:
+            answer_id = answers[0].replace(ANSWER_FORM_PREFIX, '')
+            selected_answer = quandary.answers.get(pk=answer_id)
     except (KeyError, Answer.DoesNotExist):
         # Redisplay the quandary form.
-        return render(request, 'adventure/quandary_card.html', {
-            'question': quandary,
-            'error_message': "You didn't select an answer.",
+        return render(request, 'adventure/quandary.html', {
+            'quandary': quandary,
+            'error_message': "Oops, didn't get a proper answer on our end.",
         })
     else:
-        new_hero = Hero(moniker="Hero Alpha")
-        new_hero.save()
+        next_quandary = selected_answer.child_quandary.get()
 
-        new_hero.answers_given.set([selected_answer])
-        new_hero.save()
-
-        # Always return an HttpResponseRedirect after successfully dealing
-        # with POST data. This prevents data from being posted twice if a
-        # user hits the Back button.
-        return HttpResponseRedirect(reverse('adventure:journey', args=(new_hero.id,)))
+        return HttpResponseRedirect(reverse('adventure:quandary', args=(next_quandary.id,)))

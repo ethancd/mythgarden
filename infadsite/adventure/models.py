@@ -4,25 +4,18 @@ from django.contrib import admin
 
 class Quandary(models.Model):
     quandary_text = models.CharField(max_length=255)
-    parent_answer = models.ForeignKey('Answer', related_name='child_quandary', on_delete=models.SET_NULL, null=True)
     landscape = models.ForeignKey('Landscape', on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.quandary_text
 
-    @admin.display(
-        boolean=True,
-        ordering='description',
-        description='Flavor text?',
-    )
-    def has_description(self):
-        return self.description != ""
-
 
 class Answer(models.Model):
     answer_text = models.CharField(max_length=255)
     quandary = models.ForeignKey(Quandary, related_name='answers', on_delete=models.CASCADE)
+    child_quandary = models.ForeignKey(Quandary, related_name='parent_answer', on_delete=models.SET_NULL, null=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
