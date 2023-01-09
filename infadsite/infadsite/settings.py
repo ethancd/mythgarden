@@ -72,10 +72,12 @@ TEMPLATES = [
     },
 ]
 
-INITIAL_QUANDARY_ID = 1;
+INITIAL_QUANDARY_ID = 1
+COLOR_THIEF_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js'
 
 SETTINGS_EXPORT = [
     'INITIAL_QUANDARY_ID',
+    'COLOR_THIEF_CDN'
 ]
 
 WSGI_APPLICATION = 'infadsite.wsgi.application'
