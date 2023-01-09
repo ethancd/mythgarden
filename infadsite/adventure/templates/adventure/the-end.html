@@ -1,14 +1,27 @@
 {% load static %}
 <link rel="stylesheet" href="{% static 'adventure/style.css' %}">
 
-{% if hero %}
-    <h1>Congratulations, {{hero.moniker}}!</h1>
-{% else %}
-    <h1>Congratulations, Hero!</h1>
-{% endif %}
-<p>You've done the impossible and reached the end of the test content I just wrote. This concludes your Infinite Adventure!</p>
+<div class="hero-page">
+    <div class="top-bar">
+        {% if hero %}
+            <h2 class="hero-callout">Congratulations, {{hero.moniker}}!</h2>
+        {% else %}
+            <h2 class="hero-callout">Congratulations, Hero!</h2>
+        {% endif %}
 
+        <p class="banter">You've done the impossible and reached the end of the test content I just wrote. This concludes your Infinite Adventure!</p>
+    </div>
+    <div class="main-area">
+    {% if hero and hero.portrait %}
+        <div class="portrait-container">
+            <img class="portrait" src="{{ hero.portrait.image.url }}">
+            <div class="portrait-shadow"></div>
+        </div>
+    {% endif %}
+    </div>
 
-<a class="go-button" href="{% url 'adventure:quandary' pk=settings.INITIAL_QUANDARY_ID %}">Start another journey</a>
+    <div class="bottom-bar">
+        <a class="go-button" href="{% url 'adventure:quandary' pk=settings.INITIAL_QUANDARY_ID %}">Start another journey</a>
+     </div>
 
-<img src="{% static 'adventure/images/crystal-bunny-nonprofit-logo.png' %}">
+</div>

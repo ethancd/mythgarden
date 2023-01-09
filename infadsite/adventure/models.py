@@ -24,7 +24,6 @@ class Answer(models.Model):
 
 class Hero(models.Model):
     moniker = models.CharField(max_length=255)
-    answers_given = models.ManyToManyField(Answer, related_name='heroes')
     portrait = models.ForeignKey('Portrait', related_name='heroes', on_delete=models.SET_NULL, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

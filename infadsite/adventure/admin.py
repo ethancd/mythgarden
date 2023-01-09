@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Quandary, Answer, Landscape
+from .models import Quandary, Answer, Hero, Landscape, Portrait
 
 
 class AnswerInline(admin.TabularInline):
@@ -34,5 +34,7 @@ class QuandaryAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Quandary, QuandaryAdmin)
+admin.site.register(Hero)
 admin.site.register(Answer)
 admin.site.register(Landscape)
+admin.site.register(Portrait)

@@ -58,5 +58,5 @@ def choose(request, quandary_id):
         if selected_answer.child_quandary:
             return HttpResponseRedirect(reverse('adventure:quandary', args=(selected_answer.child_quandary.id,)))
         else:
-            hero = Hero.objects.create(moniker=selected_answer.answer_text)
+            hero = Hero.objects.get_or_create(moniker=selected_answer.answer_text)[0]
             return HttpResponseRedirect(reverse('adventure:the-end', args=(hero.id,)))
