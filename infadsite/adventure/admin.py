@@ -1,11 +1,13 @@
 from django.contrib import admin
 
-from .models import Quandary, Answer
+from .models import Quandary, Answer, Landscape
+
 
 class AnswerInline(admin.TabularInline):
     model = Answer
     fk_name = 'quandary'
     extra = 3
+
 
 class ParentAnswerInline(admin.TabularInline):
     model = Answer
@@ -24,7 +26,7 @@ class ParentAnswerInline(admin.TabularInline):
 
 
 class QuandaryAdmin(admin.ModelAdmin):
-    fields = ['quandary_text']
+    fields = ['quandary_text', 'landscape']
     inlines = [ParentAnswerInline, AnswerInline]
     list_display = ['quandary_text']
     list_filter = ['created_at']
@@ -33,3 +35,4 @@ class QuandaryAdmin(admin.ModelAdmin):
 
 admin.site.register(Quandary, QuandaryAdmin)
 admin.site.register(Answer)
+admin.site.register(Landscape)
