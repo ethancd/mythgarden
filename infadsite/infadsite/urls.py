@@ -21,6 +21,7 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('adventure/', include('adventure.urls')),
     path('admin/', admin.site.urls),
+    path('mythgarden/', include('mythgarden.urls')),
 ]
 
 if settings.DEBUG:

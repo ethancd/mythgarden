@@ -1,0 +1,32 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'mythgarden/style.css' %}">
+
+<div class="page">
+    <section class="top-bar">
+        <ul class="horizontal stats">
+            <li class="player-name">Squall Leonhart</li>
+            <li class="datetime"><span class="day">Mon</span><span class="time">2pm</span></li>
+            <li class="money">₭300</li>
+            <li class="bonds">*</li>
+        </ul>
+        <ul class="horizontal inventory">
+            <li class="item">Parsnip Seed<span class="qty">15</span></li>
+        </ul>
+        <p class="message">Welcome to Mythgarden :)</p>
+        <p class="location">Farm</p>
+    </section>
+
+    <section class="sidebar">
+        <ul class="vertical actions">
+            <li class="action"><span>Plant Seeds</span><span class="cost">1h</span></li>
+            <li class="action"><span>Walk North</span><span class="cost">1h</span></li>
+            <li class="action"><span>Walk East</span><span class="cost">30m</span></li>
+            <li class="action"><span>Walk South</span><span class="cost">30m</span></li>
+        </ul>
+    </section>
+
+    <div class="main-area">
+        <img class="landscape" src="{% static 'mythgarden/images/farm.png' %}">
+    </div>
+</div>
+
