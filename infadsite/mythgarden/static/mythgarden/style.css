@@ -4,16 +4,15 @@ body {
     margin: 0;
 }
 
-/* home page */
-
-.quandary-page {
-    background-color: rgb(40, 60, 60);
-    position: relative;
-    height: 100%;
+* {
+    font-family: "Roboto Mono", Roboto, sans-serif;
+    color: #008f11;
+    font-size: 4vh;
 }
 
-.hero-page {
-    background-color: rgb(180, 140, 90);
+/* layout */
+
+.page {
     position: relative;
     height: 100%;
 }
@@ -21,19 +20,107 @@ body {
 .top-bar {
     width: 100%;
     height: 20%;
+    background-color: #ffd;
     position: relative;
-    z-index: 1;
-}
-
-.sidebar {
-    width: 20%;
-    height: 80%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
 }
 
 .main-area {
-    width: 80%;
+    width: 100%;
     height: 80%;
+    display: flex;
+}
+
+.sidebar {
+    width: 35%;
+    height: 100%;
+    background-color: #dff;
+}
+
+.canvas {
+    width: 80%;
+    height: 100%;
+    background-color: #fdf;
+}
+
+/* general lists */
+
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: flex-start;
+}
+
+ul.horizontal {
+    flex-direction: row;
+}
+
+ul.vertical {
+    flex-direction: column;
+}
+
+/* top-bar HUD elements */
+
+ul.player-info {
+    justify-content: space-between;
+    position: relative;
+    width: 100%;
+}
+
+li.player-name {
+    position: absolute;
+    left: 0;
+}
+
+li.location {
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, 0);
+}
+
+li.stats {
+    position: absolute;
+    right: 0;
+}
+
+ul.stats {
+    align-items: end;
+}
+
+.message {
+    position: absolute;
+    top: 3vh;
+    left: 50%;
+    transform: translate(-50%, 0);
+    border: 2px solid #008f11;
+}
+
+ul.inventory {
+    position: absolute;
+    top: 14vh;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    row-gap: 0;
+}
+
+/* sidebar elements */
+
+ul.actions {
+    width: 100%;
+}
+
+.action {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* canvas elements */
+
+.landscape {
+    display: block;
+    margin: auto;
+    height: 100%;
+    opacity: 50%;
 }
