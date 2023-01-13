@@ -1,11 +1,17 @@
 {% load static %}
 <link href='https://fonts.googleapis.com/css?family=Roboto Mono' rel='stylesheet'>
 <link rel="stylesheet" href="{% static 'mythgarden/style.css' %}">
+<script src="{% static 'mythgarden/script.js' %}"></script>
 
 <div class="page">
     <section class="top-bar">
-        <ul class="horizontal player-info">
-            <li class="player-name">Squall Leonhart</li>
+        <ul class="horizontal game-info">
+            <li class="player-info">
+                <div class="player-avatar">
+                    <img src="{% static 'mythgarden/images/squall-farmer.png' %}">
+                </div>
+                <div class="player-name">Squall Leonhart</div>
+            </li>
             <li class="location">Balamb Farm</li>
             <li class="stats">
                 <ul class="vertical stats">
@@ -13,7 +19,6 @@
                     <li class="money">₭300</li>
                 </ul>
             </li>
-
         </ul>
         <p class="message">Welcome to Mythgarden :)</p>
         <ul class="horizontal inventory">

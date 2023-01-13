@@ -62,15 +62,28 @@ ul.vertical {
 
 /* top-bar HUD elements */
 
-ul.player-info {
+ul.game-info {
     justify-content: space-between;
     position: relative;
     width: 100%;
 }
 
-li.player-name {
+li.player-info {
     position: absolute;
     left: 0;
+    display: flex;
+    gap: 2vh;
+}
+
+.player-avatar {
+    width: 6vh;
+    height: 6vh;
+    border: 2px solid #008f11;
+}
+
+.player-avatar img {
+    width: 100%;
+    height: 100%;
 }
 
 li.location {
@@ -96,12 +109,29 @@ ul.stats {
     border: 2px solid #008f11;
 }
 
+.message:hover {
+    cursor: pointer;
+}
+
+.message:hover::after {
+    content: '×';
+    color: #8f0011;
+    position: absolute;
+    font-size: 6vh;
+    top: -3vh;
+    right: 0;
+}
+
 ul.inventory {
     position: absolute;
     top: 14vh;
     justify-content: space-between;
     flex-wrap: wrap;
     row-gap: 0;
+}
+
+li.item .qty::before {
+    content: ' x';
 }
 
 /* sidebar elements */
@@ -114,6 +144,10 @@ ul.actions {
     width: 100%;
     display: flex;
     justify-content: space-between;
+}
+
+.action.executing {
+    background-color: #8f0011;
 }
 
 /* canvas elements */
