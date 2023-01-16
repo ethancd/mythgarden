@@ -28,6 +28,7 @@ body {
     width: 100%;
     height: 80%;
     display: flex;
+    position: relative;
 }
 
 .sidebar {
@@ -107,9 +108,6 @@ ul.stats {
     left: 50%;
     transform: translate(-50%, 0);
     border: 2px solid #008f11;
-}
-
-.message:hover {
     cursor: pointer;
 }
 
@@ -144,6 +142,7 @@ ul.actions {
     width: 100%;
     display: flex;
     justify-content: space-between;
+    cursor: pointer;
 }
 
 .action.executing {
@@ -157,4 +156,43 @@ ul.actions {
     margin: auto;
     height: 100%;
     opacity: 50%;
+}
+
+.log {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 20%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    justify-content: flex-end;
+}
+
+li.log-entry {
+    display: inline-block;
+    font-size: 2vh;
+    color: #99e6a2;
+}
+
+li.log-entry.cursor {
+    position: relative;
+}
+
+li.log-entry.cursor::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: inline-block;
+    background-color: #b7e1bd;
+    vertical-align: top;
+    width: 1vh;
+    height: 2.5vh;
+    animation: blink 2s step-end infinite;
+}
+
+@keyframes blink {
+  0% { opacity: 1.0; }
+  50% { opacity: 0.0; }
+  100% { opacity: 1.0; }
 }

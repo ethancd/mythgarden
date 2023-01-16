@@ -15,7 +15,7 @@
             <li class="location">Balamb Farm</li>
             <li class="stats">
                 <ul class="vertical stats">
-                    <li class="datetime"><span class="day">Mon</span> <span class="time">2pm</span></li>
+                    <li class="clock" data-day="1" data-time="14">Mon 2pm</li>
                     <li class="money">₭300</li>
                 </ul>
             </li>
@@ -30,15 +30,22 @@
         <section class="sidebar">
             <ul class="vertical actions">
                 <li>Actions:</li>
-                <li class="action"><span>Plant Seeds</span><span class="cost">1h</span></li>
-                <li class="action"><span>Walk North</span><span class="cost">1h</span></li>
-                <li class="action"><span>Walk East</span><span class="cost">30m</span></li>
-                <li class="action"><span>Walk South</span><span class="cost">30m</span></li>
+                <li class="action"><span class="desc">Plant Seeds</span><span class="cost">1h</span></li>
+                <li class="action"><span class="desc">Walk North</span><span class="cost">1h</span></li>
+                <li class="action"><span class="desc">Walk East</span><span class="cost">30m</span></li>
+                <li class="action"><span class="desc">Walk South</span><span class="cost">30m</span></li>
             </ul>
         </section>
 
         <section class="canvas">
             <img class="landscape" src="{% static 'mythgarden/images/idyllic-green-farm.png' %}">
+            <ul class="log vertical">
+                <li class="log-entry">You planted 3 Parsnip Seeds.</li>
+                <li class="log-entry">You planted 4 Parsnip Seeds.</li>
+                <li class="log-entry">You planted 5 Parsnip Seeds.</li>
+                <li class="log-entry">You walked east.</li>
+                <li class="log-entry cursor">&nbsp;</li>
+            </ul>
         </section>
     </section>
 </div>
