@@ -53,11 +53,49 @@ function executeAction(element: HTMLElement) {
     post('action', {actionType: element.id})
         .then((response) => {
             console.log(response);
+
+            // @ts-ignore
+            if (response.new_location) {
+                // @ts-ignore
+                updateLocation(response.new_location);
+            } else {
+                console.log('something went wrong with new location');
+            }
+
             element.classList.toggle('executing');
         }).catch((response) => {
             console.log(response);
             element.classList.toggle('executing');
         });
+}
+
+// fn: update displayed location name and landscape to the new location
+function updateLocation(newLocation: string) {
+    console.log('updating location');
+    const LANDSCAPES: any = {
+        'Balamb Farm': 'idyllic-green-farm',
+        'General Store': 'old-timey-general-store',
+    };
+
+    const locationEl = findElementByClassName('location');
+    const landscapeEl = findElementByClassName('landscape');
+
+    const landscapeFileName = LANDSCAPES[newLocation]
+
+    // This confusing regex creates 3 capture groups:
+    // 1. (.*\/) the static path to the image (excluding the filename)
+    // 2. ([A-Za-z-]*) the filename (excluding the extension)
+    // 3. (\.[a-z]*) the extension
+    // Capture groups $1 and $3 are preserved by the replace,
+    // and the filename is replaced with the new location's filename
+    const staticPathRegex = /(.*\/)([A-Za-z-]*)(\.[a-z]*)/;
+
+    locationEl.innerText = newLocation;
+    const currentImageSrc = getStrOrError(landscapeEl.getAttribute('src'));
+    const newImageSrc = currentImageSrc.replace(staticPathRegex, `$1${landscapeFileName}$3`);
+
+    //@ts-ignore
+    landscapeEl.src = newImageSrc;
 }
 
 // fn: log an action given the action description element
@@ -201,14 +239,10 @@ export {
 function post(url: string, data: object): Promise<Response> {
     const csrftoken = getStrOrError(Cookies.get('csrftoken'));
 
-    console.log(url);
-    console.log(csrftoken);
-
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open('POST', url);
         xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.setRequestHeader('X-CSRFToken', csrftoken);
         xhr.setRequestHeader('X-CSRFToken', csrftoken);
         xhr.send(JSON.stringify(data));
 
