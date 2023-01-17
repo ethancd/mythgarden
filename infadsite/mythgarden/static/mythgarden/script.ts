@@ -209,6 +209,7 @@ function post(url: string, data: object): Promise<Response> {
         xhr.open('POST', url);
         xhr.setRequestHeader('Content-Type', 'application/json');
         xhr.setRequestHeader('X-CSRFToken', csrftoken);
+        xhr.setRequestHeader('X-CSRFToken', csrftoken);
         xhr.send(JSON.stringify(data));
 
         xhr.onload = () => {

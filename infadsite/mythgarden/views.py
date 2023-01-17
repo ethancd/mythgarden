@@ -1,4 +1,5 @@
 from django.http import HttpResponse, HttpResponseRedirect
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.urls import reverse
@@ -16,8 +17,8 @@ def home(request):
 
 
 def action(request):
-    if request.method == 'POST' and request.is_ajax():
-        action_type = request.POST.get('actionType')
+    if request.method == 'POST':
+        action_type = json.loads(request.body)['actionType']
         results = {}
 
         if is_travel(action_type):
@@ -26,7 +27,7 @@ def action(request):
         if is_plant(action_type):
             results['new_crops'] = gen_new_crops(action_type)
 
-        return HttpResponse(json.dumps(results), content_type="application/json")
+        return JsonResponse(results)
     else:
         return HttpResponseRedirect(reverse('mythgarden:home'))
 
