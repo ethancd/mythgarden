@@ -166,6 +166,7 @@ ul.actions {
     height: 100%;
     background-color: rgba(0, 0, 0, 0.8);
     justify-content: flex-end;
+    overflow: hidden;
 }
 
 li.log-entry {
@@ -176,6 +177,7 @@ li.log-entry {
 
 li.log-entry.cursor {
     position: relative;
+    order: 999; /* always put the cursor entry at bottom of log */
 }
 
 li.log-entry.cursor::after {

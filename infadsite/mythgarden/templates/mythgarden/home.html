@@ -1,7 +1,7 @@
 {% load static %}
 <link href='https://fonts.googleapis.com/css?family=Roboto Mono' rel='stylesheet'>
 <link rel="stylesheet" href="{% static 'mythgarden/style.css' %}">
-<script src="{% static 'mythgarden/script.js' %}"></script>
+<script type="module" src="{% static 'mythgarden/dist/bundle.js' %}"></script>
 
 <div class="page">
     <section class="top-bar">
@@ -30,10 +30,10 @@
         <section class="sidebar">
             <ul class="vertical actions">
                 <li>Actions:</li>
-                <li class="action"><span class="desc">Plant Seeds</span><span class="cost">1h</span></li>
-                <li class="action"><span class="desc">Walk North</span><span class="cost">1h</span></li>
-                <li class="action"><span class="desc">Walk East</span><span class="cost">30m</span></li>
-                <li class="action"><span class="desc">Walk South</span><span class="cost">30m</span></li>
+                <li class="action" id="plant-parsnips"><span class="desc">Plant Parsnip Seeds</span><span class="cost">1h</span></li>
+                <li class="action" id="walk-north"><span class="desc">Walk North</span><span class="cost">1h</span></li>
+                <li class="action" id="walk-east"><span class="desc">Walk East</span><span class="cost">30m</span></li>
+                <li class="action" id="walk-south"><span class="desc">Walk South</span><span class="cost">30m</span></li>
             </ul>
         </section>
 

@@ -5,4 +5,5 @@ from . import views
 app_name = 'mythgarden'
 urlpatterns = [
     path('', views.home, name='home'),
+    path('action', views.action, name='action'),
 ]

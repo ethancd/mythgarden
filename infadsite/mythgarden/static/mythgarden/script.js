@@ -1,21 +1,22 @@
 // A typescript file for the game Mythgarden
+import Cookies from 'js-cookie';
 /* DOM functions */
 // fn: add an event listener to an element (specified by class name)
 function listenOnElement(className, event, fn) {
-    var element = findElementByClassName(className);
+    const element = findElementByClassName(className);
     listen(element, event, fn);
 }
 function listenOnElements(className, event, fn) {
-    var elements = findAllElementsByClassName(className);
-    elements.forEach(function (element) { return listen(element, event, fn); });
+    const elements = findAllElementsByClassName(className);
+    elements.forEach(element => listen(element, event, fn));
 }
 function listen(element, event, fn) {
-    element.addEventListener(event, function () {
+    element.addEventListener(event, () => {
         fn(element);
-        console.log("".concat(element.tagName, ".").concat(element.className, "#").concat(element.id, " ").concat(event, " event fired"));
+        console.log(`${element.tagName}.${element.className}#${element.id} ${event} event fired`);
     });
     // @ts-ignore
-    console.log("bound ".concat(element.className, " on ").concat(event, " to ").concat(fn.name));
+    console.log(`bound ${element.className} on ${event} to ${fn.name}`);
 }
 // fn: find first element with a class name
 function findElementByClassName(className) {
@@ -36,38 +37,44 @@ function executeAction(element) {
     element.classList.toggle('executing');
     logAction(element.getElementsByClassName('desc')[0]);
     payActionCost(element.getElementsByClassName('cost')[0]);
-    setTimeout(function () {
+    post('action', { actionType: element.id })
+        .then((response) => {
+        console.log(response);
         element.classList.toggle('executing');
-    }, 1000);
+    }).catch((response) => {
+        console.log(response);
+        element.classList.toggle('executing');
+    });
 }
 // fn: log an action given the action description element
 function logAction(desc) {
-    var actionDescText = desc.textContent;
-    var logText = createLogEntry(actionDescText);
+    const actionDescText = getStrOrError(desc.textContent);
+    const logText = createLogEntry(actionDescText);
     appendLogEntry(logText);
 }
 // fn: create a log entry from the passed text
 function createLogEntry(text) {
-    return "You ".concat(text, "ed.");
+    return `You ${text}ed.`;
 }
 // fn: append a log entry based on the passed text
 function appendLogEntry(text) {
-    var log = findElementByClassName('log');
-    var entry = document.createElement('li');
+    const log = findElementByClassName('log');
+    const entry = document.createElement('li');
     entry.className = 'log-entry';
     entry.textContent = text;
     log.appendChild(entry);
 }
 // fn: pay the cost of an action given the action cost element
 function payActionCost(cost) {
-    var costText = cost.textContent;
-    var costAmount = parseDuration(costText);
+    const costText = getStrOrError(cost.textContent);
+    const costAmount = parseDuration(costText);
     advanceClock(costAmount);
 }
 // fn: parse duration in hours from a display string
 function parseDuration(displayString) {
-    var _a = displayString.split(/(\d+)/), amountText = _a[0], unit = _a[1];
-    var amount = parseInt(amountText);
+    // this split returns an empty string in [0], number in [1], and unit in [2]
+    const [_, amountText, unit] = displayString.split(/(\d+)/);
+    let amount = parseInt(amountText);
     switch (unit) {
         case 'h':
             break;
@@ -78,24 +85,28 @@ function parseDuration(displayString) {
             amount *= 24;
             break;
         default:
-            throw new Error("Invalid duration unit: ".concat(unit));
+            throw new Error(`Invalid duration unit: ${unit}`);
     }
     return amount;
 }
 // fn: advance the game clock by the passed amount {
 function advanceClock(amount) {
-    var clockEl = findElementByClassName('clock');
-    var _a = calcNewClockValues(clockEl.dataset, amount), newDay = _a[0], newTime = _a[1];
-    var newDisplay = genClockDisplayValue(newDay, newTime);
+    const clockEl = findElementByClassName('clock');
+    const [newDay, newTime] = calcNewClockValues(clockEl.dataset, amount);
+    const newDisplay = genClockDisplayValue(newDay, newTime);
     setClockValues(clockEl, newDay, newTime, newDisplay);
 }
 // fn: add new time to current time and advance day if necessary
 function calcNewClockValues(clockData, amount) {
-    var day = parseInt(clockData.day);
-    var time = parseInt(clockData.time);
-    var newTime = time + amount;
+    if (clockData.day === undefined || clockData.time === undefined) {
+        throw new Error('Clock data is missing');
+    }
+    const day = parseInt(clockData.day);
+    const time = parseFloat(clockData.time); // preserve decimal places for eg half hours
+    const newTime = time + amount;
     if (newTime >= 24) {
-        return [(day + 1) % 7, newTime - 24];
+        const daysToAdd = Math.floor(newTime / 24);
+        return [(day + daysToAdd) % 7, newTime % 24];
     }
     else {
         return [day, newTime];
@@ -103,25 +114,28 @@ function calcNewClockValues(clockData, amount) {
 }
 // fn: generate a display string for the clock
 function genClockDisplayValue(day, time) {
-    var WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    var weekdayText = WEEKDAYS[day];
-    var hourText = '';
+    if (day < 0 || day > 6 || time < 0 || time > 24) {
+        throw new Error('Invalid day or time');
+    }
+    const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const weekdayText = WEEKDAYS[day];
+    let hourText = '';
     if (time > 12) {
-        hourText = "".concat(Math.floor(time - 12));
+        hourText = `${Math.floor(time - 12)}`;
     }
     else if (time < 1) {
         hourText = '12';
     }
     else {
-        hourText = "".concat(Math.floor(time));
+        hourText = `${Math.floor(time)}`;
     }
-    var hasMinutes = time % 1 !== 0;
-    var minuteText = '';
+    const hasMinutes = time % 1 !== 0;
+    let minuteText = '';
     if (hasMinutes) {
-        minuteText = ":".concat(Math.floor(time % 1 * 60));
+        minuteText = `:${Math.floor(time % 1 * 60)}`;
     }
-    var timeSuffix = time >= 12 ? 'pm' : 'am';
-    return "".concat(weekdayText, " ").concat(hourText).concat(minuteText).concat(timeSuffix);
+    const timeSuffix = time >= 12 ? 'pm' : 'am';
+    return `${weekdayText} ${hourText}${minuteText}${timeSuffix}`;
 }
 // fn: update the values in the clock element
 function setClockValues(clockEl, day, time, display) {
@@ -135,4 +149,35 @@ function setup() {
     listenOnElement('message', 'click', hide);
     listenOnElements('action', 'click', executeAction);
 }
-window.onload = setup;
+if (typeof window !== "undefined") {
+    window.onload = setup;
+}
+export { createLogEntry, parseDuration, calcNewClockValues, genClockDisplayValue, };
+// fn: given a post url and a data object, make an xhr call to the server and return the response
+function post(url, data) {
+    const csrftoken = getStrOrError(Cookies.get('csrftoken'));
+    console.log(url);
+    console.log(csrftoken);
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', url);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('X-CSRFToken', csrftoken);
+        xhr.send(JSON.stringify(data));
+        xhr.onload = () => {
+            if (xhr.status === 200) {
+                resolve(JSON.parse(xhr.responseText));
+            }
+            else {
+                reject(xhr.responseText);
+            }
+        };
+    });
+}
+// fn: check if a value is a string, and throw an error if not
+function getStrOrError(str) {
+    if (typeof str !== 'string') {
+        throw new Error(`Expected string, got ${typeof str}`);
+    }
+    return str;
+}

@@ -1,5 +1,7 @@
 // A typescript file for the game Mythgarden
 
+import Cookies from 'js-cookie'
+
 /* DOM functions */
 
 // fn: add an event listener to an element (specified by class name)
@@ -48,14 +50,19 @@ function executeAction(element: HTMLElement) {
     logAction(element.getElementsByClassName('desc')[0]);
     payActionCost(element.getElementsByClassName('cost')[0]);
 
-    setTimeout(() => {
-        element.classList.toggle('executing');
-    }, 1000);
+    post('action', {actionType: element.id})
+        .then((response) => {
+            console.log(response);
+            element.classList.toggle('executing');
+        }).catch((response) => {
+            console.log(response);
+            element.classList.toggle('executing');
+        });
 }
 
 // fn: log an action given the action description element
 function logAction(desc: Element) {
-    const actionDescText = desc.textContent;
+    const actionDescText = getStrOrError(desc.textContent);
     const logText = createLogEntry(actionDescText);
 
     appendLogEntry(logText);
@@ -78,7 +85,7 @@ function appendLogEntry(text: string) {
 
 // fn: pay the cost of an action given the action cost element
 function payActionCost(cost: Element) {
-    const costText = cost.textContent;
+    const costText = getStrOrError(cost.textContent);
     const costAmount = parseDuration(costText);
 
     advanceClock(costAmount);
@@ -86,7 +93,8 @@ function payActionCost(cost: Element) {
 
 // fn: parse duration in hours from a display string
 function parseDuration(displayString: string): number {
-    const [amountText, unit] = displayString.split(/(\d+)/)
+     // this split returns an empty string in [0], number in [1], and unit in [2]
+    const [_, amountText, unit] = displayString.split(/(\d+)/);
     let amount = parseInt(amountText);
 
     switch (unit) {
@@ -116,12 +124,17 @@ function advanceClock(amount: number) {
 
 // fn: add new time to current time and advance day if necessary
 function calcNewClockValues(clockData: DOMStringMap, amount: number): [number, number] {
+    if (clockData.day === undefined || clockData.time === undefined) {
+        throw new Error('Clock data is missing');
+    }
+
     const day = parseInt(clockData.day);
-    const time = parseInt(clockData.time);
+    const time = parseFloat(clockData.time); // preserve decimal places for eg half hours
     const newTime = time + amount;
 
     if (newTime >= 24) {
-        return [(day + 1) % 7, newTime - 24];
+        const daysToAdd = Math.floor(newTime / 24);
+        return [(day + daysToAdd) % 7, newTime % 24];
     } else {
         return [day, newTime];
     }
@@ -129,10 +142,14 @@ function calcNewClockValues(clockData: DOMStringMap, amount: number): [number, n
 
 // fn: generate a display string for the clock
 function genClockDisplayValue(day: number, time: number): string {
+    if (day < 0 || day > 6 || time < 0 || time > 24) {
+        throw new Error('Invalid day or time');
+    }
+
     const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const weekdayText = WEEKDAYS[day];
 
-    let hourText = '';
+    let hourText;
 
     if (time > 12) {
         hourText = `${Math.floor(time - 12)}`;
@@ -169,4 +186,46 @@ function setup() {
     listenOnElements('action', 'click', executeAction);
 }
 
-window.onload = setup;
+if (typeof window !== "undefined") {
+    window.onload = setup;
+}
+
+export {
+    createLogEntry,
+    parseDuration,
+    calcNewClockValues,
+    genClockDisplayValue,
+}
+
+// fn: given a post url and a data object, make an xhr call to the server and return the response
+function post(url: string, data: object): Promise<Response> {
+    const csrftoken = getStrOrError(Cookies.get('csrftoken'));
+
+    console.log(url);
+    console.log(csrftoken);
+
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', url);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('X-CSRFToken', csrftoken);
+        xhr.send(JSON.stringify(data));
+
+        xhr.onload = () => {
+            if (xhr.status === 200) {
+                resolve(JSON.parse(xhr.responseText));
+            } else {
+                reject(xhr.responseText);
+            }
+        };
+    });
+}
+
+// fn: check if a value is a string, and throw an error if not
+function getStrOrError(str: any): string {
+    if (typeof str !== 'string') {
+        throw new Error(`Expected string, got ${typeof str}`);
+    }
+
+    return str;
+}
