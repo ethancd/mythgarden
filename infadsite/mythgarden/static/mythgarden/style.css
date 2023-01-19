@@ -128,10 +128,6 @@ ul.inventory {
     row-gap: 0;
 }
 
-li.item .qty::before {
-    content: ' x';
-}
-
 /* sidebar elements */
 
 ul.actions {

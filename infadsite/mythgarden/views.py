@@ -1,19 +1,28 @@
 from django.http import HttpResponse, HttpResponseRedirect
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import render
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.urls import reverse
-from django.views import generic
-from django import forms
 import json
 
-# from .models import Quandary, Answer, Hero
+from .models import Hero, Place
 
 
 @ensure_csrf_cookie
 def home(request):
+    hero = Hero.objects.all()[:1].get()
+    situation = hero.situation
+    place = situation.place
+    actions = situation.gen_available_actions()
+
+    context = {
+        'hero': hero,
+        'place': place,
+        'actions': actions,
+    }
+
     template_name = 'mythgarden/home.html'
-    return render(request, template_name)
+    return render(request, template_name, context)
 
 
 def action(request):
