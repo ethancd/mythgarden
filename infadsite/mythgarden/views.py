@@ -7,18 +7,18 @@ from django.urls import reverse
 from .game_logic import ActionGenerator
 import json
 
-from .models import Hero, Place
+from .models import Hero
 
 
 @ensure_csrf_cookie
 def home(request):
     hero = Hero.objects.all()[:1].get()
-    inventory = hero.rucksack.contents.all()
+    inventory = list(hero.rucksack.contents.all())
 
     situation = hero.situation
     place = situation.place
-    contents = situation.contents.all()
-    villagers = situation.occupants.all()
+    contents = list(situation.contents.all())
+    villagers = list(situation.occupants.all())
 
     actions = ActionGenerator().gen_available_actions(place, inventory, contents, villagers)
 

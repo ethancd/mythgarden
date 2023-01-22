@@ -12,8 +12,13 @@ class ActionGenerator:
 
         available_actions = []
 
-        landmarks = place.landmarks.all()
+        landmarks = list(place.landmarks.all())
         bridges = list(Bridge.objects.filter(place_1=place) | Bridge.objects.filter(place_2=place))
+
+        print('--- generating actions ---')
+        print(f'landmarks: {landmarks}')
+        print(f'bridges: {bridges}')
+        print(f'villagers: {villagers}')
 
         if any([l.landmark_type == Landmark.FIELD for l in landmarks]):
             farming_actions = self.gen_farming_actions(contents, inventory)
@@ -140,7 +145,7 @@ class ActionGenerator:
             description=f'Sell {item.name}',
             action_type=Action.SEL,
             target_object=item,
-            cost_amount=-item.price,
+            cost_amount=item.price,
             cost_unit=Action.KOIN,
             log_statement=f'You sold a {item.name} for {item.price} koin.',
         )

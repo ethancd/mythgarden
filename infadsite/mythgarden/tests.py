@@ -322,7 +322,7 @@ class GenShoppingActionsTests(TestCase):
         self.inventory = [create_item(price=5)]
         actions = self.ag.gen_shopping_actions(self.shop_contents, self.inventory)
 
-        self.assertEqual(actions[0].cost_amount, -5)
+        self.assertEqual(actions[0].cost_amount, 5)
 
     def test_returns_sell_actions_with_correct_cost_unit(self):
         """
@@ -641,7 +641,7 @@ class GenFarmingActionsTests(TestCase):
 
         self.assertEqual(plant_action.cost_amount, 30)
 
-    def test_returns_plan_actions_with_correct_cost_unit(self):
+    def test_returns_plant_actions_with_correct_cost_unit(self):
         """
         Returns a list with plant actions with the correct cost_unit
         """
@@ -1071,3 +1071,21 @@ class GenTravelActionsTests(TestCase):
         actions = self.ag.gen_travel_actions(self.farm, self.bridges)
 
         self.assertEqual(actions[0].log_statement, 'You travelled East to The Store.')
+
+
+class ActionModelTests(TestCase):
+    def test_computes_correct_display_cost_for_time_actions(self):
+        """
+        Computes the correct display cost for time actions
+        """
+        action = Action(action_type=Action.WAT, cost_amount=1, cost_unit=Action.HOUR)
+
+        self.assertEqual(action.display_cost, '1h')
+
+    def test_computes_correct_display_cost_for_money_actions(self):
+        """
+        Computes the correct display cost for money actions
+        """
+        action = Action(action_type=Action.BUY, cost_amount=5, cost_unit=Action.KOIN)
+
+        self.assertEqual(action.display_cost, '₭5')

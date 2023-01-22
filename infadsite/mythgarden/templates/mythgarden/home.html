@@ -35,10 +35,17 @@
         <section class="sidebar">
             <ul class="vertical actions">
                 <li>Actions:</li>
-                <li class="action" id="plant-parsnips"><span class="desc">Plant Parsnip Seeds</span><span class="cost">1h</span></li>
-                <li class="action" id="walk-north"><span class="desc">Walk North</span><span class="cost">1h</span></li>
-                <li class="action" id="walk-east"><span class="desc">Walk East</span><span class="cost">30m</span></li>
-                <li class="action" id="walk-south"><span class="desc">Walk South</span><span class="cost">30m</span></li>
+                {% for action in actions %}
+                    <li class="action"
+                        data-action-type="{{action.action_type}}"
+                        data-target-object="{{action.target_object}}"
+                        data-secondary-target-object="{{action.secondary_target_object}}"
+                        data-direction="{{action.direction}}"
+                        data-log-statement="{{action.log_statement}}">
+                        <span class="desc">{{action.description}}</span>
+                        <span class="cost">{{action.display_cost}}</span>
+                    </li>
+                {% endfor %}
             </ul>
         </section>
 

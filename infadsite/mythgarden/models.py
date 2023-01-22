@@ -27,7 +27,7 @@ class Rucksack(models.Model):
     contents = models.ManyToManyField('Item', blank=True)
 
     def __str__(self):
-        return str(self.contents)
+        return str(self.hero) + "'s rucksack"
 
 
 class Clock(models.Model):
@@ -154,14 +154,14 @@ class Bridge(models.Model):
 
 
 class Situation(models.Model):
-    hero = models.ForeignKey(Hero, on_delete=models.CASCADE)
+    hero = models.OneToOneField(Hero, on_delete=models.CASCADE, related_name='situation')
     place = models.ForeignKey(Place, on_delete=models.CASCADE, default=Place.get_default_pk)
 
     contents = models.ManyToManyField('Item', blank=True)
     occupants = models.ManyToManyField('Villager', blank=True)
 
     def __str__(self):
-        return self.hero + ' in ' + self.place
+        return str(self.hero) + ' in ' + str(self.place)
 
 
 class Action(models.Model):
@@ -197,6 +197,9 @@ class Action(models.Model):
         (KOIN, '₭'),
     ]
 
+    TIME_UNITS = [MIN, HOUR, DAY]
+    MONEY_UNITS = [KOIN]
+
     action_type = models.CharField(max_length=7, choices=ACTION_TYPES)
     description = models.CharField(max_length=255)
 
@@ -220,6 +223,13 @@ class Action(models.Model):
 
     def __str__(self):
         return self.description
+
+    @property
+    def display_cost(self):
+        if self.cost_unit in self.MONEY_UNITS:
+            return self.get_cost_unit_display() + str(self.cost_amount)
+        else:
+            return str(self.cost_amount) + self.get_cost_unit_display()
 
     class Meta:
         indexes = [
