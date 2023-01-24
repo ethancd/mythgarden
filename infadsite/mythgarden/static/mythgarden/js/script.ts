@@ -1,40 +1,16 @@
 // A typescript file for the game Mythgarden
 
-import Cookies from 'js-cookie'
+import {
+    findElementByClassName,
+    findAllElementsByClassName,
+    listenOnElement,
+    listenOnElements,
+} from './dom';
 
-/* DOM functions */
+import {
+    post,
+} from './ajax';
 
-// fn: add an event listener to an element (specified by class name)
-function listenOnElement(className: string, event: string, fn: Function) {
-    const element = findElementByClassName(className);
-    listen(element, event, fn);
-}
-
-function listenOnElements(className: string, event: string, fn: Function) {
-    const elements = findAllElementsByClassName(className);
-    elements.forEach(element => listen(element, event, fn));
-}
-
-function listen(element: HTMLElement, event: string, fn: Function) {
-    element.addEventListener(event, () => {
-        fn(element)
-        console.log(`${element.tagName}.${element.className}#${element.id} ${event} event fired`);
-    });
-
-    // @ts-ignore
-    console.log(`bound ${element.className} on ${event} to ${fn.name}`);
-}
-
-// fn: find first element with a class name
-function findElementByClassName(className: string): HTMLElement{
-    return document.getElementsByClassName(className)[0] as HTMLElement;
-}
-
-// fn: find all elements with a class name
-function findAllElementsByClassName(className: string): HTMLElement[] {
-    // @ts-ignore
-    return Array.from(document.getElementsByClassName(className)) as HTMLElement[];
-}
 
 /* user interaction functions */
 
@@ -47,20 +23,27 @@ function hide(element: HTMLElement) {
 function executeAction(element: HTMLElement) {
     element.classList.toggle('executing');
 
-    logAction(element.getElementsByClassName('desc')[0]);
-    payActionCost(element.getElementsByClassName('cost')[0]);
+    const descEl = element.getElementsByClassName('desc')[0];
+    const descText = getStrOrError(descEl.textContent);
 
-    post('action', {actionType: element.id})
+    // logAction(element.getElementsByClassName('desc')[0]);
+    // payActionCost(element.getElementsByClassName('cost')[0]);
+
+    post('action', {description: descText})
         .then((response) => {
             console.log(response);
-
+            // update clock if necessary
+            //   updateClock(response.clock_display)
+            // update wallet if necessary
+            //   updateWallet(response.wallet_display)
+            // update location if necessary
+            //   updateLocation(response.place);
+            // update inventory if necessary
+            //  updateInventory(response.inventory);
+            // appendLogEntry(response.log_entry);
+            // updateActions(response.actions);
             // @ts-ignore
-            if (response.new_location) {
-                // @ts-ignore
-                updateLocation(response.new_location);
-            } else {
-                console.log('something went wrong with new location');
-            }
+
 
             element.classList.toggle('executing');
         }).catch((response) => {
@@ -235,26 +218,7 @@ export {
     genClockDisplayValue,
 }
 
-// fn: given a post url and a data object, make an xhr call to the server and return the response
-function post(url: string, data: object): Promise<Response> {
-    const csrftoken = getStrOrError(Cookies.get('csrftoken'));
 
-    return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', url);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.setRequestHeader('X-CSRFToken', csrftoken);
-        xhr.send(JSON.stringify(data));
-
-        xhr.onload = () => {
-            if (xhr.status === 200) {
-                resolve(JSON.parse(xhr.responseText));
-            } else {
-                reject(xhr.responseText);
-            }
-        };
-    });
-}
 
 // fn: check if a value is a string, and throw an error if not
 function getStrOrError(str: any): string {

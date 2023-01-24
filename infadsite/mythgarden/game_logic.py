@@ -1,4 +1,4 @@
-from .models import Bridge, Action, Item, Villager, Place, Landmark
+from .models import Bridge, Action, Item, Villager, Place, Landmark, Situation
 
 from .static_helpers import guard_type, guard_types
 
@@ -205,3 +205,53 @@ class ActionGenerator:
             cost_unit=Action.HOUR,
             log_statement=f'You travelled {display_direction} to {destination.name}.',
         )
+
+
+class ActionExecutor:
+    def execute(self, action, situation):
+        """Executes the given action, modifying relevant models in the situation, and returns updated
+        (selecting the correct method based on the action type using a bit of meta programming, as a treat)"""
+        guard_type(action, Action)
+        guard_type(situation, Situation)
+
+        ex = f'execute_{action.get_action_type_display().lower()}_action'
+
+        if hasattr(self, ex) and callable(getattr(self, ex)):
+            return getattr(self, ex)(action, situation)
+        else:
+            raise Exception(f'Unknown action type: {action.get_action_type_display().lower()}')
+
+    def execute_travel_action(self, action, situation):
+        """Executes a travel action, which updates the situation's current place and ticks the clock"""
+
+        situation.place = action.target_object
+        situation.save()
+
+        situation.hero.clock.advance(action.cost_amount, action.cost_unit)
+
+        return {
+            'place': situation.place,
+            'clock': situation.hero.clock,
+        }
+
+    def execute_talk_action(self, action, situation):
+        raise NotImplementedError()
+
+    def execute_give_action(self, action, situation):
+        raise NotImplementedError()
+
+    def execute_sell_action(self, action, situation):
+        raise NotImplementedError()
+
+    def execute_buy_action(self, action, situation):
+        raise NotImplementedError()
+
+    def execute_plant_action(self, action, situation):
+        raise NotImplementedError()
+
+    def execute_water_action(self, action, situation):
+        raise NotImplementedError()
+
+    def execute_harvest_action(self, action, situation):
+        raise NotImplementedError()
+

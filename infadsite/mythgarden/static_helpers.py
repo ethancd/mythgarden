@@ -7,7 +7,7 @@ def guard_types(lst, cls):
 
 def guard_type(obj, cls):
     """Returns True if obj is an instance of cls, else raises a TypeError"""
-    if type(obj) is cls:
+    if isinstance(obj, cls):
         return True
     else:
         raise TypeError(f"{obj} is not a valid {cls} object")

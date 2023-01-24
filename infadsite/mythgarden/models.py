@@ -3,6 +3,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.core.validators import MinValueValidator, MaxValueValidator, ValidationError
 
 
 class Hero(models.Model):
@@ -50,11 +51,53 @@ class Clock(models.Model):
     ]
 
     hero = models.OneToOneField(Hero, on_delete=models.CASCADE, primary_key=True)
-    day = models.CharField(max_length=9, choices=DAYS_OF_WEEK)
-    time = models.FloatField(default=0)
+    day = models.CharField(default=SUNDAY, max_length=9, choices=DAYS_OF_WEEK)
+    time = models.FloatField(default=0, validators=[MinValueValidator(0.0), MaxValueValidator(24.0)])
 
     def __str__(self):
-        return self.get_day_display() + ' ' + str(self.time)
+        return self.get_day_display() + ' ' + self.get_time_display()
+
+    def get_time_display(self):
+        hours = int(self.time) % 12
+        if hours == 0:
+            hours = 12
+        minutes = int((self.time - int(self.time)) * 60)
+        suffix = 'pm' if self.time >= 12 else 'am'
+
+        return f"{hours}:{minutes:02d}{suffix}"
+
+    def advance(self, duration, unit):
+        """ Updates the day and time by the given amount of time,
+        rolling the clock and days over at midnight and end of saturday respectively. """
+
+        amount_in_hours = self.parse_duration(duration, unit)
+        self.time += amount_in_hours
+
+        if self.time >= 24:
+            days_to_add = int(self.time / 24)
+            self.time = self.time % 24
+            self.advance_day(days_to_add)
+
+    # noinspection PyMethodMayBeStatic
+    def parse_duration(self, duration, unit):
+        if unit == Action.HOUR:
+            return float(duration)
+        elif unit == Action.MIN:
+            return float(duration / 60)
+        elif unit == Action.DAY:
+            return float(duration * 24)
+        else:
+            raise ValueError(f"Invalid duration unit: {unit}")
+
+    def advance_day(self, days_to_add):
+        """ Advances the day by the given number of days, rolling over at the end of the week. """
+        current_day_index = self.DAYS_OF_WEEK.index((self.day, self.get_day_display()))
+        new_day_index = (current_day_index + days_to_add) % 7
+        self.day = self.DAYS_OF_WEEK[new_day_index][0]
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
 
 
 class Wallet(models.Model):
@@ -96,6 +139,19 @@ class Landmark(models.Model):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        self.guard_landmark_constraints_on_place(self.place, self.landmark_type)
+        return super().save(*args, **kwargs)
+
+    # noinspection PyMethodMayBeStatic
+    def guard_landmark_constraints_on_place(self, place, landmark_type):
+        """ Ensures that only one of {field or shop} exists per place. """
+        landmark_is_field_or_shop = landmark_type in [Landmark.FIELD, Landmark.SHOP]
+        place_has_field_or_shop = place.landmarks.filter(landmark_type__in=[Landmark.FIELD, Landmark.SHOP]).exists()
+
+        if landmark_is_field_or_shop and place_has_field_or_shop:
+            raise ValidationError('A place can only have one of: field, shop.')
 
 
 class Item(models.Model):
@@ -226,10 +282,13 @@ class Action(models.Model):
 
     @property
     def display_cost(self):
-        if self.cost_unit in self.MONEY_UNITS:
+        if self.is_cost_in_money():
             return self.get_cost_unit_display() + str(self.cost_amount)
         else:
             return str(self.cost_amount) + self.get_cost_unit_display()
+
+    def is_cost_in_money(self):
+        return self.cost_unit in self.MONEY_UNITS
 
     class Meta:
         indexes = [

@@ -1,6 +1,6 @@
 // Tests for MythGarden js business logic
 import { assert } from 'chai';
-import { createLogEntry, parseDuration, calcNewClockValues, genClockDisplayValue, } from '../mythgarden/static/mythgarden/script';
+import { createLogEntry, parseDuration, calcNewClockValues, genClockDisplayValue, } from '../mythgarden/static/mythgarden/script.js';
 // Function to test: createLogEntry
 describe('createLogEntry', () => {
     it('should return a string', () => {

@@ -6,7 +6,7 @@ import {
     parseDuration,
     calcNewClockValues,
     genClockDisplayValue,
-} from '../mythgarden/static/mythgarden/script';
+} from '../mythgarden/static/mythgarden/js/script';
 
 // Function to test: createLogEntry
 describe('createLogEntry', () => {

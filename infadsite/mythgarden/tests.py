@@ -1,9 +1,10 @@
 from django.test import TestCase
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
+from django.core.validators import ValidationError
 
-from .models import Item, Action, Villager, Place, Bridge, Landmark
+from .models import Item, Action, Villager, Place, Bridge, Landmark, Situation, Hero, Clock
 
-from .game_logic import ActionGenerator
+from .game_logic import ActionGenerator, ActionExecutor
 
 
 def assertAnyActionsOfType(actions, action_type):
@@ -22,7 +23,7 @@ def create_villager(name='Lea', home=None):
     return Villager.objects.create(name=name, home=home)
 
 
-def create_place(name):
+def create_place(name='The Farm'):
     return Place.objects.create(name=name)
 
 
@@ -32,6 +33,10 @@ def create_bridge(place_1, place_2, direction_1=Bridge.WEST, direction_2=Bridge.
 
 def create_landmark(name, place, landmark_type):
     return Landmark.objects.create(name=name, place=place, landmark_type=landmark_type)
+
+
+def create_hero(name='Stan'):
+    return Hero.objects.create(name=name)
 
 
 class GenAvailableActionsTests(TestCase):
@@ -174,16 +179,15 @@ class GenAvailableActionsTests(TestCase):
 
         self.ag.gen_social_actions.assert_not_called()
 
-    def test_returns_all_types_of_actions_when_all_types_are_available(self):
-        """Returns all types of actions when all types are available"""
+    def test_returns_multiple_types_of_actions_when_multiple_types_are_available(self):
+        """Returns multiple types of actions when multiple types are available"""
         create_landmark('Field', self.farm, Landmark.FIELD)
-        create_landmark('Shop', self.farm, Landmark.SHOP)
         create_bridge(self.farm, create_place('The Forest'))
         self.villagers = [create_villager()]
 
         actions = self.ag.gen_available_actions(self.farm, self.inventory, self.contents, self.villagers)
 
-        self.assertEqual(actions, self.farming_actions + self.shopping_actions + self.travel_actions + self.social_actions)
+        self.assertEqual(actions, self.farming_actions + self.travel_actions + self.social_actions)
 
 
 class GenShoppingActionsTests(TestCase):
@@ -1089,3 +1093,303 @@ class ActionModelTests(TestCase):
         action = Action(action_type=Action.BUY, cost_amount=5, cost_unit=Action.KOIN)
 
         self.assertEqual(action.display_cost, '₭5')
+
+
+class PlaceModelTests(TestCase):
+    def setUp(self):
+        self.place = create_place()
+
+    def test_if_has_field_landmark_cannot_add_second_field_landmark(self):
+        """
+        If a place has a field landmark, cannot add a second field landmark
+        """
+        create_landmark('Field 1', self.place, Landmark.FIELD)
+
+        with self.assertRaises(ValidationError):
+            create_landmark('Field 2', self.place, Landmark.FIELD)
+
+    def test_if_has_field_landmark_cannot_add_shop_landmark(self):
+        """
+        If a place has a field landmark, cannot add a shop landmark
+        """
+        create_landmark('Field 1', self.place, Landmark.FIELD)
+
+        with self.assertRaises(ValidationError):
+            create_landmark('Micro Shop', self.place, Landmark.SHOP)
+
+    def test_if_has_shop_landmark_cannot_add_field_landmark(self):
+        """
+        If a place has a shop landmark, cannot add a field landmark
+        """
+        create_landmark('Micro Shop', self.place, Landmark.SHOP)
+
+        with self.assertRaises(ValidationError):
+            create_landmark('Field 1', self.place, Landmark.FIELD)
+
+    def test_if_has_shop_landmark_cannot_add_second_shop_landmark(self):
+        """
+        If a place has a shop landmark, cannot add a second shop landmark
+        """
+        create_landmark('Micro Shop', self.place, Landmark.SHOP)
+
+        with self.assertRaises(ValidationError):
+            create_landmark('Secondary Micro Shop', self.place, Landmark.SHOP)
+
+
+class ClockModelTests(TestCase):
+    def setUp(self):
+        self.clock = Clock(hero=create_hero(), day=Clock.MONDAY, time=9)
+
+    def test_parse_duration_returns_a_float(self):
+        """
+        parse_duration returns a float
+        """
+        duration = 1
+        unit = Action.HOUR
+
+        amount = self.clock.parse_duration(duration, unit)
+
+        self.assertTrue(isinstance(amount, float))
+
+    def test_parse_duration_returns_correct_amount_for_hours(self):
+        """
+        parse_duration returns the correct amount for hours
+        """
+        duration = 1
+        unit = Action.HOUR
+
+        amount = self.clock.parse_duration(duration, unit)
+
+        self.assertEqual(amount, 1.0)
+
+    def test_parse_duration_returns_correct_amount_for_minutes(self):
+        """
+        parse_duration returns the correct amount for minutes
+        """
+        duration = 30
+        unit = Action.MIN
+
+        amount = self.clock.parse_duration(duration, unit)
+
+        self.assertEqual(amount, 0.5)
+
+    def test_parse_duration_returns_correct_amount_for_days(self):
+        """
+        parse_duration returns the correct amount for days
+        """
+        duration = 2
+        unit = Action.DAY
+
+        amount = self.clock.parse_duration(duration, unit)
+
+        self.assertEqual(amount, 48.0)
+
+    def test_parse_duration_throws_error_for_invalid_unit(self):
+        """
+        parse_duration throws an error for an invalid unit
+        """
+        duration = 1
+        unit = 'q'
+
+        with self.assertRaises(ValueError):
+            self.clock.parse_duration(duration, unit)
+
+    def test_advance_should_advance_the_time_by_the_amount_of_hours(self):
+        """
+        advance should advance the time by the amount of hours
+        """
+        self.clock.time = 9
+        self.clock.advance(1, Action.HOUR)
+
+        self.assertEqual(self.clock.time, 10)
+
+    def test_advance_should_roll_time_over_when_time_equals_24(self):
+        """
+        advance should roll time over when time equals 24
+        """
+        self.clock.time = 9
+        self.clock.advance(15, Action.HOUR)
+
+        self.assertEqual(self.clock.time, 0)
+
+    def test_advance_should_roll_time_over_when_time_exceeds_24(self):
+        """
+        advance should roll time over when time exceeds 24
+        """
+        self.clock.time = 9
+        self.clock.advance(18, Action.HOUR)
+
+        self.assertEqual(self.clock.time, 3)
+
+    def test_advance_should_roll_day_over_when_time_exceeds_24(self):
+        """
+        advance should roll day over when time exceeds 24
+        """
+        self.clock.day = Clock.MONDAY
+        self.clock.time = 9
+        self.clock.advance(18, Action.HOUR)
+
+        self.assertEqual(self.clock.day, Clock.TUESDAY)
+
+    def test_advance_should_roll_day_over_multiple_day_when_time_exceeds_48_plus(self):
+        """
+        advance should roll day over multiple days when time exceeds 48+ hours
+        """
+        self.clock.day = Clock.MONDAY
+        self.clock.time = 9
+        self.clock.advance(2, Action.DAY)
+
+        self.assertEqual(self.clock.day, Clock.WEDNESDAY)
+
+    def test_advance_should_roll_back_to_start_of_week_when_day_goes_past_saturday(self):
+        """
+        advance should roll back to start of week when day goes past Saturday
+        """
+        self.clock.day = Clock.SATURDAY
+        self.clock.time = 9
+        self.clock.advance(18, Action.HOUR)
+
+        self.assertEqual(self.clock.day, Clock.SUNDAY)
+
+    def test_advance_should_result_in_decimals_when_not_an_even_hour(self):
+        """
+        advance should result in decimals when not an even hour
+        """
+        self.clock.time = 9
+        self.clock.advance(30, Action.MIN)
+
+        self.assertEqual(self.clock.time, 9.5)
+
+    def test_advance_should_add_two_decimals_up_to_an_even_hour(self):
+        """
+        should add two decimals up to an even hour
+        """
+        self.clock.time = 9.5
+        self.clock.advance(30, Action.MIN)
+
+        self.assertEqual(self.clock.time, 10)
+
+    def test_get_time_display_should_show_pm_if_time_is_after_12(self):
+        """
+        get_time_display should show pm if time is after 12
+        """
+        self.clock.time = 13
+
+        self.assertEqual(self.clock.get_time_display(), '1:00pm')
+
+    def test_get_time_display_should_show_am_if_time_is_before_12(self):
+        """
+        get_time_display should show am if time is before 12
+        """
+        self.clock.time = 9
+
+        self.assertEqual(self.clock.get_time_display(), '9:00am')
+
+    def test_get_time_display_should_show_12am_if_time_is_0(self):
+        """
+        get_time_display should show 12am if time is 0
+        """
+        self.clock.time = 0
+
+        self.assertEqual(self.clock.get_time_display(), '12:00am')
+
+    def test_get_time_display_should_show_12pm_if_time_is_12(self):
+        """
+        get_time_display should show 12pm if time is 12
+        """
+        self.clock.time = 12
+
+        self.assertEqual(self.clock.get_time_display(), '12:00pm')
+
+    def test_get_time_display_should_show_1230am_if_time_is_0_5(self):
+        """
+        get_time_display should show 12:30 am if time is 0.5
+        """
+        self.clock.time = 0.5
+
+        self.assertEqual(self.clock.get_time_display(), '12:30am')
+
+    def test_get_time_display_should_show_1230pm_if_time_is_12_5(self):
+        """
+        get_time_display should show 12:30 pm if time is 12.5
+        """
+        self.clock.time = 12.5
+
+        self.assertEqual(self.clock.get_time_display(), '12:30pm')
+
+    def test_clock_should_error_if_time_is_set_to_less_than_0(self):
+        """
+        should error if time is less than 0
+        """
+
+        with self.assertRaises(ValidationError):
+            self.clock.time = -1
+            self.clock.save()
+
+    def test_clock_should_error_if_time_is_set_to_greater_than_24(self):
+        """
+        should error if time is greater than 24
+        """
+
+        with self.assertRaises(ValidationError):
+            self.clock.time = 24.5
+            self.clock.save()
+
+
+class ExecuteActionsTests(TestCase):
+    def test_each_action_type_calls_correct_execute_action_method(self):
+        """
+        Each action type calls the correct execute_action method
+        """
+        ae = ActionExecutor()
+        situation = MagicMock(spec=Situation)
+
+        IMPLEMENTED_EXECUTIONS = [
+            (Action.TRA, 'Travel')
+        ]
+
+        for action_type, display_type in Action.ACTION_TYPES:
+            with self.subTest(action_type=action_type, display_type=display_type):
+                is_implemented = (action_type, display_type) in IMPLEMENTED_EXECUTIONS
+                print(action_type, display_type)
+                action = Action(action_type=action_type)
+                ex = f'execute_{display_type.lower()}_action'
+
+                self.assertTrue(hasattr(ae, ex))
+                self.assertTrue(callable(getattr(ae, ex)))
+
+                with patch.object(ae, ex) as mock:
+                    ae.execute(action, situation)
+                    mock.assert_called_with(action, situation)
+
+                if not is_implemented:
+                    with self.assertRaises(NotImplementedError):
+                        ae.execute(action, situation)
+
+    def test_throw_error_if_passed_non_action(self):
+        """
+        Throw error if passed non-action
+        """
+        ae = ActionExecutor()
+        situation = MagicMock(spec=Situation)
+
+        with self.assertRaises(TypeError):
+            ae.execute('not an action', situation)
+
+    def test_throw_error_if_passed_non_situation(self):
+        """
+        Throw error if passed non-situation
+        """
+        ae = ActionExecutor()
+        action = MagicMock(spec=Action)
+
+        with self.assertRaises(TypeError):
+            ae.execute(action, 'not a situation')
+
+
+
+
+
+
+
+
