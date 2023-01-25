@@ -3,6 +3,29 @@
 <link rel="stylesheet" href="{% static 'mythgarden/style.css' %}">
 <script type="module" src="{% static 'mythgarden/dist/bundle.js' %}"></script>
 
+<!--
+expected models:
+    hero:
+        name
+        portrait:
+            url
+        clock
+        wallet
+    place:
+        name
+        image:
+            url
+    inventory[]:
+        name
+    actions[]:
+        description
+        display_cost
+    landmarks[]:
+        name
+        is_field_or_shop
+    landmark_contents[]:
+        name
+-->
 <div class="page">
     <section class="top-bar">
         <ul class="horizontal game-info">
@@ -15,16 +38,15 @@
             <li class="location">{{ place.name }}</li>
             <li class="stats">
                 <ul class="vertical stats">
-                    <li class="clock" data-day="{{ hero.clock.day }}" data-time="{{ hero.clock.time }}">{{ hero.clock }}</li>
-                    <li class="money">₭{{ hero.wallet.money}}</li>
+                    <li class="clock">{{ hero.clock }}</li>
+                    <li class="money">{{ hero.wallet }}</li>
                 </ul>
             </li>
         </ul>
         <p class="message">Welcome to Mythgarden :)</p>
         <ul class="horizontal inventory">
-            {% for item in hero.rucksack.all %}
+            {% for item in inventory %}
                 <li class="item">
-                    <img src="{{ item.icon.url }}">
                     <span class="item-name">{{ item.name }}</span>
                 </li>
             {% endfor %}
@@ -33,16 +55,11 @@
 
     <section class="main-area">
         <section class="sidebar">
+            <div>Actions:</div>
             <ul class="vertical actions">
-                <li>Actions:</li>
                 {% for action in actions %}
-                    <li class="action"
-                        data-action-type="{{action.action_type}}"
-                        data-target-object="{{action.target_object}}"
-                        data-secondary-target-object="{{action.secondary_target_object}}"
-                        data-direction="{{action.direction}}"
-                        data-log-statement="{{action.log_statement}}">
-                        <span class="desc">{{action.description}}</span>
+                    <li class="action">
+                        <span class="description">{{action.description}}</span>
                         <span class="cost">{{action.display_cost}}</span>
                     </li>
                 {% endfor %}
@@ -51,11 +68,22 @@
 
         <section class="canvas">
             <img class="landscape" src="{{ place.image.url }}">
+            <ul class="landmarks vertical">
+                {% for landmark in landmarks %}
+                    <li class="landmark">
+                        <span class="landmark-name">{{ landmark.name }}</span>
+                        {% if landmark.is_field_or_shop %}
+                            <ul class="contents horizontal">
+                                {% for item in landmark_contents %}
+                                    <li class="item">
+                                        <span class="item-name">{{ item.name }}</span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                {% endfor %}
+            </ul>
             <ul class="log vertical">
-                <li class="log-entry">You planted 3 Parsnip Seeds.</li>
-                <li class="log-entry">You planted 4 Parsnip Seeds.</li>
-                <li class="log-entry">You planted 5 Parsnip Seeds.</li>
-                <li class="log-entry">You walked east.</li>
                 <li class="log-entry cursor">&nbsp;</li>
             </ul>
         </section>

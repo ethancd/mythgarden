@@ -3,8 +3,11 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.urls import reverse
+from django.core.serializers import serialize
+from django.core.serializers.json import DjangoJSONEncoder
 
 from .game_logic import ActionGenerator, ActionExecutor
+from .static_helpers import srs_serialize
 import json
 
 from .models import Hero
@@ -20,6 +23,9 @@ def home(request):
     context = {
         'hero': hero,
         'place': place,
+        'landmarks': place.landmarks.all(),
+        'landmark_contents': hero.situation.contents.all(),
+        'inventory': hero.rucksack.contents.all(),
         'actions': actions,
     }
 
@@ -32,13 +38,29 @@ def action(request):
     or returns an error message if the action is not available.
 
     results = {
-        ?clock: Clock,
-        ?wallet: Wallet,
-        ?place: Place,
-        ?inventory: [Item],
-        ?landmark_contents: [Item],
+        ?clock: string,
+        ?wallet: string,
+        ?place: {
+            name: string,
+            image: {
+                url: string
+            },
+        },
+        ?inventory: [{
+            name: string,
+        }],
+        ?landmarks: [{
+            name: string,
+            is_field_or_shop: bool,
+        }],
+        ?landmark_contents: [{
+            name: string,
+        }],
         log_statement: str,
-        actions: [Action],
+        actions: [{
+            description: string,
+            display_cost: string,
+        }]
     }
     """
     if request.method == 'POST':
@@ -47,18 +69,30 @@ def action(request):
         hero = Hero.objects.all()[:1].get()
         actions = get_current_actions(hero)
 
-        requested_action = [a for a in actions if a.description == description][0]
+        print(f'looking for {description} in {actions}')
 
-        if not requested_action:
+        matches = [a for a in actions if a.description == description]
+
+        if len(matches) == 1:
+            requested_action = matches[0]
+        elif len(matches) > 1:
+            raise Exception(f'Multiple actions match description: {description}')
+        else:  # len(matches) == 0
             return JsonResponse({'error': 'requested action not available'})
 
         if not can_pay_cost(hero, requested_action):
             return JsonResponse({'error': 'hero cannot afford requested action'})
 
-        results = ActionExecutor().execute(requested_action, hero.situation)
+        updated_models = ActionExecutor().execute(requested_action, hero.situation)
+        updated_models['actions'] = get_current_actions(hero)
 
+        results = {}
+        for k, v in updated_models.items():
+            print(f'{k}: {v}')
+            results[k] = srs_serialize(v)
+
+        # results = {k: serialize("json", v) for k, v in updated_models.items()}
         results['log_statement'] = requested_action.log_statement
-        results['actions'] = get_current_actions(hero)
 
         return JsonResponse(results)
     else:
@@ -80,7 +114,7 @@ def get_current_actions(hero):
 
 def can_pay_cost(hero, requested_action):
     if requested_action.is_cost_in_money:
-        return hero.wallet.amount >= requested_action.cost_amount
+        return hero.wallet.money >= requested_action.cost_amount
     else:
         return True
 

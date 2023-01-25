@@ -4,7 +4,7 @@
     "tsc": "^2.0.4",
     "webpack": "^5.75.0"
   },
-  "main": "./mythgarden/static/mythgarden/script.js",
+  "main": "./mythgarden/static/mythgarden/js/script.js",
   "type": "module",
   "devDependencies": {
     "@types/chai": "^4.3.4",

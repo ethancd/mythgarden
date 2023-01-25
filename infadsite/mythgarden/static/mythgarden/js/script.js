@@ -35,7 +35,7 @@ function hide(element) {
 // fn: execute an action
 function executeAction(element) {
     element.classList.toggle('executing');
-    logAction(element.getElementsByClassName('desc')[0]);
+    logAction(element.getElementsByClassName('description')[0]);
     payActionCost(element.getElementsByClassName('cost')[0]);
     post('action', { actionType: element.id })
         .then((response) => {

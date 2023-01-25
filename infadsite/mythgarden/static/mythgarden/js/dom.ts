@@ -32,10 +32,30 @@ function findAllElementsByClassName(className: string): HTMLElement[] {
     return Array.from(document.getElementsByClassName(className)) as HTMLElement[];
 }
 
+// fn: hide an element
+function hide(element: HTMLElement) {
+    element.style.display = "none";
+}
+
+// fn: show an element
+function show(element: HTMLElement) {
+    element.style.display = "block";
+}
+
+// fn: remove an element's contents (child elements)
+function clearList(element: HTMLElement) {
+    while (element.firstChild) {
+        element.removeChild(element.firstChild);
+    }
+}
+
 
 export {
     listenOnElement,
     listenOnElements,
     findElementByClassName,
     findAllElementsByClassName,
+    hide,
+    show,
+    clearList,
 }

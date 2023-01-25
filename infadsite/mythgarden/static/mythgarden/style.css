@@ -38,6 +38,7 @@ body {
 }
 
 .canvas {
+    position: relative;
     width: 80%;
     height: 100%;
     background-color: #fdf;
@@ -152,6 +153,22 @@ ul.actions {
     margin: auto;
     height: 100%;
     opacity: 50%;
+}
+
+.landmarks {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 20%;
+    height: 100%;
+    background-color: rgba(230, 66, 230, 0.8);
+    justify-content: flex-end;
+    overflow: hidden;
+}
+
+li.landmark {
+    display: inline-block;
+    font-size: 2vh;
 }
 
 .log {

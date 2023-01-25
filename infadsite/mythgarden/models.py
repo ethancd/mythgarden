@@ -57,6 +57,9 @@ class Clock(models.Model):
     def __str__(self):
         return self.get_day_display() + ' ' + self.get_time_display()
 
+    def serialize(self):
+        return str(self)
+
     def get_time_display(self):
         hours = int(self.time) % 12
         if hours == 0:
@@ -105,7 +108,10 @@ class Wallet(models.Model):
     money = models.IntegerField(default=0)
 
     def __str__(self):
-        return str(self.money)
+        return Action.KOIN_SIGN + str(self.money)
+
+    def serialize(self):
+        return str(self)
 
 
 class Place(models.Model):
@@ -119,6 +125,14 @@ class Place(models.Model):
 
     def __str__(self):
         return self.name
+
+    def serialize(self):
+        return {
+            'name': self.name,
+            'image': {
+                'url': self.image.url if self.image else None
+            },
+        }
 
 
 class Landmark(models.Model):
@@ -140,9 +154,18 @@ class Landmark(models.Model):
     def __str__(self):
         return self.name
 
+    def serialize(self):
+        return {
+            'name': self.name,
+            'is_field_or_shop': self.is_field_or_shop(),
+        }
+
     def save(self, *args, **kwargs):
         self.guard_landmark_constraints_on_place(self.place, self.landmark_type)
         return super().save(*args, **kwargs)
+
+    def is_field_or_shop(self):
+        return self.landmark_type in [Landmark.FIELD, Landmark.SHOP]
 
     # noinspection PyMethodMayBeStatic
     def guard_landmark_constraints_on_place(self, place, landmark_type):
@@ -174,6 +197,14 @@ class Item(models.Model):
 
     def __str__(self):
         return self.name
+
+    def serialize(self):
+        return {
+            'name': self.name,
+            'icon': {
+                'url': self.icon.url if self.icon else None
+            }
+        }
 
 
 class Villager(models.Model):
@@ -246,11 +277,13 @@ class Action(models.Model):
     DAY = 'DAY'
     KOIN = 'KOIN'
 
+    KOIN_SIGN = '₭'
+
     COST_UNITS = [
         (MIN, 'm'),
         (HOUR, 'h'),
         (DAY, 'd'),
-        (KOIN, '₭'),
+        (KOIN, KOIN_SIGN),
     ]
 
     TIME_UNITS = [MIN, HOUR, DAY]
@@ -279,6 +312,12 @@ class Action(models.Model):
 
     def __str__(self):
         return self.description
+
+    def serialize(self):
+        return {
+            'description': self.description,
+            'display_cost': self.display_cost,
+        }
 
     @property
     def display_cost(self):

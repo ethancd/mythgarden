@@ -1,7 +1,7 @@
 const path = require('path');
 
 module.exports = {
-  entry: './mythgarden/static/mythgarden/script.ts',
+  entry: './mythgarden/static/mythgarden/js/script.ts',
   module: {
     rules: [
       {

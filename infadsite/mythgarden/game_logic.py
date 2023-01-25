@@ -232,6 +232,7 @@ class ActionExecutor:
         return {
             'place': situation.place,
             'clock': situation.hero.clock,
+            'landmark_contents': list(situation.contents.all()),
         }
 
     def execute_talk_action(self, action, situation):

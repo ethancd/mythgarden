@@ -1,5 +1,9 @@
 import Cookies from "js-cookie";
 
+import {
+    getStrOrError,
+} from './staticUtils';
+
 // fn: given a post url and a data object, make an xhr call to the server and return the response
 function post(url: string, data: object): Promise<Response> {
     const csrftoken = getStrOrError(Cookies.get('csrftoken'));
