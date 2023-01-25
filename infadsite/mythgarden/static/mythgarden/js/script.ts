@@ -48,6 +48,7 @@ function updatePage(response: any) {
     if (response.wallet) setWalletValue(response.wallet);
     if (response.place) updateLocation(response.place);
     if (response.inventory) updateInventory(response.inventory);
+    if (response.landmarks) updateLandmarks(response.landmarks);
     if (response.landmark_contents) updateLandmarkContents(response.landmark_contents);
 
     appendLogEntry(response.log_statement);
@@ -126,6 +127,40 @@ function createItemElement(item: any) {
     return itemEl;
 }
 
+// fn: update the displayed landmarks
+function updateLandmarks(landmarks: any[]) {
+    console.log('updating landmarks');
+    const landmarksEl = findElementByClassName('landmarks');
+    clearList(landmarksEl);
+
+    landmarks.forEach((landmark) => {
+        const landmarkEl = createLandmarkElement(landmark);
+        landmarksEl.appendChild(landmarkEl);
+    });
+}
+
+// fn: create a landmark element
+function createLandmarkElement(landmark: any) {
+    const landmarkEl = document.createElement('li');
+    landmarkEl.className = 'landmark';
+    landmarkEl.innerHTML = `<span class="landmark-name">${landmark.name}</span>`;
+
+    if (landmark.is_field_or_shop) {
+        landmarkEl.appendChild(createLandmarkContentsElement());
+    }
+
+    return landmarkEl;
+}
+
+// fn: create an empty landmark contents element
+// actual contents will be filled by updateLandmarkContents
+function createLandmarkContentsElement() {
+    const contentsEl = document.createElement('ul');
+    contentsEl.className = 'contents horizontal';
+
+    return contentsEl;
+}
+
 // fn: clear the displayed landmark contents
 function clearLandmarkContents() {
     const contentsEl = findElementByClassName('contents');
@@ -134,9 +169,14 @@ function clearLandmarkContents() {
 }
 
 // fn: update the displayed landmark contents
+// assumes that the landmark contents element already exists
 function updateLandmarkContents(contents: any[]) {
     console.log('updating landmark contents');
     const contentsEl = findElementByClassName('contents');
+    if (!contentsEl) {
+        console.log('no contents element found');
+        return;
+    }
     clearList(contentsEl);
 
     contents.forEach((item) => {

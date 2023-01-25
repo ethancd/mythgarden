@@ -1,10 +1,8 @@
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponseRedirect
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.urls import reverse
-from django.core.serializers import serialize
-from django.core.serializers.json import DjangoJSONEncoder
 
 from .game_logic import ActionGenerator, ActionExecutor
 from .static_helpers import srs_serialize
@@ -86,12 +84,7 @@ def action(request):
         updated_models = ActionExecutor().execute(requested_action, hero.situation)
         updated_models['actions'] = get_current_actions(hero)
 
-        results = {}
-        for k, v in updated_models.items():
-            print(f'{k}: {v}')
-            results[k] = srs_serialize(v)
-
-        # results = {k: serialize("json", v) for k, v in updated_models.items()}
+        results = {k: srs_serialize(v) for k, v in updated_models.items()}
         results['log_statement'] = requested_action.log_statement
 
         return JsonResponse(results)

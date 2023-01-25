@@ -1345,7 +1345,11 @@ class ExecuteActionsTests(TestCase):
         situation = MagicMock(spec=Situation)
 
         IMPLEMENTED_EXECUTIONS = [
-            (Action.TRA, 'Travel')
+            (Action.TRA, 'Travel'),
+            (Action.BUY, 'Buy'),
+            (Action.SEL, 'Sell'),
+            (Action.PLA, 'Plant'),
+            (Action.HAR, 'Harvest'),
         ]
 
         for action_type, display_type in Action.ACTION_TYPES:

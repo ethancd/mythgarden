@@ -228,10 +228,12 @@ class ActionExecutor:
         situation.save()
 
         situation.hero.clock.advance(action.cost_amount, action.cost_unit)
+        situation.hero.clock.save()
 
         return {
             'place': situation.place,
             'clock': situation.hero.clock,
+            'landmarks': list(situation.place.landmarks.all()),
             'landmark_contents': list(situation.contents.all()),
         }
 
@@ -242,17 +244,70 @@ class ActionExecutor:
         raise NotImplementedError()
 
     def execute_sell_action(self, action, situation):
-        raise NotImplementedError()
+        """Executes a sell action, which moves an item from the hero's inventory into the situation contents
+        and adds the price in koin to the hero's wallet"""
+
+        situation.hero.rucksack.contents.remove(action.target_object)
+        situation.hero.rucksack.save()
+
+        situation.contents.add(action.target_object)
+        situation.save()
+
+        situation.hero.wallet.money += action.cost_amount
+        situation.hero.wallet.save()
+
+        return {
+            'wallet': situation.hero.wallet,
+            'inventory': list(situation.hero.rucksack.contents.all()),
+            'landmark_contents': list(situation.contents.all()),
+        }
 
     def execute_buy_action(self, action, situation):
-        raise NotImplementedError()
+        """Executes a buy action, which moves an item from the situation contents into the hero's inventory
+        and deducts the price in koin from the hero's wallet"""
+
+        situation.hero.rucksack.contents.add(action.target_object)
+        situation.hero.rucksack.save()
+
+        situation.contents.remove(action.target_object)
+        situation.save()
+
+        situation.hero.wallet.money -= action.cost_amount
+        situation.hero.wallet.save()
+
+        return {
+            'wallet': situation.hero.wallet,
+            'inventory': list(situation.hero.rucksack.contents.all()),
+            'landmark_contents': list(situation.contents.all()),
+        }
 
     def execute_plant_action(self, action, situation):
-        raise NotImplementedError()
+        """Executes a plant action, which moves a seed from the hero's inventory into the situation contents"""
+
+        situation.hero.rucksack.contents.remove(action.target_object)
+        situation.hero.rucksack.save()
+
+        situation.contents.add(action.target_object)
+        situation.save()
+
+        return {
+            'inventory': list(situation.hero.rucksack.contents.all()),
+            'landmark_contents': list(situation.contents.all()),
+        }
 
     def execute_water_action(self, action, situation):
         raise NotImplementedError()
 
     def execute_harvest_action(self, action, situation):
-        raise NotImplementedError()
+        """Executes a harvest action, which moves a crop from the situation contents into the hero's inventory"""
 
+        situation.hero.rucksack.contents.add(action.target_object)
+        situation.hero.rucksack.save()
+
+        situation.contents.remove(action.target_object)
+        situation.save()
+
+        return {
+            'inventory': list(situation.hero.rucksack.contents.all()),
+            'landmark_contents': list(situation.contents.all()),
+        }
