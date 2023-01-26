@@ -1,30 +1,30 @@
-from .models import Bridge, Action, Item, Villager, Place, Landmark, Situation
+from .models import Bridge, Action, Item, Villager, Place, Building, Session
 
 from .static_helpers import guard_type, guard_types
 
 
 class ActionGenerator:
     def gen_available_actions(self, place, inventory, contents, villagers):
-        """Returns a list of available actions for the hero in the current situation, taking into account:
+        """Returns a list of available actions for the hero in the current session, taking into account:
         - the hero's current inventory
         - the location's current present items/occupants (contents and villagers)
-        - the place's static features (landmarks and bridges)"""
+        - the place's static features (buildings and bridges)"""
 
         available_actions = []
 
-        landmarks = list(place.landmarks.all())
+        buildings = list(place.buildings.all())
         bridges = list(Bridge.objects.filter(place_1=place) | Bridge.objects.filter(place_2=place))
 
         print('--- generating actions ---')
-        print(f'landmarks: {landmarks}')
+        print(f'buildings: {buildings}')
         print(f'bridges: {bridges}')
         print(f'villagers: {villagers}')
 
-        if any([l.landmark_type == Landmark.FIELD for l in landmarks]):
+        if any([l.building_type == Building.FIELD for l in buildings]):
             farming_actions = self.gen_farming_actions(contents, inventory)
             available_actions += farming_actions
 
-        if any([l.landmark_type == Landmark.SHOP for l in landmarks]):
+        if any([l.building_type == Building.SHOP for l in buildings]):
             shopping_actions = self.gen_shopping_actions(contents, inventory)
             available_actions += shopping_actions
 
@@ -208,106 +208,97 @@ class ActionGenerator:
 
 
 class ActionExecutor:
-    def execute(self, action, situation):
-        """Executes the given action, modifying relevant models in the situation, and returns updated
+    def execute(self, action, session):
+        """Executes the given action, modifying relevant models in the session, and returns updated
         (selecting the correct method based on the action type using a bit of meta programming, as a treat)"""
         guard_type(action, Action)
-        guard_type(situation, Situation)
+        guard_type(session, Session)
 
         ex = f'execute_{action.get_action_type_display().lower()}_action'
 
         if hasattr(self, ex) and callable(getattr(self, ex)):
-            return getattr(self, ex)(action, situation)
+            return getattr(self, ex)(action, session)
         else:
             raise Exception(f'Unknown action type: {action.get_action_type_display().lower()}')
 
-    def execute_travel_action(self, action, situation):
-        """Executes a travel action, which updates the situation's current place and ticks the clock"""
+    def execute_travel_action(self, action, session):
+        """Executes a travel action, which updates the hero's current location and ticks the clock"""
 
-        situation.place = action.target_object
-        situation.save()
+        session.location = action.target_object
+        session.clock.advance(action.cost_amount, action.cost_unit)
 
-        situation.hero.clock.advance(action.cost_amount, action.cost_unit)
-        situation.hero.clock.save()
+        session.save_data()
 
         return {
-            'place': situation.place,
-            'clock': situation.hero.clock,
-            'landmarks': list(situation.place.landmarks.all()),
-            'landmark_contents': list(situation.contents.all()),
+            'place': session.location,
+            'clock': session.clock,
+            'buildings': list(session.location.buildings.all()),
+            'contents': list(session.place_contents.all()),
         }
 
-    def execute_talk_action(self, action, situation):
+    def execute_talk_action(self, action, session):
         raise NotImplementedError()
 
-    def execute_give_action(self, action, situation):
+    def execute_give_action(self, action, session):
         raise NotImplementedError()
 
-    def execute_sell_action(self, action, situation):
-        """Executes a sell action, which moves an item from the hero's inventory into the situation contents
+    def execute_sell_action(self, action, session):
+        """Executes a sell action, which moves an item from the hero's inventory into the session contents
         and adds the price in koin to the hero's wallet"""
 
-        situation.hero.rucksack.contents.remove(action.target_object)
-        situation.hero.rucksack.save()
+        session.inventory.items.remove(action.target_object)
+        session.place_contents.add(action.target_object)
+        session.wallet.money += action.cost_amount
 
-        situation.contents.add(action.target_object)
-        situation.save()
-
-        situation.hero.wallet.money += action.cost_amount
-        situation.hero.wallet.save()
+        session.save_data()
 
         return {
-            'wallet': situation.hero.wallet,
-            'inventory': list(situation.hero.rucksack.contents.all()),
-            'landmark_contents': list(situation.contents.all()),
+            'wallet': session.wallet,
+            'inventory': list(session.inventory.items.all()),
+            'contents': list(session.place_contents.all()),
         }
 
-    def execute_buy_action(self, action, situation):
-        """Executes a buy action, which moves an item from the situation contents into the hero's inventory
+    def execute_buy_action(self, action, session):
+        """Executes a buy action, which moves an item from the session contents into the hero's inventory
         and deducts the price in koin from the hero's wallet"""
 
-        situation.hero.rucksack.contents.add(action.target_object)
-        situation.hero.rucksack.save()
+        session.inventory.items.add(action.target_object)
+        session.place_contents.remove(action.target_object)
+        session.wallet.money -= action.cost_amount
 
-        situation.contents.remove(action.target_object)
-        situation.save()
-
-        situation.hero.wallet.money -= action.cost_amount
-        situation.hero.wallet.save()
+        session.save_data()
 
         return {
-            'wallet': situation.hero.wallet,
-            'inventory': list(situation.hero.rucksack.contents.all()),
-            'landmark_contents': list(situation.contents.all()),
+            'wallet': session.wallet,
+            'inventory': list(session.inventory.items.all()),
+            'contents': list(session.place_contents.all()),
         }
 
-    def execute_plant_action(self, action, situation):
-        """Executes a plant action, which moves a seed from the hero's inventory into the situation contents"""
+    def execute_plant_action(self, action, session):
+        """Executes a plant action, which moves a seed from the hero's inventory into the session contents"""
 
-        situation.hero.rucksack.contents.remove(action.target_object)
-        situation.hero.rucksack.save()
+        session.inventory.items.remove(action.target_object)
+        session.place_contents.add(action.target_object)
 
-        situation.contents.add(action.target_object)
-        situation.save()
+        session.save_data()
 
         return {
-            'inventory': list(situation.hero.rucksack.contents.all()),
-            'landmark_contents': list(situation.contents.all()),
+            'inventory': list(session.inventory.items.all()),
+            'contents': list(session.place_contents.all()),
         }
 
-    def execute_water_action(self, action, situation):
+    def execute_water_action(self, action, session):
         raise NotImplementedError()
 
-    def execute_harvest_action(self, action, situation):
-        """Executes a harvest action, which moves a crop from the situation contents into the hero's inventory"""
+    def execute_harvest_action(self, action, session):
+        """Executes a harvest action, which moves a crop from the session contents into the hero's inventory"""
 
-        situation.hero.rucksack.contents.add(action.target_object)
-        situation.hero.rucksack.save()
+        session.inventory.items.add(action.target_object)
+        session.place_contents.remove(action.target_object)
 
-        situation.contents.remove(action.target_object)
-        situation.save()
+        session.save_data()
 
         return {
-            'inventory': list(situation.hero.rucksack.contents.all()),
-            'landmark_contents': list(situation.contents.all()),
+            'inventory': list(session.inventory.items.all()),
+            'contents': list(session.place_contents.all()),
         }

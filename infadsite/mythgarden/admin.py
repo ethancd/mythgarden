@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Hero, Inventory, Clock, Wallet, Situation, Place, Landmark, Bridge, Item
+from .models import Session, Hero, Inventory, Clock, Wallet, Place, Building, Bridge, Item
 
 
 class ClockInline(admin.TabularInline):
@@ -13,13 +13,14 @@ class WalletInline(admin.TabularInline):
     max_num = 1
 
 
-class SituationInline(admin.TabularInline):
-    model = Situation
+class HeroInline(admin.TabularInline):
+    model = Hero
     max_num = 1
 
 
-class LandmarkInline(admin.TabularInline):
-    model = Landmark
+class BuildingInline(admin.TabularInline):
+    model = Building
+    fk_name = 'surround'
     extra = 1
 
 
@@ -41,30 +42,19 @@ class ItemInline(admin.TabularInline):
 
 
 class InventoryInline(admin.TabularInline):
-    model = Inventory.contents.through
-    extra = 1
+    model = Inventory
+    max_num = 1
 
 
-class HeroAdmin(admin.ModelAdmin):
-    inlines = [ClockInline, WalletInline, SituationInline]
+class SessionAdmin(admin.ModelAdmin):
+    inlines = [HeroInline, ClockInline, WalletInline, InventoryInline]
 
 
 class PlaceAdmin(admin.ModelAdmin):
-    inlines = [LandmarkInline, Bridge1Inline, Bridge2Inline]
+    inlines = [BuildingInline, Bridge1Inline, Bridge2Inline]
 
 
-class ItemAdmin(admin.ModelAdmin):
-    inlines = [InventoryInline]
-    exclude = ['contents']
-
-
-class RucksackAdmin(admin.ModelAdmin):
-    inlines = [InventoryInline]
-
-
-admin.site.register(Hero, HeroAdmin)
+admin.site.register(Session, SessionAdmin)
 admin.site.register(Place, PlaceAdmin)
-admin.site.register(Item, ItemAdmin)
-admin.site.register(Inventory, RucksackAdmin)
-admin.site.register(Situation)
-admin.site.register(Landmark)
+admin.site.register(Item)
+admin.site.register(Building)

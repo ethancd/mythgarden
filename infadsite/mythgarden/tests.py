@@ -2,7 +2,7 @@ from django.test import TestCase
 from unittest.mock import MagicMock, patch
 from django.core.validators import ValidationError
 
-from .models import Item, Action, Villager, Place, Bridge, Landmark, Situation, Hero, Clock
+from .models import Item, Action, Villager, Place, Bridge, Building, Situation, Hero, Clock
 
 from .game_logic import ActionGenerator, ActionExecutor
 
@@ -32,7 +32,7 @@ def create_bridge(place_1, place_2, direction_1=Bridge.WEST, direction_2=Bridge.
 
 
 def create_landmark(name, place, landmark_type):
-    return Landmark.objects.create(name=name, place=place, landmark_type=landmark_type)
+    return Building.objects.create(name=name, place=place, landmark_type=landmark_type)
 
 
 def create_hero(name='Stan'):
@@ -72,7 +72,7 @@ class GenAvailableActionsTests(TestCase):
 
     def test_calls_gen_farming_actions_when_place_has_field(self):
         """Calls gen_farming_actions when place has a field landmark"""
-        create_landmark('Farm', self.farm, Landmark.FIELD)
+        create_landmark('Farm', self.farm, Building.FIELD)
 
         self.ag.gen_available_actions(self.farm, self.inventory, self.contents, self.villagers)
 
@@ -80,7 +80,7 @@ class GenAvailableActionsTests(TestCase):
 
     def test_returns_farming_actions_when_place_has_field(self):
         """Returns farming actions when place has a field landmark"""
-        create_landmark('Farm', self.farm, Landmark.FIELD)
+        create_landmark('Farm', self.farm, Building.FIELD)
 
         actions = self.ag.gen_available_actions(self.farm, self.inventory, self.contents, self.villagers)
 
@@ -94,7 +94,7 @@ class GenAvailableActionsTests(TestCase):
 
     def test_calls_gen_shopping_actions_when_place_has_shop(self):
         """Calls gen_shopping_actions when place has a shop landmark"""
-        create_landmark('Shop', self.farm, Landmark.SHOP)
+        create_landmark('Shop', self.farm, Building.SHOP)
 
         self.ag.gen_available_actions(self.farm, self.inventory, self.contents, self.villagers)
 
@@ -102,7 +102,7 @@ class GenAvailableActionsTests(TestCase):
 
     def test_returns_shopping_actions_when_place_has_shop(self):
         """Returns shopping actions when place has a shop landmark"""
-        create_landmark('Shop', self.farm, Landmark.SHOP)
+        create_landmark('Shop', self.farm, Building.SHOP)
 
         actions = self.ag.gen_available_actions(self.farm, self.inventory, self.contents, self.villagers)
 
@@ -181,7 +181,7 @@ class GenAvailableActionsTests(TestCase):
 
     def test_returns_multiple_types_of_actions_when_multiple_types_are_available(self):
         """Returns multiple types of actions when multiple types are available"""
-        create_landmark('Field', self.farm, Landmark.FIELD)
+        create_landmark('Field', self.farm, Building.FIELD)
         create_bridge(self.farm, create_place('The Forest'))
         self.villagers = [create_villager()]
 
@@ -1103,37 +1103,37 @@ class PlaceModelTests(TestCase):
         """
         If a place has a field landmark, cannot add a second field landmark
         """
-        create_landmark('Field 1', self.place, Landmark.FIELD)
+        create_landmark('Field 1', self.place, Building.FIELD)
 
         with self.assertRaises(ValidationError):
-            create_landmark('Field 2', self.place, Landmark.FIELD)
+            create_landmark('Field 2', self.place, Building.FIELD)
 
     def test_if_has_field_landmark_cannot_add_shop_landmark(self):
         """
         If a place has a field landmark, cannot add a shop landmark
         """
-        create_landmark('Field 1', self.place, Landmark.FIELD)
+        create_landmark('Field 1', self.place, Building.FIELD)
 
         with self.assertRaises(ValidationError):
-            create_landmark('Micro Shop', self.place, Landmark.SHOP)
+            create_landmark('Micro Shop', self.place, Building.SHOP)
 
     def test_if_has_shop_landmark_cannot_add_field_landmark(self):
         """
         If a place has a shop landmark, cannot add a field landmark
         """
-        create_landmark('Micro Shop', self.place, Landmark.SHOP)
+        create_landmark('Micro Shop', self.place, Building.SHOP)
 
         with self.assertRaises(ValidationError):
-            create_landmark('Field 1', self.place, Landmark.FIELD)
+            create_landmark('Field 1', self.place, Building.FIELD)
 
     def test_if_has_shop_landmark_cannot_add_second_shop_landmark(self):
         """
         If a place has a shop landmark, cannot add a second shop landmark
         """
-        create_landmark('Micro Shop', self.place, Landmark.SHOP)
+        create_landmark('Micro Shop', self.place, Building.SHOP)
 
         with self.assertRaises(ValidationError):
-            create_landmark('Secondary Micro Shop', self.place, Landmark.SHOP)
+            create_landmark('Secondary Micro Shop', self.place, Building.SHOP)
 
 
 class ClockModelTests(TestCase):

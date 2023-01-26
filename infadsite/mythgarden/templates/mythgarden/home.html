@@ -9,8 +9,8 @@ expected models:
         name
         portrait:
             url
-        clock
-        wallet
+    clock
+    wallet
     place:
         name
         image:
@@ -20,10 +20,9 @@ expected models:
     actions[]:
         description
         display_cost
-    landmarks[]:
+    buildings[]:
         name
-        is_field_or_shop
-    landmark_contents[]:
+    contents[]:
         name
 -->
 <div class="page">
@@ -38,8 +37,8 @@ expected models:
             <li class="location">{{ place.name }}</li>
             <li class="stats">
                 <ul class="vertical stats">
-                    <li class="clock">{{ hero.clock }}</li>
-                    <li class="wallet">{{ hero.wallet }}</li>
+                    <li class="clock">{{ clock }}</li>
+                    <li class="wallet">{{ wallet }}</li>
                 </ul>
             </li>
         </ul>
@@ -69,19 +68,18 @@ expected models:
         <section class="canvas">
             <img class="landscape" src="{{ place.image.url }}">
             <ul class="landmarks vertical">
-                {% for landmark in landmarks %}
+                {% for building in buildings %}
                     <li class="landmark">
-                        <span class="landmark-name">{{ landmark.name }}</span>
-                        {% if landmark.is_field_or_shop %}
-                            <ul class="contents horizontal">
-                                {% for item in landmark_contents %}
-                                    <li class="item">
-                                        <span class="item-name">{{ item.name }}</span>
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
+                        <span class="landmark-name">{{ building.name }}</span>
+                    </li>
                 {% endfor %}
+                <ul class="contents horizontal">
+                    {% for item in contents %}
+                        <li class="item">
+                            <span class="item-name">{{ item.name }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
             </ul>
             <ul class="log vertical">
                 <li class="log-entry cursor">&nbsp;</li>

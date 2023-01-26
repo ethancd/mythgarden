@@ -1,6 +1,6 @@
 from django.http import HttpResponseRedirect
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.urls import reverse
 
@@ -8,23 +8,23 @@ from .game_logic import ActionGenerator, ActionExecutor
 from .static_helpers import srs_serialize
 import json
 
-from .models import Hero
+from .models import Session
 
 
 @ensure_csrf_cookie
 def home(request):
-    hero = Hero.objects.all()[:1].get()
-    place = hero.situation.place
-
-    actions = get_current_actions(hero)
+    session = Session.objects.find_or_create(pk=request.session['session_key'])
+    actions = get_current_actions(session)
 
     context = {
-        'hero': hero,
-        'place': place,
-        'landmarks': place.landmarks.all(),
-        'landmark_contents': hero.situation.contents.all(),
-        'inventory': hero.rucksack.contents.all(),
+        'hero': session.hero,
+        'clock': session.clock,
+        'wallet': session.wallet,
+        'place': session.location,
+        'inventory': session.inventory.items.all(),
         'actions': actions,
+        'buildings': session.location.buildings.all(),
+        'contents': session.place_contents.all(),
     }
 
     template_name = 'mythgarden/home.html'
@@ -47,11 +47,13 @@ def action(request):
         ?inventory: [{
             name: string,
         }],
-        ?landmarks: [{
+        ?buildings: [{
             name: string,
-            is_field_or_shop: bool,
+            image: {
+                url: string
+            },
         }],
-        ?landmark_contents: [{
+        ?contents: [{
             name: string,
         }],
         log_statement: str,
@@ -64,25 +66,24 @@ def action(request):
     if request.method == 'POST':
         description = json.loads(request.body)['description']
 
-        hero = Hero.objects.all()[:1].get()
-        actions = get_current_actions(hero)
+        session = Session.objects.get_object_or_404(pk=request.session['session_key'])
+        actions = get_current_actions(session)
 
         print(f'looking for {description} in {actions}')
-
         matches = [a for a in actions if a.description == description]
 
         if len(matches) == 1:
             requested_action = matches[0]
         elif len(matches) > 1:
-            raise Exception(f'Multiple actions match description: {description}')
+            return JsonResponse({'error': f'Multiple actions match description: {description}'})
         else:  # len(matches) == 0
             return JsonResponse({'error': 'requested action not available'})
 
-        if not can_pay_cost(hero, requested_action):
+        if not can_pay_cost(session.wallet, requested_action):
             return JsonResponse({'error': 'hero cannot afford requested action'})
 
-        updated_models = ActionExecutor().execute(requested_action, hero.situation)
-        updated_models['actions'] = get_current_actions(hero)
+        updated_models = ActionExecutor().execute(requested_action, session)
+        updated_models['actions'] = get_current_actions(session)
 
         results = {k: srs_serialize(v) for k, v in updated_models.items()}
         results['log_statement'] = requested_action.log_statement
@@ -92,22 +93,20 @@ def action(request):
         return HttpResponseRedirect(reverse('mythgarden:home'))
 
 
-def get_current_actions(hero):
-    inventory = list(hero.rucksack.contents.all())
-
-    situation = hero.situation
-    place = situation.place
-    contents = list(situation.contents.all())
-    villagers = list(situation.occupants.all())
+def get_current_actions(session):
+    inventory = list(session.inventory.items.all())
+    place = session.location
+    contents = list(session.location.session_data.contents.all())
+    villagers = list(session.location.session_data.occupants.all())
 
     actions = ActionGenerator().gen_available_actions(place, inventory, contents, villagers)
 
     return actions
 
 
-def can_pay_cost(hero, requested_action):
+def can_pay_cost(wallet, requested_action):
     if requested_action.is_cost_in_money:
-        return hero.wallet.money >= requested_action.cost_amount
+        return wallet.money >= requested_action.cost_amount
     else:
         return True
 

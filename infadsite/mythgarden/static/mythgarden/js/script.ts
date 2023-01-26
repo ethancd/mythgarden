@@ -22,7 +22,7 @@ function executeAction(element: HTMLElement) {
     const description = getActionDescription(element);
 
     post('action', {description})
-        .then((response) => {
+        .then((response: any) => {
             console.log(response);
             if (response.error) {
                 throw response;
@@ -30,7 +30,7 @@ function executeAction(element: HTMLElement) {
             updatePage(response);
 
             element.classList.toggle('executing');
-        }).catch((response) => {
+        }).catch((response: any) => {
             console.log(response)
             passErrorToUser(response);
             element.classList.toggle('executing');
@@ -168,7 +168,9 @@ function createLandmarkContentsElement() {
 function clearLandmarkContents() {
     const contentsEl = findElementByClassName('contents');
 
-    clearList(contentsEl);
+    if (contentsEl) {
+        clearList(contentsEl);
+    }
 }
 
 // fn: update the displayed landmark contents

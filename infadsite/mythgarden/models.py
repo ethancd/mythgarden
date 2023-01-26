@@ -6,29 +6,12 @@ from django.dispatch import receiver
 from django.core.validators import MinValueValidator, MaxValueValidator, ValidationError
 
 
-class Hero(models.Model):
-    name = models.CharField(max_length=255)
-    portrait = models.ImageField(upload_to='portraits/', null=True, blank=True)
-
-    def __str__(self):
-        return self.name
-
-
-@receiver(post_save, sender=Hero)
-def create_belongings(sender, instance, created, **kwargs):
-    if created:
-        Inventory.objects.create(hero=instance)
-        Clock.objects.create(hero=instance)
-        Wallet.objects.create(hero=instance)
-        Situation.objects.create(hero=instance)
-
-
 class Inventory(models.Model):
-    hero = models.OneToOneField(Hero, on_delete=models.CASCADE, primary_key=True)
-    contents = models.ManyToManyField('Item', blank=True)
+    session = models.OneToOneField('Session', on_delete=models.CASCADE, primary_key=True)
+    items = models.ManyToManyField('Item', blank=True)
 
     def __str__(self):
-        return str(self.hero) + "'s rucksack"
+        return self.items.all().__str__()
 
 
 class Clock(models.Model):
@@ -50,7 +33,7 @@ class Clock(models.Model):
         (SATURDAY, 'Sat'),
     ]
 
-    hero = models.OneToOneField(Hero, on_delete=models.CASCADE, primary_key=True)
+    session = models.OneToOneField('Session', on_delete=models.CASCADE, primary_key=True)
     day = models.CharField(default=SUNDAY, max_length=9, choices=DAYS_OF_WEEK)
     time = models.FloatField(default=0, validators=[MinValueValidator(0.0), MaxValueValidator(24.0)])
 
@@ -104,7 +87,7 @@ class Clock(models.Model):
 
 
 class Wallet(models.Model):
-    hero = models.OneToOneField(Hero, on_delete=models.CASCADE, primary_key=True)
+    session = models.OneToOneField('Session', on_delete=models.CASCADE, primary_key=True)
     money = models.IntegerField(default=0)
 
     def __str__(self):
@@ -117,6 +100,20 @@ class Wallet(models.Model):
 class Place(models.Model):
     name = models.CharField(max_length=255)
     image = models.ImageField(upload_to='places/', null=True, blank=True)
+
+    # FARM = 'FARM'
+    # SHOP = 'SHOP'
+    # WILD = 'WILD'
+    # HOME = 'HOME'
+    #
+    # LAND_TYPES = [
+    #     (FARM, 'Farm'),
+    #     (SHOP, 'Shop'),
+    #     (WILD, 'Wild'),
+    #     (HOME, 'Home'),
+    # ]
+    #
+    # land_type = models.CharField(max_length=4, choices=LAND_TYPES)
 
     @classmethod
     def get_default_pk(cls):
@@ -135,46 +132,78 @@ class Place(models.Model):
         }
 
 
-class Landmark(models.Model):
-    FIELD = 'FIELD'
-    SHOP = 'SHOP'
-    HOUSE = 'HOUSE'
+class Building(Place):
+    surround = models.ForeignKey(Place, on_delete=models.CASCADE, related_name='buildings')
 
-    LANDMARK_TYPES = [
-        (FIELD, 'Field'),
-        (SHOP, 'Shop'),
-        (HOUSE, 'House'),
-    ]
+    def __str__(self):
+        return super().__str__()
 
-    name = models.CharField(max_length=255)
-    image = models.ImageField(upload_to='landmarks/', null=True, blank=True)
-    place = models.ForeignKey(Place, on_delete=models.CASCADE, related_name='landmarks')
-    landmark_type = models.CharField(max_length=5, choices=LANDMARK_TYPES, default=HOUSE)
+    def serialize(self):
+        return super().serialize()
+
+
+class PlaceState(models.Model):
+    session = models.ForeignKey('Session', on_delete=models.CASCADE, related_name='place_states')
+    place = models.ForeignKey(Place, on_delete=models.CASCADE, related_name='states')
+
+    contents = models.ManyToManyField('Item', blank=True)
+    occupants = models.ManyToManyField('Villager', blank=True)
+
+
+class Session(models.Model):
+    key = models.CharField(max_length=32, primary_key=True)
+    location = models.ForeignKey(Place, on_delete=models.SET_NULL, null=True, default=Place.get_default_pk())
+
+    def save_data(self):
+        """save objects related to the session, excluding:
+        place_session_data for non-current locations,
+        villager_session_data for non-present villagers
+        """
+
+        self.save()
+        self.hero.save()
+        self.clock.save()
+        self.wallet.save()
+        self.inventory.save()
+        self.location_state.save()
+        self.occupant_states.save()
+
+    @property
+    def location_state(self):
+        return self.place_states(place=self.location).first()
+
+    @property
+    def place_contents(self):
+        return self.location_state.contents.all()
+
+    @property
+    def occupants(self):
+        return self.location_state.occupants.all()
+
+    @property
+    def occupant_states(self):
+        return self.villager_states.filter(villager__in=self.occupants.all())
+
+    def __str__(self):
+        return self.key
+
+
+@receiver(post_save, sender=Session)
+def create_belongings(sender, instance, created, **kwargs):
+    if created:
+        Hero.objects.create(session=instance)
+        Inventory.objects.create(session=instance)
+        Clock.objects.create(session=instance)
+        Wallet.objects.create(session=instance)
+
+
+class Hero(models.Model):
+    session = models.OneToOneField(Session, on_delete=models.CASCADE, primary_key=True)
+    name = models.CharField(max_length=255, default='Squall')
+    portrait = models.ImageField(upload_to='portraits/', null=True, blank=True)
 
     def __str__(self):
         return self.name
-
-    def serialize(self):
-        return {
-            'name': self.name,
-            'is_field_or_shop': self.is_field_or_shop(),
-        }
-
-    def save(self, *args, **kwargs):
-        self.guard_landmark_constraints_on_place(self.place, self.landmark_type)
-        return super().save(*args, **kwargs)
-
-    def is_field_or_shop(self):
-        return self.landmark_type in [Landmark.FIELD, Landmark.SHOP]
-
-    # noinspection PyMethodMayBeStatic
-    def guard_landmark_constraints_on_place(self, place, landmark_type):
-        """ Ensures that only one of {field or shop} exists per place. """
-        landmark_is_field_or_shop = landmark_type in [Landmark.FIELD, Landmark.SHOP]
-        place_has_field_or_shop = place.landmarks.filter(landmark_type__in=[Landmark.FIELD, Landmark.SHOP]).exists()
-
-        if landmark_is_field_or_shop and place_has_field_or_shop:
-            raise ValidationError('A place can only have one of: field, shop.')
 
 
 class Item(models.Model):
@@ -210,10 +239,18 @@ class Item(models.Model):
 class Villager(models.Model):
     name = models.CharField(max_length=255)
     portrait = models.ImageField(upload_to='portraits/', null=True, blank=True)
-    home = models.ForeignKey(Landmark, on_delete=models.SET_NULL, null=True, blank=True)
+    home = models.ForeignKey(Building, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return self.name
+
+
+class VillagerSessionData(models.Model):
+    session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name='villager_states')
+    villager = models.ForeignKey(Villager, on_delete=models.CASCADE, related_name='states')
+
+    affinity = models.IntegerField(default=0)
+    location = models.ForeignKey(Place, on_delete=models.CASCADE, related_name='villagers')  # , default=villager.home)
 
 
 class Bridge(models.Model):
@@ -238,17 +275,6 @@ class Bridge(models.Model):
     def __str__(self):
         return str(self.place_1) + ' on the ' + self.get_direction_1_display() + ' is adjacent to ' + str(
             self.place_2) + ' to the ' + self.get_direction_2_display()
-
-
-class Situation(models.Model):
-    hero = models.OneToOneField(Hero, on_delete=models.CASCADE, related_name='situation')
-    place = models.ForeignKey(Place, on_delete=models.CASCADE, default=Place.get_default_pk)
-
-    contents = models.ManyToManyField('Item', blank=True)
-    occupants = models.ManyToManyField('Villager', blank=True)
-
-    def __str__(self):
-        return str(self.hero) + ' in ' + str(self.place)
 
 
 class Action(models.Model):
