@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Hero, Rucksack, Clock, Wallet, Situation, Place, Landmark, Bridge, Item
+from .models import Hero, Inventory, Clock, Wallet, Situation, Place, Landmark, Bridge, Item
 
 
 class ClockInline(admin.TabularInline):
@@ -41,7 +41,7 @@ class ItemInline(admin.TabularInline):
 
 
 class InventoryInline(admin.TabularInline):
-    model = Rucksack.contents.through
+    model = Inventory.contents.through
     extra = 1
 
 
@@ -65,6 +65,6 @@ class RucksackAdmin(admin.ModelAdmin):
 admin.site.register(Hero, HeroAdmin)
 admin.site.register(Place, PlaceAdmin)
 admin.site.register(Item, ItemAdmin)
-admin.site.register(Rucksack, RucksackAdmin)
+admin.site.register(Inventory, RucksackAdmin)
 admin.site.register(Situation)
 admin.site.register(Landmark)

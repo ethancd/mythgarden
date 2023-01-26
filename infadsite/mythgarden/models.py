@@ -17,13 +17,13 @@ class Hero(models.Model):
 @receiver(post_save, sender=Hero)
 def create_belongings(sender, instance, created, **kwargs):
     if created:
-        Rucksack.objects.create(hero=instance)
+        Inventory.objects.create(hero=instance)
         Clock.objects.create(hero=instance)
         Wallet.objects.create(hero=instance)
         Situation.objects.create(hero=instance)
 
 
-class Rucksack(models.Model):
+class Inventory(models.Model):
     hero = models.OneToOneField(Hero, on_delete=models.CASCADE, primary_key=True)
     contents = models.ManyToManyField('Item', blank=True)
 
