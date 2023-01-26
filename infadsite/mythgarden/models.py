@@ -101,19 +101,19 @@ class Place(models.Model):
     name = models.CharField(max_length=255)
     image = models.ImageField(upload_to='places/', null=True, blank=True)
 
-    # FARM = 'FARM'
-    # SHOP = 'SHOP'
-    # WILD = 'WILD'
-    # HOME = 'HOME'
-    #
-    # LAND_TYPES = [
-    #     (FARM, 'Farm'),
-    #     (SHOP, 'Shop'),
-    #     (WILD, 'Wild'),
-    #     (HOME, 'Home'),
-    # ]
-    #
-    # land_type = models.CharField(max_length=4, choices=LAND_TYPES)
+    FARM = 'FARM'
+    SHOP = 'SHOP'
+    WILD = 'WILD'
+    HOME = 'HOME'
+
+    LAND_TYPES = [
+        (FARM, 'Farm'),
+        (SHOP, 'Shop'),
+        (WILD, 'Wild'),
+        (HOME, 'Home'),
+    ]
+
+    land_type = models.CharField(max_length=4, choices=LAND_TYPES, default=WILD)
 
     @classmethod
     def get_default_pk(cls):
@@ -245,7 +245,7 @@ class Villager(models.Model):
         return self.name
 
 
-class VillagerSessionData(models.Model):
+class VillagerState(models.Model):
     session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name='villager_states')
     villager = models.ForeignKey(Villager, on_delete=models.CASCADE, related_name='states')
 

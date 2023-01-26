@@ -7,10 +7,16 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('mythgarden', '0015_rename_rucksack_inventory_alter_clock_day.py'),
+        ('mythgarden', '0015_rename_rucksack_inventory_alter_clock_day'),
     ]
 
     operations = [
+        migrations.DeleteModel(
+            name='Situation',
+        ),
+        migrations.DeleteModel(
+            name='Landmark',
+        ),
         migrations.CreateModel(
             name='Building',
             fields=[
@@ -45,74 +51,14 @@ class Migration(migrations.Migration):
                 ('villager', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='states', to='mythgarden.villager')),
             ],
         ),
-        migrations.RemoveField(
-            model_name='landmark',
-            name='place',
-        ),
         migrations.RenameField(
             model_name='inventory',
             old_name='contents',
             new_name='items',
         ),
-        migrations.RemoveField(
-            model_name='clock',
-            name='hero',
-        ),
-        migrations.RemoveField(
-            model_name='hero',
-            name='id',
-        ),
-        migrations.RemoveField(
-            model_name='inventory',
-            name='hero',
-        ),
-        migrations.RemoveField(
-            model_name='wallet',
-            name='hero',
-        ),
-        migrations.AlterField(
-            model_name='hero',
-            name='name',
-            field=models.CharField(default='Squall', max_length=255),
-        ),
-        migrations.DeleteModel(
-            name='Situation',
-        ),
-        migrations.AddField(
-            model_name='placestate',
-            name='session',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='place_states', to='mythgarden.session'),
-        ),
-        migrations.AddField(
-            model_name='clock',
-            name='session',
-            field=models.OneToOneField(default=1, on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='mythgarden.session'),
-            preserve_default=False,
-        ),
-        migrations.AddField(
-            model_name='hero',
-            name='session',
-            field=models.OneToOneField(default=1, on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='mythgarden.session'),
-            preserve_default=False,
-        ),
-        migrations.AddField(
-            model_name='inventory',
-            name='session',
-            field=models.OneToOneField(default=1, on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='mythgarden.session'),
-            preserve_default=False,
-        ),
-        migrations.AddField(
-            model_name='wallet',
-            name='session',
-            field=models.OneToOneField(default=1, on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='mythgarden.session'),
-            preserve_default=False,
-        ),
         migrations.AlterField(
             model_name='villager',
             name='home',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='mythgarden.building'),
-        ),
-        migrations.DeleteModel(
-            name='Landmark',
         ),
     ]
