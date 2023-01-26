@@ -24,6 +24,9 @@ function executeAction(element: HTMLElement) {
     post('action', {description})
         .then((response) => {
             console.log(response);
+            if (response.error) {
+                throw response;
+            }
             updatePage(response);
 
             element.classList.toggle('executing');
