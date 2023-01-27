@@ -5,6 +5,8 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.validators import MinValueValidator, MaxValueValidator, ValidationError
 
+from .static_helpers import generate_uuid
+
 
 class Inventory(models.Model):
     session = models.OneToOneField('Session', on_delete=models.CASCADE, primary_key=True)
@@ -64,7 +66,6 @@ class Clock(models.Model):
             self.time = self.time % 24
             self.advance_day(days_to_add)
 
-    # noinspection PyMethodMayBeStatic
     def parse_duration(self, duration, unit):
         if unit == Action.HOUR:
             return float(duration)
@@ -97,28 +98,50 @@ class Wallet(models.Model):
         return str(self)
 
 
+
+def validate_place_type_matches_class(value, cls):
+    if cls == Place and value not in Place.LAND_TYPES:
+        raise ValidationError(f"Invalid place type: {value} must be a land type for {cls}")
+    elif cls == Building and value not in Place.BUILDING_TYPES:
+        raise ValidationError(f"Invalid place type: {value} must be a building type for {cls}")
+    else:
+        return value
+
+
 class Place(models.Model):
     name = models.CharField(max_length=255)
-    image = models.ImageField(upload_to='places/', null=True, blank=True)
+    image = models.ImageField(upload_to='places/', default='places/idyllic-green-farm.png')
 
     FARM = 'FARM'
-    SHOP = 'SHOP'
     WILD = 'WILD'
+    TOWN = 'TOWN'
+    SHOP = 'SHOP'
     HOME = 'HOME'
 
-    LAND_TYPES = [
+    LAND_TYPES = [FARM, WILD, TOWN]
+    BUILDING_TYPES = [SHOP, HOME]
+
+    PLACE_TYPES = [
         (FARM, 'Farm'),
-        (SHOP, 'Shop'),
         (WILD, 'Wild'),
+        (TOWN, 'Town'),
+        (SHOP, 'Shop'),
         (HOME, 'Home'),
     ]
 
-    land_type = models.CharField(max_length=4, choices=LAND_TYPES, default=WILD)
+    place_type = models.CharField(max_length=4, choices=PLACE_TYPES, default=WILD)
 
     @classmethod
     def get_default_pk(cls):
         place, created = cls.objects.get_or_create(name='The Farm')
         return place.pk
+
+    def clean(self):
+        validate_place_type_matches_class(self.place_type, self.__class__)
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -151,8 +174,9 @@ class PlaceState(models.Model):
 
 
 class Session(models.Model):
-    key = models.CharField(max_length=32, primary_key=True)
-    location = models.ForeignKey(Place, on_delete=models.SET_NULL, null=True, default=Place.get_default_pk())
+    key = models.CharField(max_length=32, primary_key=True, default=generate_uuid)
+    location = models.ForeignKey(Place, on_delete=models.SET_NULL, null=True, default=Place.get_default_pk)
+    skip_post_save_signal = models.BooleanField(default=False)
 
     def save_data(self):
         """save objects related to the session, excluding:
@@ -166,11 +190,11 @@ class Session(models.Model):
         self.wallet.save()
         self.inventory.save()
         self.location_state.save()
-        self.occupant_states.save()
+        self.occupant_states.save
 
     @property
     def location_state(self):
-        return self.place_states(place=self.location).first()
+        return self.place_states.get_or_create(place=self.location)[0]
 
     @property
     def place_contents(self):
@@ -182,7 +206,11 @@ class Session(models.Model):
 
     @property
     def occupant_states(self):
-        return self.villager_states.filter(villager__in=self.occupants.all())
+        occupant_states = []
+        for villager in self.occupants.all():
+            occupant_states.add(self.villager_states.get_or_create(villager=villager).first())
+
+        return occupant_states
 
     def __str__(self):
         return self.key
@@ -190,7 +218,7 @@ class Session(models.Model):
 
 @receiver(post_save, sender=Session)
 def create_belongings(sender, instance, created, **kwargs):
-    if created:
+    if created and not instance.skip_post_save_signal:
         Hero.objects.create(session=instance)
         Inventory.objects.create(session=instance)
         Clock.objects.create(session=instance)
@@ -200,7 +228,7 @@ def create_belongings(sender, instance, created, **kwargs):
 class Hero(models.Model):
     session = models.OneToOneField(Session, on_delete=models.CASCADE, primary_key=True)
     name = models.CharField(max_length=255, default='Squall')
-    portrait = models.ImageField(upload_to='portraits/', null=True, blank=True)
+    portrait = models.ImageField(upload_to='portraits/', default='portraits/squall-farmer.png')
 
     def __str__(self):
         return self.name

@@ -1,4 +1,5 @@
 from collections.abc import Iterable
+import uuid
 
 
 def guard_types(lst, cls):
@@ -21,3 +22,7 @@ def srs_serialize(obj):
         return [srs_serialize(i) for i in obj]
     else:
         return obj.serialize()
+
+
+def generate_uuid():
+    return uuid.uuid4().hex

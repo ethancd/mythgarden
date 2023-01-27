@@ -13,7 +13,17 @@ from .models import Session
 
 @ensure_csrf_cookie
 def home(request):
-    session = Session.objects.find_or_create(pk=request.session['session_key'])
+    session_key = request.session.get('session_key', None)
+
+    print(f'----------Session key is {session_key}-----------')
+
+    if session_key is None:
+        session = Session.objects.create()
+        print(f'----------Created new session with key {session.pk}-----------')
+        request.session['session_key'] = session.pk
+    else:
+        session = Session.objects.get_or_create(pk=session_key)[0]
+
     actions = get_current_actions(session)
 
     context = {
@@ -96,8 +106,8 @@ def action(request):
 def get_current_actions(session):
     inventory = list(session.inventory.items.all())
     place = session.location
-    contents = list(session.location.session_data.contents.all())
-    villagers = list(session.location.session_data.occupants.all())
+    contents = list(session.place_contents.all())
+    villagers = list(session.occupants.all())
 
     actions = ActionGenerator().gen_available_actions(place, inventory, contents, villagers)
 

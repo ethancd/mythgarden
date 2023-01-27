@@ -6,7 +6,7 @@ from .static_helpers import guard_type, guard_types
 class ActionGenerator:
     def gen_available_actions(self, place, inventory, contents, villagers):
         """Returns a list of available actions for the hero in the current session, taking into account:
-        - the hero's current inventory
+        - the current inventory
         - the location's current present items/occupants (contents and villagers)
         - the place's static features (buildings and bridges)"""
 
@@ -20,11 +20,11 @@ class ActionGenerator:
         print(f'bridges: {bridges}')
         print(f'villagers: {villagers}')
 
-        if any([l.building_type == Building.FIELD for l in buildings]):
+        if place.place_type == Place.FARM:
             farming_actions = self.gen_farming_actions(contents, inventory)
             available_actions += farming_actions
 
-        if any([l.building_type == Building.SHOP for l in buildings]):
+        if place.place_type == Place.SHOP:
             shopping_actions = self.gen_shopping_actions(contents, inventory)
             available_actions += shopping_actions
 

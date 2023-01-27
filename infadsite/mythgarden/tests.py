@@ -2,7 +2,7 @@ from django.test import TestCase
 from unittest.mock import MagicMock, patch
 from django.core.validators import ValidationError
 
-from .models import Item, Action, Villager, Place, Bridge, Building, Situation, Hero, Clock
+from .models import Item, Action, Villager, Place, Bridge, Building, Hero, Clock, Session
 
 from .game_logic import ActionGenerator, ActionExecutor
 
@@ -23,20 +23,24 @@ def create_villager(name='Lea', home=None):
     return Villager.objects.create(name=name, home=home)
 
 
-def create_place(name='The Farm'):
-    return Place.objects.create(name=name)
+def create_place(name='Nowheresville', place_type=Place.TOWN):
+    return Place.objects.create(name=name, place_type=place_type)
 
 
 def create_bridge(place_1, place_2, direction_1=Bridge.WEST, direction_2=Bridge.EAST):
     return Bridge.objects.create(place_1=place_1, place_2=place_2, direction_1=direction_1, direction_2=direction_2)
 
 
-def create_landmark(name, place, landmark_type):
-    return Building.objects.create(name=name, place=place, landmark_type=landmark_type)
+def create_building(name, place, place_type):
+    return Building.objects.create(name=name, surround=place, place_type=place_type)
 
 
 def create_hero(name='Stan'):
     return Hero.objects.create(name=name)
+
+
+def create_session(skip_post_save_signal=True):
+    return Session.objects.create(skip_post_save_signal=skip_post_save_signal)
 
 
 class GenAvailableActionsTests(TestCase):
@@ -59,101 +63,106 @@ class GenAvailableActionsTests(TestCase):
         self.social_actions = ['talk', 'give']
         self.ag.gen_social_actions.return_value = self.social_actions
 
-        self.farm = create_place('The Farm')
+        self.town = create_place('The Town', Place.TOWN)
+        self.farm = create_place('The Farm', Place.FARM)
         self.inventory = []
         self.contents = []
         self.villagers = []
 
     def test_returns_list(self):
         """Returns a list"""
-        actions = self.ag.gen_available_actions(self.farm, self.inventory, self.contents, self.villagers)
+        actions = self.ag.gen_available_actions(self.town, self.inventory, self.contents, self.villagers)
 
         self.assertIsInstance(actions, list)
 
-    def test_calls_gen_farming_actions_when_place_has_field(self):
-        """Calls gen_farming_actions when place has a field landmark"""
-        create_landmark('Farm', self.farm, Building.FIELD)
-
+    def test_calls_gen_farming_actions_when_place_type_is_farm(self):
+        """Calls gen_farming_actions when place_type is farm"""
         self.ag.gen_available_actions(self.farm, self.inventory, self.contents, self.villagers)
 
         self.ag.gen_farming_actions.assert_called_once_with(self.contents, self.inventory)
 
-    def test_returns_farming_actions_when_place_has_field(self):
-        """Returns farming actions when place has a field landmark"""
-        create_landmark('Farm', self.farm, Building.FIELD)
-
+    def test_returns_farming_actions_when_place_type_is_farm(self):
+        """Returns farming actions when place_type is farm"""
         actions = self.ag.gen_available_actions(self.farm, self.inventory, self.contents, self.villagers)
 
         self.assertEqual(actions, self.farming_actions)
 
-    def test_does_not_call_gen_farming_actions_when_place_does_not_have_field(self):
-        """Does not call gen_farming_actions when place is missing a field landmark"""
-        self.ag.gen_available_actions(self.farm, self.inventory, self.contents, self.villagers)
+    def test_does_not_call_gen_farming_actions_when_place_is_not_place_type_farm(self):
+        """Does not call gen_farming_actions when place_type is not farm"""
+        self.ag.gen_available_actions(self.town, self.inventory, self.contents, self.villagers)
 
         self.ag.gen_farming_actions.assert_not_called()
 
-    def test_calls_gen_shopping_actions_when_place_has_shop(self):
-        """Calls gen_shopping_actions when place has a shop landmark"""
-        create_landmark('Shop', self.farm, Building.SHOP)
+    def test_calls_gen_shopping_actions_when_place_is_a_shop_building(self):
+        """Calls gen_shopping_actions when place is a building with place_type shop"""
+        self.shop = create_building('Shop', self.town, Building.SHOP)
 
-        self.ag.gen_available_actions(self.farm, self.inventory, self.contents, self.villagers)
+        self.ag.gen_available_actions(self.shop, self.inventory, self.contents, self.villagers)
 
         self.ag.gen_shopping_actions.assert_called_once_with(self.contents, self.inventory)
 
-    def test_returns_shopping_actions_when_place_has_shop(self):
+    def test_returns_shopping_actions_when_place_is_a_shop_building(self):
         """Returns shopping actions when place has a shop landmark"""
-        create_landmark('Shop', self.farm, Building.SHOP)
+        self.shop = create_building('Shop', self.town, Building.SHOP)
 
-        actions = self.ag.gen_available_actions(self.farm, self.inventory, self.contents, self.villagers)
+        actions = self.ag.gen_available_actions(self.shop, self.inventory, self.contents, self.villagers)
 
         self.assertEqual(actions, self.shopping_actions)
 
-    def test_does_not_call_gen_shopping_actions_when_place_does_not_have_shop(self):
-        """Does not call gen_shopping_actions when place is missing a shop landmark"""
+    def test_does_not_call_gen_shopping_actions_when_place_is_not_a_building(self):
+        """Does not call gen_shopping_actions when place is not a building"""
         self.ag.gen_available_actions(self.farm, self.inventory, self.contents, self.villagers)
+
+        self.ag.gen_shopping_actions.assert_not_called()
+
+    def test_does_not_call_gen_shopping_actions_when_place_is_a_building_but_not_shop(self):
+        """Does not call gen_shopping_actions when place is a building but not a shop"""
+        self.neighbor_house = create_building('Neighbor House', self.town, Building.HOME)
+
+        self.ag.gen_available_actions(self.neighbor_house, self.inventory, self.contents, self.villagers)
 
         self.ag.gen_shopping_actions.assert_not_called()
 
     def test_calls_gen_travel_actions_when_place_is_place_1_of_a_saved_bridge(self):
         """Calls gen_travel_actions when place is place_1 of a bridge"""
-        bridges = [create_bridge(self.farm, create_place('The Forest'))]
+        bridges = [create_bridge(self.town, create_place('The Forest'))]
 
-        self.ag.gen_available_actions(self.farm, self.inventory, self.contents, self.villagers)
+        self.ag.gen_available_actions(self.town, self.inventory, self.contents, self.villagers)
 
-        self.ag.gen_travel_actions.assert_called_once_with(self.farm, bridges)
+        self.ag.gen_travel_actions.assert_called_once_with(self.town, bridges)
 
     def test_returns_travel_actions_when_place_is_place_1_of_a_saved_bridge(self):
         """Returns travel actions when place is place_1 of a bridge"""
-        create_bridge(self.farm, create_place('The Forest'))
+        create_bridge(self.town, create_place('The Forest'))
 
-        actions = self.ag.gen_available_actions(self.farm, self.inventory, self.contents, self.villagers)
+        actions = self.ag.gen_available_actions(self.town, self.inventory, self.contents, self.villagers)
 
         self.assertEqual(actions, self.travel_actions)
 
     def test_calls_gen_travel_actions_when_place_is_place_2_of_a_saved_bridge(self):
         """Calls gen_travel_actions when place is place_2 of a bridge"""
-        bridges = [create_bridge(create_place('The Forest'), self.farm)]
+        bridges = [create_bridge(create_place('The Forest'), self.town)]
 
-        self.ag.gen_available_actions(self.farm, self.inventory, self.contents, self.villagers)
+        self.ag.gen_available_actions(self.town, self.inventory, self.contents, self.villagers)
 
-        self.ag.gen_travel_actions.assert_called_once_with(self.farm, bridges)
+        self.ag.gen_travel_actions.assert_called_once_with(self.town, bridges)
 
     def test_calls_gen_travel_actions_when_place_is_part_of_multiple_bridges(self):
         """Calls gen_travel_actions when place is part of multiple bridges"""
         bridges = [
-            create_bridge(self.farm, create_place('The Forest')),
-            create_bridge(create_place('The Mountains'), self.farm)
+            create_bridge(self.town, create_place('The Forest')),
+            create_bridge(create_place('The Mountains'), self.town)
         ]
 
-        self.ag.gen_available_actions(self.farm, self.inventory, self.contents, self.villagers)
+        self.ag.gen_available_actions(self.town, self.inventory, self.contents, self.villagers)
 
-        self.ag.gen_travel_actions.assert_called_once_with(self.farm, bridges)
+        self.ag.gen_travel_actions.assert_called_once_with(self.town, bridges)
 
     def test_does_not_call_gen_travel_actions_when_place_is_not_in_a_saved_bridge(self):
         """Does not call gen_travel_actions when place is not a bridge"""
         create_bridge(create_place('The Forest'), create_place('The Mountains'))
 
-        self.ag.gen_available_actions(self.farm, self.inventory, self.contents, self.villagers)
+        self.ag.gen_available_actions(self.town, self.inventory, self.contents, self.villagers)
 
         self.ag.gen_travel_actions.assert_not_called()
 
@@ -161,7 +170,7 @@ class GenAvailableActionsTests(TestCase):
         """Calls gen_social_actions when villagers are present"""
         self.villagers = [create_villager()]
 
-        self.ag.gen_available_actions(self.farm, self.inventory, self.contents, self.villagers)
+        self.ag.gen_available_actions(self.town, self.inventory, self.contents, self.villagers)
 
         self.ag.gen_social_actions.assert_called_once_with(self.villagers, self.inventory)
 
@@ -169,19 +178,18 @@ class GenAvailableActionsTests(TestCase):
         """Returns social actions when villagers are present"""
         self.villagers = [create_villager()]
 
-        actions = self.ag.gen_available_actions(self.farm, self.inventory, self.contents, self.villagers)
+        actions = self.ag.gen_available_actions(self.town, self.inventory, self.contents, self.villagers)
 
         self.assertEqual(actions, self.social_actions)
 
     def test_does_not_call_gen_social_actions_when_no_villagers_are_present(self):
         """Does not call gen_social_actions when no villagers are present"""
-        self.ag.gen_available_actions(self.farm, self.inventory, self.contents, self.villagers)
+        self.ag.gen_available_actions(self.town, self.inventory, self.contents, self.villagers)
 
         self.ag.gen_social_actions.assert_not_called()
 
     def test_returns_multiple_types_of_actions_when_multiple_types_are_available(self):
         """Returns multiple types of actions when multiple types are available"""
-        create_landmark('Field', self.farm, Building.FIELD)
         create_bridge(self.farm, create_place('The Forest'))
         self.villagers = [create_villager()]
 
@@ -1095,50 +1103,10 @@ class ActionModelTests(TestCase):
         self.assertEqual(action.display_cost, '₭5')
 
 
-class PlaceModelTests(TestCase):
-    def setUp(self):
-        self.place = create_place()
-
-    def test_if_has_field_landmark_cannot_add_second_field_landmark(self):
-        """
-        If a place has a field landmark, cannot add a second field landmark
-        """
-        create_landmark('Field 1', self.place, Building.FIELD)
-
-        with self.assertRaises(ValidationError):
-            create_landmark('Field 2', self.place, Building.FIELD)
-
-    def test_if_has_field_landmark_cannot_add_shop_landmark(self):
-        """
-        If a place has a field landmark, cannot add a shop landmark
-        """
-        create_landmark('Field 1', self.place, Building.FIELD)
-
-        with self.assertRaises(ValidationError):
-            create_landmark('Micro Shop', self.place, Building.SHOP)
-
-    def test_if_has_shop_landmark_cannot_add_field_landmark(self):
-        """
-        If a place has a shop landmark, cannot add a field landmark
-        """
-        create_landmark('Micro Shop', self.place, Building.SHOP)
-
-        with self.assertRaises(ValidationError):
-            create_landmark('Field 1', self.place, Building.FIELD)
-
-    def test_if_has_shop_landmark_cannot_add_second_shop_landmark(self):
-        """
-        If a place has a shop landmark, cannot add a second shop landmark
-        """
-        create_landmark('Micro Shop', self.place, Building.SHOP)
-
-        with self.assertRaises(ValidationError):
-            create_landmark('Secondary Micro Shop', self.place, Building.SHOP)
-
-
 class ClockModelTests(TestCase):
     def setUp(self):
-        self.clock = Clock(hero=create_hero(), day=Clock.MONDAY, time=9)
+        session = create_session()
+        self.clock = Clock(session=session, day=Clock.MONDAY, time=9)
 
     def test_parse_duration_returns_a_float(self):
         """
@@ -1342,7 +1310,7 @@ class ExecuteActionsTests(TestCase):
         Each action type calls the correct execute_action method
         """
         ae = ActionExecutor()
-        situation = MagicMock(spec=Situation)
+        session = MagicMock(spec=Session)
 
         IMPLEMENTED_EXECUTIONS = [
             (Action.TRA, 'Travel'),
@@ -1363,32 +1331,32 @@ class ExecuteActionsTests(TestCase):
                 self.assertTrue(callable(getattr(ae, ex)))
 
                 with patch.object(ae, ex) as mock:
-                    ae.execute(action, situation)
-                    mock.assert_called_with(action, situation)
+                    ae.execute(action, session)
+                    mock.assert_called_with(action, session)
 
                 if not is_implemented:
                     with self.assertRaises(NotImplementedError):
-                        ae.execute(action, situation)
+                        ae.execute(action, session)
 
     def test_throw_error_if_passed_non_action(self):
         """
         Throw error if passed non-action
         """
         ae = ActionExecutor()
-        situation = MagicMock(spec=Situation)
+        session = MagicMock(spec=Session)
 
         with self.assertRaises(TypeError):
-            ae.execute('not an action', situation)
+            ae.execute('not an action', session)
 
-    def test_throw_error_if_passed_non_situation(self):
+    def test_throw_error_if_passed_non_session(self):
         """
-        Throw error if passed non-situation
+        Throw error if passed non-session
         """
         ae = ActionExecutor()
         action = MagicMock(spec=Action)
 
         with self.assertRaises(TypeError):
-            ae.execute(action, 'not a situation')
+            ae.execute(action, 'not a session')
 
 
 
