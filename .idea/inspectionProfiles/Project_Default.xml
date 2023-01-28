@@ -12,6 +12,7 @@
       <option name="ignoredIdentifiers">
         <list>
           <option value="infadsite.mythgarden.game_logic.gen_shopping_actions.*" />
+          <option value="infadsite.mythgarden.management.commands.seed_database.mythgarden" />
         </list>
       </option>
     </inspection_tool>

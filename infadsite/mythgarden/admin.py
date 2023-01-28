@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Session, Hero, Inventory, Clock, Wallet, Place, Building, Bridge, Item, PlaceState
+from .models import Session, Hero, Inventory, Clock, Wallet, Place, Building, Bridge, Item, PlaceState, Villager
 
 
 class ClockInline(admin.TabularInline):
@@ -63,3 +63,4 @@ admin.site.register(Wallet)
 admin.site.register(Hero)
 admin.site.register(Inventory)
 admin.site.register(PlaceState)
+admin.site.register(Villager)

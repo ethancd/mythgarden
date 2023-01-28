@@ -109,7 +109,7 @@ def validate_place_type_matches_class(value, cls):
 
 
 class Place(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     image = models.ImageField(upload_to='places/', default='places/idyllic-green-farm.png')
 
     FARM = 'FARM'
@@ -153,6 +153,9 @@ class Place(models.Model):
                 'url': self.image.url if self.image else None
             },
         }
+
+    def natural_key(self):
+        return self.name
 
 
 class Building(Place):
