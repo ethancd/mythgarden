@@ -98,7 +98,6 @@ class Wallet(models.Model):
         return str(self)
 
 
-
 def validate_place_type_matches_class(value, cls):
     if cls == Place and value not in Place.LAND_TYPES:
         raise ValidationError(f"Invalid place type: {value} must be a land type for {cls}")
@@ -106,6 +105,11 @@ def validate_place_type_matches_class(value, cls):
         raise ValidationError(f"Invalid place type: {value} must be a building type for {cls}")
     else:
         return value
+
+
+class PlaceManager(models.Manager):
+    def get_by_natural_key(self, name):
+        return self.get(name=name)
 
 
 class Place(models.Model):
@@ -131,6 +135,8 @@ class Place(models.Model):
 
     place_type = models.CharField(max_length=4, choices=PLACE_TYPES, default=WILD)
 
+    objects = PlaceManager()
+
     @classmethod
     def get_default_pk(cls):
         place, created = cls.objects.get_or_create(name='The Farm')
@@ -153,9 +159,6 @@ class Place(models.Model):
                 'url': self.image.url if self.image else None
             },
         }
-
-    def natural_key(self):
-        return self.name
 
 
 class Building(Place):
