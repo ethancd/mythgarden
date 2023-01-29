@@ -9,8 +9,10 @@ expected models:
         name
         portrait:
             url
-    clock
+    clock:
+        display
     wallet
+        display
     place:
         name
         image:
@@ -22,7 +24,7 @@ expected models:
         display_cost
     buildings[]:
         name
-    contents[]:
+    place_contents[]:
         name
 -->
 <div class="page">
@@ -37,8 +39,8 @@ expected models:
             <li class="location">{{ place.name }}</li>
             <li class="stats">
                 <ul class="vertical stats">
-                    <li class="clock">{{ clock }}</li>
-                    <li class="wallet">{{ wallet }}</li>
+                    <li class="clock">{{ clock.display }}</li>
+                    <li class="wallet">{{ wallet.display }}</li>
                 </ul>
             </li>
         </ul>
@@ -67,19 +69,19 @@ expected models:
 
         <section class="canvas">
             <img class="landscape" src="{{ place.image.url }}">
-            <ul class="landmarks vertical">
+            <ul class="buildings vertical">
                 {% for building in buildings %}
-                    <li class="landmark">
-                        <span class="landmark-name">{{ building.name }}</span>
+                    <li class="building">
+                        <span class="building-name">{{ building.name }}</span>
                     </li>
                 {% endfor %}
-                <ul class="contents horizontal">
-                    {% for item in contents %}
-                        <li class="item">
-                            <span class="item-name">{{ item.name }}</span>
-                        </li>
-                    {% endfor %}
-                </ul>
+            </ul>
+            <ul class="contents horizontal">
+                {% for item in place_contents %}
+                    <li class="item">
+                        <span class="item-name">{{ item.name }}</span>
+                    </li>
+                {% endfor %}
             </ul>
             <ul class="log vertical">
                 <li class="log-entry cursor">&nbsp;</li>

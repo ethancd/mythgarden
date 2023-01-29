@@ -233,7 +233,7 @@ class ActionExecutor:
             'place': session.location,
             'clock': session.clock,
             'buildings': list(session.location.buildings.all()),
-            'contents': list(session.place_contents.all()),
+            'place_contents': list(session.location_state.contents.all()),
         }
 
     def execute_talk_action(self, action, session):
@@ -247,7 +247,7 @@ class ActionExecutor:
         and adds the price in koin to the hero's wallet"""
 
         session.inventory.items.remove(action.target_object)
-        session.place_contents.add(action.target_object)
+        session.location_state.contents.add(action.target_object)
         session.wallet.money += action.cost_amount
 
         session.save_data()
@@ -255,7 +255,7 @@ class ActionExecutor:
         return {
             'wallet': session.wallet,
             'inventory': list(session.inventory.items.all()),
-            'contents': list(session.place_contents.all()),
+            'place_contents': list(session.location_state.contents.all()),
         }
 
     def execute_buy_action(self, action, session):
@@ -263,7 +263,7 @@ class ActionExecutor:
         and deducts the price in koin from the hero's wallet"""
 
         session.inventory.items.add(action.target_object)
-        session.place_contents.remove(action.target_object)
+        session.location_state.contents.remove(action.target_object)
         session.wallet.money -= action.cost_amount
 
         session.save_data()
@@ -271,20 +271,20 @@ class ActionExecutor:
         return {
             'wallet': session.wallet,
             'inventory': list(session.inventory.items.all()),
-            'contents': list(session.place_contents.all()),
+            'place_contents': list(session.location_state.contents.all()),
         }
 
     def execute_plant_action(self, action, session):
         """Executes a plant action, which moves a seed from the hero's inventory into the session contents"""
 
         session.inventory.items.remove(action.target_object)
-        session.place_contents.add(action.target_object)
+        session.location_state.contents.add(action.target_object)
 
         session.save_data()
 
         return {
             'inventory': list(session.inventory.items.all()),
-            'contents': list(session.place_contents.all()),
+            'place_contents': list(session.location_state.contents.all()),
         }
 
     def execute_water_action(self, action, session):
@@ -294,11 +294,11 @@ class ActionExecutor:
         """Executes a harvest action, which moves a crop from the session contents into the hero's inventory"""
 
         session.inventory.items.add(action.target_object)
-        session.place_contents.remove(action.target_object)
+        session.location_state.contents.remove(action.target_object)
 
         session.save_data()
 
         return {
             'inventory': list(session.inventory.items.all()),
-            'contents': list(session.place_contents.all()),
+            'place_contents': list(session.location_state.contents.all()),
         }

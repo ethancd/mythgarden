@@ -34,7 +34,7 @@ def home(request):
         'inventory': session.inventory.items.all(),
         'actions': actions,
         'buildings': session.location.buildings.all(),
-        'contents': session.place_contents.all(),
+        'place_contents': session.location_state.contents.all(),
     }
 
     template_name = 'mythgarden/home.html'
@@ -63,7 +63,7 @@ def action(request):
                 url: string
             },
         }],
-        ?contents: [{
+        ?place_contents: [{
             name: string,
         }],
         log_statement: str,
@@ -76,7 +76,7 @@ def action(request):
     if request.method == 'POST':
         description = json.loads(request.body)['description']
 
-        session = Session.objects.get_object_or_404(pk=request.session['session_key'])
+        session = get_object_or_404(Session, pk=request.session['session_key'])
         actions = get_current_actions(session)
 
         print(f'looking for {description} in {actions}')
@@ -106,7 +106,7 @@ def action(request):
 def get_current_actions(session):
     inventory = list(session.inventory.items.all())
     place = session.location
-    contents = list(session.place_contents.all())
+    contents = list(session.location_state.contents.all())
     villagers = list(session.occupants.all())
 
     actions = ActionGenerator().gen_available_actions(place, inventory, contents, villagers)
@@ -115,7 +115,7 @@ def get_current_actions(session):
 
 
 def can_pay_cost(wallet, requested_action):
-    if requested_action.is_cost_in_money:
+    if requested_action.is_cost_in_money():
         return wallet.money >= requested_action.cost_amount
     else:
         return True

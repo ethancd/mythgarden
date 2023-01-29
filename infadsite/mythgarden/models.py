@@ -13,7 +13,7 @@ class Inventory(models.Model):
     items = models.ManyToManyField('Item', blank=True)
 
     def __str__(self):
-        return self.items.all().__str__()
+        return 'Inventory ' + self.session.abbr_key_tag()
 
 
 class Clock(models.Model):
@@ -40,10 +40,14 @@ class Clock(models.Model):
     time = models.FloatField(default=0, validators=[MinValueValidator(0.0), MaxValueValidator(24.0)])
 
     def __str__(self):
-        return self.get_day_display() + ' ' + self.get_time_display()
+        return 'Clock ' + self.session.abbr_key_tag()
 
     def serialize(self):
-        return str(self)
+        return self.display
+
+    @property
+    def display(self):
+        return self.get_day_display() + ' ' + self.get_time_display()
 
     def get_time_display(self):
         hours = int(self.time) % 12
@@ -92,10 +96,14 @@ class Wallet(models.Model):
     money = models.IntegerField(default=0)
 
     def __str__(self):
-        return Action.KOIN_SIGN + str(self.money)
+        return 'Wallet ' + self.session.abbr_key_tag()
 
     def serialize(self):
-        return str(self)
+        return self.display
+
+    @property
+    def display(self):
+        return Action.KOIN_SIGN + str(self.money)
 
 
 def validate_place_type_matches_class(value, cls):
@@ -178,6 +186,9 @@ class PlaceState(models.Model):
     contents = models.ManyToManyField('Item', blank=True)
     occupants = models.ManyToManyField('Villager', blank=True)
 
+    def __str__(self):
+        return f'{self.place} state ' + self.session.abbr_key_tag()
+
 
 class Session(models.Model):
     key = models.CharField(max_length=32, primary_key=True, default=generate_uuid)
@@ -196,15 +207,11 @@ class Session(models.Model):
         self.wallet.save()
         self.inventory.save()
         self.location_state.save()
-        self.occupant_states.save
+        [o.save() for o in self.occupant_states]
 
     @property
     def location_state(self):
         return self.place_states.get_or_create(place=self.location)[0]
-
-    @property
-    def place_contents(self):
-        return self.location_state.contents.all()
 
     @property
     def occupants(self):
@@ -218,8 +225,11 @@ class Session(models.Model):
 
         return occupant_states
 
+    def abbr_key_tag(self):
+        return f'({self.key[:8]}...)'
+
     def __str__(self):
-        return self.key
+        return 'Session ' + self.abbr_key_tag()
 
 
 @receiver(post_save, sender=Session)
@@ -237,7 +247,7 @@ class Hero(models.Model):
     portrait = models.ImageField(upload_to='portraits/', default='portraits/squall-farmer.png')
 
     def __str__(self):
-        return self.name
+        return 'Hero ' + self.session.abbr_key_tag()
 
 
 class Item(models.Model):
@@ -285,6 +295,9 @@ class VillagerState(models.Model):
 
     affinity = models.IntegerField(default=0)
     location = models.ForeignKey(Place, on_delete=models.CASCADE, related_name='villagers')  # , default=villager.home)
+
+    def __str__(self):
+        return f'{self.villager} state ' + self.session.abbr_key_tag()
 
 
 class Bridge(models.Model):

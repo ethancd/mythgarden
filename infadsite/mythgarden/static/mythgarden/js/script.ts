@@ -51,8 +51,8 @@ function updatePage(response: any) {
     if (response.wallet) setWalletValue(response.wallet);
     if (response.place) updateLocation(response.place);
     if (response.inventory) updateInventory(response.inventory);
-    if (response.landmarks) updateLandmarks(response.landmarks);
-    if (response.landmark_contents) updateLandmarkContents(response.landmark_contents);
+    if (response.buildings) updateBuildings(response.buildings);
+    if (response.place_contents) updatePlaceContents(response.place_contents);
 
     appendLogEntry(response.log_statement);
     updateActions(response.actions);
@@ -93,7 +93,7 @@ function updateLocation(location: any) {
 
     setLocationNameValue(location.name);
     updateLocationLandscapeImage(location.image.url);
-    clearLandmarkContents();
+    clearPlaceContents();
 }
 
 // fn: update the displayed location name
@@ -130,42 +130,29 @@ function createItemElement(item: any) {
     return itemEl;
 }
 
-// fn: update the displayed landmarks
-function updateLandmarks(landmarks: any[]) {
-    console.log('updating landmarks');
-    const landmarksEl = findElementByClassName('landmarks');
-    clearList(landmarksEl);
+// fn: update the displayed buildings
+function updateBuildings(buildings: any[]) {
+    console.log('updating buildings');
+    const buildingsEl = findElementByClassName('buildings');
+    clearList(buildingsEl);
 
-    landmarks.forEach((landmark) => {
-        const landmarkEl = createLandmarkElement(landmark);
-        landmarksEl.appendChild(landmarkEl);
+    buildings.forEach((building) => {
+        const buildingEl = createBuildingElement(building);
+        buildingsEl.appendChild(buildingEl);
     });
 }
 
-// fn: create a landmark element
-function createLandmarkElement(landmark: any) {
-    const landmarkEl = document.createElement('li');
-    landmarkEl.className = 'landmark';
-    landmarkEl.innerHTML = `<span class="landmark-name">${landmark.name}</span>`;
+// fn: create a building element
+function createBuildingElement(building: any) {
+    const buildingEl = document.createElement('li');
+    buildingEl.className = 'building';
+    buildingEl.innerHTML = `<span class="building-name">${building.name}</span>`;
 
-    if (landmark.is_field_or_shop) {
-        landmarkEl.appendChild(createLandmarkContentsElement());
-    }
-
-    return landmarkEl;
+    return buildingEl;
 }
 
-// fn: create an empty landmark contents element
-// actual contents will be filled by updateLandmarkContents
-function createLandmarkContentsElement() {
-    const contentsEl = document.createElement('ul');
-    contentsEl.className = 'contents horizontal';
-
-    return contentsEl;
-}
-
-// fn: clear the displayed landmark contents
-function clearLandmarkContents() {
+// fn: clear the displayed place contents
+function clearPlaceContents() {
     const contentsEl = findElementByClassName('contents');
 
     if (contentsEl) {
@@ -173,10 +160,9 @@ function clearLandmarkContents() {
     }
 }
 
-// fn: update the displayed landmark contents
-// assumes that the landmark contents element already exists
-function updateLandmarkContents(contents: any[]) {
-    console.log('updating landmark contents');
+// fn: update the displayed place contents
+function updatePlaceContents(place_contents: any[]) {
+    console.log('updating place contents');
     const contentsEl = findElementByClassName('contents');
     if (!contentsEl) {
         console.log('no contents element found');
@@ -184,7 +170,7 @@ function updateLandmarkContents(contents: any[]) {
     }
     clearList(contentsEl);
 
-    contents.forEach((item) => {
+    place_contents.forEach((item) => {
         const itemEl = createItemElement(item);
         contentsEl.appendChild(itemEl);
     });
