@@ -8,7 +8,7 @@ import re
 from mythgarden.models import *
 from ._command_helpers import str_to_class, snakecase_to_titlecase
 
-DEFAULT = 'default'
+SKIP_VALUES = ['default', 'none', 'null', 'skip']
 
 
 def parse_fk_cell(field_name, field_value):
@@ -82,10 +82,11 @@ class Command(BaseCommand):
                     self.stdout.write(f'reading row {reader.line_num} as blank row')
 
                     if cls is not None:
-                        self.stdout.write(f'Done with {cls.__name__} for now,'
-                                          f'created {per_model_created_count} and found {per_model_found_count}')
+                        self.stdout.write(self.style.SUCCESS(f'{cls.__name__} complete: '
+                                          f'created {per_model_created_count} and found {per_model_found_count}'))
                         per_model_created_count = 0
                         per_model_found_count = 0
+                        cls = None
 
                     expecting_header = True
                     continue
@@ -119,15 +120,15 @@ class Command(BaseCommand):
                 cleaned_field_names = field_names.copy()
 
                 for i, field_name in enumerate(field_names):
-                    if field_name.startswith('fk__'):
+                    if field_name.startswith('fk__') and field_values[i] not in SKIP_VALUES:
                         cleaned_field_name, foreign_instance = parse_fk_cell(field_name, field_values[i])
 
                         cleaned_field_names[i] = cleaned_field_name
                         field_values[i] = foreign_instance
 
                 # we zip the field names & values into a dict of kwargs,
-                # but we'll skip any fields that have the value 'default'
-                kwargs = {k: v for k, v in zip(cleaned_field_names, field_values) if v != DEFAULT}
+                # but we'll skip any fields that have the value 'default', 'none', (or any other value in SKIP_VALUES)
+                kwargs = {k: v for k, v in zip(cleaned_field_names, field_values) if v not in SKIP_VALUES}
 
                 instance, created = cls.objects.get_or_create(**kwargs)
 
@@ -135,14 +136,15 @@ class Command(BaseCommand):
                     self.stdout.write(f'row {reader.line_num}: {cls.__name__} with kwargs {kwargs}'
                                       f'gives {instance}, and created? {created}')
 
-                if options['verbosity'] >= 2:
-                    if created:
-                        created_count += 1
-                        per_model_created_count += 1
+                if created:
+                    created_count += 1
+                    per_model_created_count += 1
+                    if options['verbosity'] >= 2:
                         self.stdout.write(self.style.SUCCESS(f'Used {cls.__name__} with kwargs {kwargs} to create {instance}'))
-                    else:
-                        found_count += 1
-                        per_model_found_count += 1
+                else:
+                    found_count += 1
+                    per_model_found_count += 1
+                    if options['verbosity'] >= 2:
                         self.stdout.write(self.style.WARNING(f'Found {cls.__name__} with kwargs {kwargs}'))
 
         self.stdout.write(self.style.SUCCESS(

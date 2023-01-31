@@ -192,7 +192,7 @@ class PlaceState(models.Model):
 
 class Session(models.Model):
     key = models.CharField(max_length=32, primary_key=True, default=generate_uuid)
-    location = models.ForeignKey(Place, on_delete=models.SET_NULL, null=True, default=Place.get_default_pk)
+    location = models.ForeignKey(Place, on_delete=models.CASCADE, null=True, default=Place.get_default_pk)
     skip_post_save_signal = models.BooleanField(default=False)
 
     def save_data(self):
@@ -282,11 +282,19 @@ class Item(models.Model):
 
 class Villager(models.Model):
     name = models.CharField(max_length=255)
-    portrait = models.ImageField(upload_to='portraits/', null=True, blank=True)
+    full_name = models.CharField(max_length=255, null=True, blank=True)
+    friendliness = models.IntegerField(default=4, validators=[MinValueValidator(1), MaxValueValidator(7)])
+    portrait = models.ImageField(upload_to='portraits/', null=True, blank=True, default='portraits/squall-farmer.png')
     home = models.ForeignKey(Building, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.full_name:
+            self.full_name = self.name
+
+        return super().save(*args, **kwargs)
 
 
 class VillagerState(models.Model):
@@ -355,9 +363,9 @@ class Action(models.Model):
     KOIN_SIGN = '₭'
 
     COST_UNITS = [
-        (MIN, 'm'),
-        (HOUR, 'h'),
-        (DAY, 'd'),
+        (MIN, 'min'),
+        (HOUR, 'hour'),
+        (DAY, 'day'),
         (KOIN, KOIN_SIGN),
     ]
 
@@ -399,7 +407,7 @@ class Action(models.Model):
         if self.is_cost_in_money():
             return self.get_cost_unit_display() + str(self.cost_amount)
         else:
-            return str(self.cost_amount) + self.get_cost_unit_display()
+            return str(self.cost_amount) + ' ' + self.get_cost_unit_display()
 
     def is_cost_in_money(self):
         return self.cost_unit in self.MONEY_UNITS
