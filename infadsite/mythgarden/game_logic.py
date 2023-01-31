@@ -28,6 +28,18 @@ class ActionGenerator:
             shopping_actions = self.gen_shopping_actions(contents, inventory)
             available_actions += shopping_actions
 
+        if len(buildings) > 0:
+            enter_actions = self.gen_enter_actions(buildings)
+            available_actions += enter_actions
+
+        try:
+            building = place.building
+            if building.surround is not None:
+                exit_action = self.gen_exit_action(building, building.surround)
+                available_actions += [exit_action]
+        except Building.DoesNotExist:
+            pass
+
         if len(bridges) > 0:
             travel_actions = self.gen_travel_actions(place, bridges)
             available_actions += travel_actions
@@ -75,6 +87,17 @@ class ActionGenerator:
 
         for item in inventory:
             actions.append(self.gen_sell_action(item))
+
+        return actions
+
+    def gen_enter_actions(self, buildings):
+        """Returns a list of enter actions: what buildings can be entered"""
+        guard_types(buildings, Building)
+
+        actions = []
+
+        for building in buildings:
+            actions.append(self.gen_enter_action(building))
 
         return actions
 
@@ -159,6 +182,28 @@ class ActionGenerator:
             cost_amount=item.price,
             cost_unit=Action.KOIN,
             log_statement=f'You bought a {item.name} for {item.price} koin.',
+        )
+
+    def gen_enter_action(self, building):
+        """Returns an action that enters given building"""
+        return Action(
+            description=f'Enter {building.name}',
+            action_type=Action.TRA,
+            target_object=building,
+            cost_amount=0,
+            cost_unit=Action.MIN,
+            log_statement=f'You entered {building.name}.',
+        )
+
+    def gen_exit_action(self, building, surround):
+        """Returns an action that exits the current place"""
+        return Action(
+            description=f'Exit',
+            action_type=Action.TRA,
+            target_object=surround,
+            cost_amount=0,
+            cost_unit=Action.MIN,
+            log_statement=f'You exited {building.name} back to {surround.name}.',
         )
 
     def gen_plant_action(self, seed):

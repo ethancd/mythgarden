@@ -333,6 +333,8 @@ class Action(models.Model):
     HAR = 'HARVEST'
     BUY = 'BUY'
     SEL = 'SELL'
+    ENT = 'ENTER'
+    EXT = 'EXIT'
 
     ACTION_TYPES = [
         (TRA, 'Travel'),
