@@ -1,23 +1,14 @@
 from django.core.management.base import BaseCommand, CommandError
-import csv
+from django.core.management import call_command
 import sys
+import csv
 import re
 
 # noinspection PyUnresolvedReferences
 from mythgarden.models import *
+from ._command_helpers import str_to_class, snakecase_to_titlecase
 
 DEFAULT = 'default'
-
-
-def str_to_class(classname: str):
-    try:
-        return getattr(sys.modules[__name__], classname)
-    except AttributeError:
-        raise CommandError(f'Could not find class {classname}')
-
-
-def snakecase_to_titlecase(snakecase_str: str):
-    return ''.join([s.capitalize() for s in snakecase_str.split('_')])
 
 
 def parse_fk_cell(field_name, field_value):
@@ -36,7 +27,7 @@ def parse_fk_cell(field_name, field_value):
 
     foreign_classname_snakecase, cleaned_field_name = re.match(r'^fk__(\w+)__(\w+)', field_name).group(1, 2)
     foreign_classname = snakecase_to_titlecase(foreign_classname_snakecase)
-    foreign_cls = str_to_class(foreign_classname)
+    foreign_cls = str_to_class(sys.modules[__name__], foreign_classname)
 
     foreign_instance = foreign_cls.objects.get_by_natural_key(field_value)
     if foreign_instance is None:
@@ -50,8 +41,16 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('path', type=str, help='Path to csv file containing initial data')
+        parser.add_argument('--flush-table', type=str, nargs='*', help='Flush the specified table(s) before seeding')
 
     def handle(self, *args, **options):
+        if options['flush_table']:
+            try:
+                call_command('flush_table', table=options['flush_table'])
+            except CommandError as e:
+                self.stdout.write(self.style.ERROR(f'Could not flush table(s): {e}. Halting execution.'))
+                return
+
         with open(options['path']) as f:
             reader = csv.reader(f)
 
@@ -96,7 +95,7 @@ class Command(BaseCommand):
                 # ... although strip out any blank columns
                 if expecting_header:
                     self.stdout.write(f'reading row {reader.line_num} as header: classname {row[0]}, field_names {row[1:]}')
-                    cls = str_to_class(row[0])
+                    cls = str_to_class(sys.modules[__name__], row[0])
                     field_names = [v for v in row[1:] if v != '']
                     expecting_header = False
                     continue
