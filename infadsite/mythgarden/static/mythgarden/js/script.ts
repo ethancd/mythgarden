@@ -53,6 +53,7 @@ function updatePage(response: any) {
     if (response.inventory) updateInventory(response.inventory);
     if (response.buildings) updateBuildings(response.buildings);
     if (response.place_contents) updatePlaceContents(response.place_contents);
+    if (response.villagers) updateVillagers(response.villagers);
 
     appendLogEntry(response.log_statement);
     updateActions(response.actions);
@@ -174,6 +175,27 @@ function updatePlaceContents(place_contents: any[]) {
         const itemEl = createItemElement(item);
         contentsEl.appendChild(itemEl);
     });
+}
+
+// fn: update the displayed villagers
+function updateVillagers(villagers: any[]) {
+    console.log('updating villagers');
+    const villagersEl = findElementByClassName('villagers');
+    clearList(villagersEl);
+
+    villagers.forEach((villager) => {
+        const villagerEl = createVillagerElement(villager);
+        villagersEl.appendChild(villagerEl);
+    });
+}
+
+// fn: create a villager element
+function createVillagerElement(villager: any) {
+    const villagerEl = document.createElement('li');
+    villagerEl.className = 'villager';
+    villagerEl.innerHTML = `<span class="villager-name">${villager.name}</span>`;
+
+    return villagerEl;
 }
 
 // fn: append a log entry based on the passed text

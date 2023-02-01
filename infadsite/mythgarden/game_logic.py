@@ -1,3 +1,5 @@
+import random
+
 from .models import Bridge, Action, Item, Villager, Place, Building, Session
 
 from .static_helpers import guard_type, guard_types
@@ -15,38 +17,30 @@ class ActionGenerator:
         buildings = list(place.buildings.all())
         bridges = list(Bridge.objects.filter(place_1=place) | Bridge.objects.filter(place_2=place))
 
-        print('--- generating actions ---')
-        print(f'buildings: {buildings}')
-        print(f'bridges: {bridges}')
-        print(f'villagers: {villagers}')
-
         if place.place_type == Place.FARM:
-            farming_actions = self.gen_farming_actions(contents, inventory)
-            available_actions += farming_actions
+            available_actions += self.gen_farming_actions(contents, inventory)
 
         if place.place_type == Place.SHOP:
-            shopping_actions = self.gen_shopping_actions(contents, inventory)
-            available_actions += shopping_actions
+            available_actions += self.gen_shopping_actions(contents, inventory)
+
+        if place.place_type in Place.WILD_TYPES:
+            available_actions += self.gen_gather_actions(place)
 
         if len(buildings) > 0:
-            enter_actions = self.gen_enter_actions(buildings)
-            available_actions += enter_actions
+            available_actions += self.gen_enter_actions(buildings)
 
         try:
             building = place.building
             if building.surround is not None:
-                exit_action = self.gen_exit_action(building, building.surround)
-                available_actions += [exit_action]
+                available_actions += [self.gen_exit_action(building, building.surround)]
         except Building.DoesNotExist:
             pass
 
         if len(bridges) > 0:
-            travel_actions = self.gen_travel_actions(place, bridges)
-            available_actions += travel_actions
+            available_actions += self.gen_travel_actions(place, bridges)
 
         if len(villagers) > 0:
-            social_actions = self.gen_social_actions(villagers, inventory)
-            available_actions += social_actions
+            available_actions += self.gen_social_actions(villagers, inventory)
 
         return available_actions
 
@@ -87,6 +81,21 @@ class ActionGenerator:
 
         for item in inventory:
             actions.append(self.gen_sell_action(item))
+
+        return actions
+
+    def gen_gather_actions(self, place):
+        """Returns a list of gathering actions tied to the current place type"""
+        guard_type(place, Place)
+
+        actions = []
+
+        if place.place_type == Place.FOREST:
+            actions.append(self.gen_foraging_action())
+        elif place.place_type == Place.MOUNTAIN:
+            actions.append(self.gen_digging_action())
+        elif place.place_type == Place.BEACH:
+            actions.append(self.gen_fishing_action())
 
         return actions
 
@@ -251,6 +260,35 @@ class ActionGenerator:
             log_statement=f'You travelled {display_direction} to {destination.name}.',
         )
 
+    def gen_fishing_action(self):
+        """Returns an action that catches a fish"""
+        return Action(
+            description='Go fishing',
+            action_type=Action.GAT,
+            cost_amount=1,
+            cost_unit=Action.HOUR,
+            log_statement='You caught a {result}!',
+        )
+
+    def gen_digging_action(self):
+        """Returns an action that digs for minerals, gems, fossils, etc"""
+        return Action(
+            description='Dig for something interesting',
+            action_type=Action.GAT,
+            cost_amount=1,
+            cost_unit=Action.HOUR,
+            log_statement='You dug up a {result}!',
+        )
+
+    def gen_foraging_action(self):
+        """Returns an action that forages for herbs, plants, etc"""
+        return Action(
+            description='Forage for plants',
+            action_type=Action.GAT,
+            cost_amount=1,
+            cost_unit=Action.HOUR,
+            log_statement='You found a {result}!',
+        )
 
 class ActionExecutor:
     def execute(self, action, session):
@@ -274,12 +312,13 @@ class ActionExecutor:
 
         session.save_data()
 
-        return {
+        return ({
             'place': session.location,
             'clock': session.clock,
             'buildings': list(session.location.buildings.all()),
             'place_contents': list(session.location_state.contents.all()),
-        }
+            'villagers': list(session.occupants.all())
+        }, action.log_statement)
 
     def execute_talk_action(self, action, session):
         raise NotImplementedError()
@@ -297,11 +336,11 @@ class ActionExecutor:
 
         session.save_data()
 
-        return {
+        return ({
             'wallet': session.wallet,
             'inventory': list(session.inventory.items.all()),
             'place_contents': list(session.location_state.contents.all()),
-        }
+        }, action.log_statement)
 
     def execute_buy_action(self, action, session):
         """Executes a buy action, which moves an item from the session contents into the hero's inventory
@@ -313,11 +352,11 @@ class ActionExecutor:
 
         session.save_data()
 
-        return {
+        return ({
             'wallet': session.wallet,
             'inventory': list(session.inventory.items.all()),
             'place_contents': list(session.location_state.contents.all()),
-        }
+        }, action.log_statement)
 
     def execute_plant_action(self, action, session):
         """Executes a plant action, which moves a seed from the hero's inventory into the session contents"""
@@ -327,10 +366,10 @@ class ActionExecutor:
 
         session.save_data()
 
-        return {
+        return ({
             'inventory': list(session.inventory.items.all()),
             'place_contents': list(session.location_state.contents.all()),
-        }
+        }, action.log_statement)
 
     def execute_water_action(self, action, session):
         raise NotImplementedError()
@@ -343,7 +382,46 @@ class ActionExecutor:
 
         session.save_data()
 
-        return {
+        return ({
             'inventory': list(session.inventory.items.all()),
             'place_contents': list(session.location_state.contents.all()),
-        }
+        }, action.log_statement)
+
+    def execute_gather_action(self, action, session):
+        """Executes a gather action, which finds a random item in the current location's item pool
+        and adds a copy to the hero's inventory"""
+
+        item = self.pull_item_from_pool(session.location)
+        session.inventory.items.add(item)
+        session.clock.advance(action.cost_amount, action.cost_unit)
+
+        session.save_data()
+
+        log_statement = action.log_statement.format(result=item.name)
+
+        return ({
+            'inventory': list(session.inventory.items.all()),
+            'clock': session.clock,
+        }, log_statement)
+
+    def pull_item_from_pool(self, location):
+        """Returns a random item from the given location's item pool, weighted by rarity"""
+
+        # Pick a rarity, find an item of that rarity;
+        # if none found, try again with another rarity;
+        # if no items at all, error out
+        rarities = [r for r in Item.RARITIES]
+        while len(rarities) > 0:
+            weights = [Item.RARITY_WEIGHTS[r] for r in rarities]
+            rarity = random.choice(rarities, weights=weights)
+            choices = location.item_pool.filter(rarity=rarity)
+
+            if choices.count() > 0:
+                item = choices.order_by('?').first()
+                return item
+            else:
+                print(f'No items found in {location.name} of rarity {rarity}, trying other rarities...')
+                rarities.remove(rarity)
+                continue
+
+        raise ValueError(f'No items found in location {location.name} of any rarity')

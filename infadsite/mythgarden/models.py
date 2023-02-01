@@ -106,15 +106,6 @@ class Wallet(models.Model):
         return Action.KOIN_SIGN + str(self.money)
 
 
-def validate_place_type_matches_class(value, cls):
-    if cls == Place and value not in Place.LAND_TYPES:
-        raise ValidationError(f"Invalid place type: {value} must be a land type for {cls}")
-    elif cls == Building and value not in Place.BUILDING_TYPES:
-        raise ValidationError(f"Invalid place type: {value} must be a building type for {cls}")
-    else:
-        return value
-
-
 class PlaceManager(models.Manager):
     def get_by_natural_key(self, name):
         return self.get(name=name)
@@ -125,23 +116,30 @@ class Place(models.Model):
     image = models.ImageField(upload_to='places/', default='places/idyllic-green-farm.png')
 
     FARM = 'FARM'
-    WILD = 'WILD'
     TOWN = 'TOWN'
+    MOUNTAIN = 'MOUNTAIN'
+    FOREST = 'FOREST'
+    BEACH = 'BEACH'
     SHOP = 'SHOP'
     HOME = 'HOME'
 
-    LAND_TYPES = [FARM, WILD, TOWN]
-    BUILDING_TYPES = [SHOP, HOME]
+    WILD_TYPES = ['MOUNTAIN', 'FOREST', 'BEACH']
 
     PLACE_TYPES = [
         (FARM, 'Farm'),
-        (WILD, 'Wild'),
+        (MOUNTAIN, 'Mountain'),
+        (FOREST, 'Forest'),
+        (BEACH, 'Beach'),
         (TOWN, 'Town'),
         (SHOP, 'Shop'),
         (HOME, 'Home'),
     ]
 
-    place_type = models.CharField(max_length=4, choices=PLACE_TYPES, default=WILD)
+    place_type = models.CharField(max_length=8, choices=PLACE_TYPES, default=TOWN)
+
+    default_contents = models.ManyToManyField('Item', blank=True)
+
+    item_pool = models.ManyToManyField('Item', blank=True, related_name='pool_locations')
 
     objects = PlaceManager()
 
@@ -149,13 +147,6 @@ class Place(models.Model):
     def get_default_pk(cls):
         place, created = cls.objects.get_or_create(name='The Farm')
         return place.pk
-
-    def clean(self):
-        validate_place_type_matches_class(self.place_type, self.__class__)
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        return super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -189,6 +180,20 @@ class PlaceState(models.Model):
     def __str__(self):
         return f'{self.place} state ' + self.session.abbr_key_tag()
 
+    def save(self, *args, **kwargs):
+        # save place state first so we can have id and assign contents and occupants
+        super().save(*args, **kwargs)
+
+        # set contents and occupants based on place defaults
+
+        self.contents.set(self.place.default_contents.all())
+
+        try:
+            building = self.place.building
+            self.occupants.set(building.residents.all())
+        except Building.DoesNotExist:
+            pass
+
 
 class Session(models.Model):
     key = models.CharField(max_length=32, primary_key=True, default=generate_uuid)
@@ -221,7 +226,8 @@ class Session(models.Model):
     def occupant_states(self):
         occupant_states = []
         for villager in self.occupants.all():
-            occupant_states.add(self.villager_states.get_or_create(villager=villager).first())
+            villager_state, created = self.villager_states.get_or_create(villager=villager, location=self.location)
+            occupant_states.append(villager_state)
 
         return occupant_states
 
@@ -250,6 +256,11 @@ class Hero(models.Model):
         return 'Hero ' + self.session.abbr_key_tag()
 
 
+class ItemManager(models.Manager):
+    def get_by_natural_key(self, name):
+        return self.get(name=name)
+
+
 class Item(models.Model):
     SEED = 'SEED'
     SPROUT = 'SPROUT'
@@ -263,10 +274,39 @@ class Item(models.Model):
         (GIFT, 'Gift'),
     ]
 
-    name = models.CharField(max_length=255)
+    COMMON = 'COMMON'
+    UNCOMMON = 'UNCOMMON'
+    RARE = 'RARE'
+    EPIC = 'EPIC'
+
+    RARITIES = [
+        COMMON,
+        UNCOMMON,
+        RARE,
+        EPIC
+    ]
+
+    RARITY_CHOICES = [
+        (COMMON, 'common'),
+        (UNCOMMON, 'uncommon'),
+        (RARE, 'rare'),
+        (EPIC, 'epic'),
+    ]
+
+    RARITY_WEIGHTS = {
+        COMMON: 0.65,
+        UNCOMMON: 0.25,
+        RARE: 0.08,
+        EPIC: 0.02,
+    }
+
+    name = models.CharField(max_length=255, unique=True)
     icon = models.ImageField(upload_to='items/', null=True, blank=True)
     item_type = models.CharField(max_length=6, choices=ITEM_TYPES, default=GIFT)
     price = models.IntegerField(default=1)
+    rarity = models.CharField(max_length=8, choices=RARITY_CHOICES, default=COMMON)
+
+    objects = ItemManager()
 
     def __str__(self):
         return self.name
@@ -285,7 +325,7 @@ class Villager(models.Model):
     full_name = models.CharField(max_length=255, null=True, blank=True)
     friendliness = models.IntegerField(default=4, validators=[MinValueValidator(1), MaxValueValidator(7)])
     portrait = models.ImageField(upload_to='portraits/', null=True, blank=True, default='portraits/squall-farmer.png')
-    home = models.ForeignKey(Building, on_delete=models.SET_NULL, null=True, blank=True)
+    home = models.ForeignKey(Building, on_delete=models.SET_NULL, null=True, blank=True, related_name='residents')
 
     def __str__(self):
         return self.name
@@ -295,6 +335,14 @@ class Villager(models.Model):
             self.full_name = self.name
 
         return super().save(*args, **kwargs)
+
+    def serialize(self):
+        return {
+            'name': self.name,
+            'portrait': {
+                'url': self.portrait.url if self.portrait else None
+            }
+        }
 
 
 class VillagerState(models.Model):
@@ -341,8 +389,7 @@ class Action(models.Model):
     HAR = 'HARVEST'
     BUY = 'BUY'
     SEL = 'SELL'
-    ENT = 'ENTER'
-    EXT = 'EXIT'
+    GAT = 'GATHER'
 
     ACTION_TYPES = [
         (TRA, 'Travel'),
@@ -353,6 +400,7 @@ class Action(models.Model):
         (HAR, 'Harvest'),
         (BUY, 'Buy'),
         (SEL, 'Sell'),
+        (GAT, 'Gather'),
     ]
 
     MIN = 'MINUTE'

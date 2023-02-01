@@ -35,6 +35,7 @@ def home(request):
         'actions': actions,
         'buildings': session.location.buildings.all(),
         'place_contents': session.location_state.contents.all(),
+        'villagers': session.occupants.all(),
     }
 
     template_name = 'mythgarden/home.html'
@@ -62,6 +63,9 @@ def action(request):
             image: {
                 url: string
             },
+        }],
+        ?villagers: [{
+            name: string,
         }],
         ?place_contents: [{
             name: string,
@@ -92,11 +96,11 @@ def action(request):
         if not can_pay_cost(session.wallet, requested_action):
             return JsonResponse({'error': 'hero cannot afford requested action'})
 
-        updated_models = ActionExecutor().execute(requested_action, session)
+        updated_models, log_statement = ActionExecutor().execute(requested_action, session)
         updated_models['actions'] = get_current_actions(session)
 
         results = {k: srs_serialize(v) for k, v in updated_models.items()}
-        results['log_statement'] = requested_action.log_statement
+        results['log_statement'] = log_statement
 
         return JsonResponse(results)
     else:

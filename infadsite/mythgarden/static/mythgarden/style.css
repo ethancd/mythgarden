@@ -171,6 +171,16 @@ li.building {
     font-size: 2vh;
 }
 
+.villagers {
+    position: absolute;
+    bottom: 0;
+    right: 20%;
+    width: 20%;
+    height: 100%;
+    background-color: rgba(230, 230, 166, 0.5);
+    overflow: hidden;
+}
+
 .contents {
     position: absolute;
     bottom: 0;

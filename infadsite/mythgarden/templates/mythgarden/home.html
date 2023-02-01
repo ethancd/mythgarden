@@ -76,6 +76,13 @@ expected models:
                     </li>
                 {% endfor %}
             </ul>
+            <ul class="villagers vertical">
+                {% for villager in villagers %}
+                    <li class="villager">
+                        <span class="villager-name">{{ villager.name }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
             <ul class="contents horizontal">
                 {% for item in place_contents %}
                     <li class="item">
