@@ -1,8 +1,15 @@
 import random
 
-from .models import Bridge, Action, Item, Villager, Place, Building, Session
+from .models import Bridge, Action, Item, Villager, Place, Building, Session, VillagerState, ItemTypePreference
 
 from .static_helpers import guard_type, guard_types
+
+
+def can_afford_action(wallet, requested_action):
+    if requested_action.is_cost_in_money() and requested_action.action_type != Action.SEL:
+        return wallet.money >= requested_action.cost_amount
+    else:
+        return True
 
 
 class ActionGenerator:
@@ -12,6 +19,7 @@ class ActionGenerator:
         - the location's current present items/occupants (contents and villagers)
         - the place's static features (buildings and bridges)"""
 
+        print(f'gen_available_actions: place={place}, inventory={inventory}, contents={contents}, villagers={villagers}')
         available_actions = []
 
         buildings = list(place.buildings.all())
@@ -138,12 +146,11 @@ class ActionGenerator:
         guard_types(inventory, Item)
 
         actions = []
-        gift_items = [i for i in inventory if i.item_type == Item.GIFT]
 
         for villager in villagers:
             actions.append(self.gen_talk_action(villager))
 
-            for item in gift_items:
+            for item in inventory:
                 actions.append(self.gen_give_action(item, villager))
 
         return actions
@@ -155,19 +162,22 @@ class ActionGenerator:
             action_type=Action.GIV,
             target_object=villager,
             secondary_target_object=item,
-            cost_amount=15,
+            cost_amount=5,
             cost_unit=Action.MIN,
-            log_statement=f'You gave a {item.name} to {villager.name}.',
+            log_statement='You gave {item_name} to {villager_name}. Looks like they {valence_text}',
         )
 
     def gen_talk_action(self, villager):
         """Returns an action that talks to given villager"""
+
+        talk_duration_amount, talk_duration_unit = self.get_talk_duration(villager)
+
         return Action(
             description=f'Talk to {villager.name}',
             action_type=Action.TAL,
             target_object=villager,
-            cost_amount=1,
-            cost_unit=Action.HOUR,
+            cost_amount=talk_duration_amount,
+            cost_unit=talk_duration_unit,
             log_statement=f'You talked to {villager.name}.',
         )
 
@@ -179,7 +189,7 @@ class ActionGenerator:
             target_object=item,
             cost_amount=item.price,
             cost_unit=Action.KOIN,
-            log_statement=f'You sold a {item.name} for {item.price} koin.',
+            log_statement=f'You sold {item.name} for {item.price} koin.',
         )
 
     def gen_buy_action(self, item):
@@ -190,7 +200,7 @@ class ActionGenerator:
             target_object=item,
             cost_amount=item.price,
             cost_unit=Action.KOIN,
-            log_statement=f'You bought a {item.name} for {item.price} koin.',
+            log_statement=f'You bought {item.name} for {item.price} koin.',
         )
 
     def gen_enter_action(self, building):
@@ -199,7 +209,7 @@ class ActionGenerator:
             description=f'Enter {building.name}',
             action_type=Action.TRA,
             target_object=building,
-            cost_amount=0,
+            cost_amount=5,
             cost_unit=Action.MIN,
             log_statement=f'You entered {building.name}.',
         )
@@ -207,12 +217,12 @@ class ActionGenerator:
     def gen_exit_action(self, building, surround):
         """Returns an action that exits the current place"""
         return Action(
-            description=f'Exit',
+            description=f'Exit {building.name}',
             action_type=Action.TRA,
             target_object=surround,
-            cost_amount=0,
+            cost_amount=5,
             cost_unit=Action.MIN,
-            log_statement=f'You exited {building.name} back to {surround.name}.',
+            log_statement=f'You exited {building.name} back out to {surround.name}.',
         )
 
     def gen_plant_action(self, seed):
@@ -275,7 +285,7 @@ class ActionGenerator:
         return Action(
             description='Dig for something interesting',
             action_type=Action.GAT,
-            cost_amount=1,
+            cost_amount=1.5,
             cost_unit=Action.HOUR,
             log_statement='You dug up a {result}!',
         )
@@ -285,10 +295,20 @@ class ActionGenerator:
         return Action(
             description='Forage for plants',
             action_type=Action.GAT,
-            cost_amount=1,
-            cost_unit=Action.HOUR,
-            log_statement='You found a {result}!',
+            cost_amount=30,
+            cost_unit=Action.MIN,
+            log_statement='You found {result}!',
         )
+
+    def get_talk_duration(self, villager):
+        """Returns the duration of a conversation with given villager"""
+        talk_duration_in_min = villager.talk_duration
+
+        if talk_duration_in_min > 60:
+            return talk_duration_in_min / 60, Action.HOUR
+        else:
+            return talk_duration_in_min, Action.MIN
+
 
 class ActionExecutor:
     def execute(self, action, session):
@@ -313,18 +333,60 @@ class ActionExecutor:
         session.save_data()
 
         return ({
-            'place': session.location,
-            'clock': session.clock,
-            'buildings': list(session.location.buildings.all()),
-            'place_contents': list(session.location_state.contents.all()),
-            'villagers': list(session.occupants.all())
-        }, action.log_statement)
+                    'place': session.location,
+                    'clock': session.clock,
+                    'buildings': list(session.location.buildings.all()),
+                    'place_contents': list(session.location_state.contents.all()),
+                    'villagers': list(session.occupants.all())
+                }, action.log_statement)
 
     def execute_talk_action(self, action, session):
-        raise NotImplementedError()
+        """Executes a talk action, which displays some dialogue, adds to the villager's affinity, and ticks the clock"""
+        # also want to set villager_state to has_been_greeted so we can't talk to them again till tomorrow
+
+        villager = action.target_object
+        is_next_tier = self.update_affinity(villager, villager.friendliness, session)
+        # dialogue = villager.get_dialogue(session)
+
+        session.clock.advance(action.cost_amount, action.cost_unit)
+
+        session.save_data()
+
+        log_statement = self.add_affinity_tag_if_needed(action.log_statement, is_next_tier, villager)
+
+        return ({
+                    'clock': session.clock,
+                    # 'dialogue': dialogue,
+                }, log_statement)
 
     def execute_give_action(self, action, session):
-        raise NotImplementedError()
+        """Executes a give action, which removes an item from the hero's inventory
+        and adds to the villager's affinity"""
+        # also want to set villager_state to has_been_gifted so we can't talk to them again till tomorrow
+
+        villager = action.target_object
+        gift = action.secondary_target_object
+        valence = villager.gift_valence(gift)
+        affinity_amount = self.calc_gift_affinity_change(valence, gift.rarity, villager.friendliness)
+        is_next_tier = self.update_affinity(villager, affinity_amount, session)
+        # dialogue = villager.get_dialogue(session)
+
+        session.clock.advance(action.cost_amount, action.cost_unit)
+        session.inventory.items.remove(gift)
+
+        session.save_data()
+
+        valence_text = self.get_valence_text(valence)
+        base_statement = action.log_statement.format(item_name=gift.name, villager_name=villager.name, valence_text=valence_text)
+
+        log_statement = self.add_affinity_tag_if_needed(base_statement, is_next_tier, villager)
+
+        session.save_data()
+
+        return ({
+                    'inventory': list(session.inventory.items.all()),
+                    # 'dialogue': dialogue,
+                }, log_statement)
 
     def execute_sell_action(self, action, session):
         """Executes a sell action, which moves an item from the hero's inventory into the session contents
@@ -337,10 +399,10 @@ class ActionExecutor:
         session.save_data()
 
         return ({
-            'wallet': session.wallet,
-            'inventory': list(session.inventory.items.all()),
-            'place_contents': list(session.location_state.contents.all()),
-        }, action.log_statement)
+                    'wallet': session.wallet,
+                    'inventory': list(session.inventory.items.all()),
+                    'place_contents': list(session.location_state.contents.all()),
+                }, action.log_statement)
 
     def execute_buy_action(self, action, session):
         """Executes a buy action, which moves an item from the session contents into the hero's inventory
@@ -353,10 +415,10 @@ class ActionExecutor:
         session.save_data()
 
         return ({
-            'wallet': session.wallet,
-            'inventory': list(session.inventory.items.all()),
-            'place_contents': list(session.location_state.contents.all()),
-        }, action.log_statement)
+                    'wallet': session.wallet,
+                    'inventory': list(session.inventory.items.all()),
+                    'place_contents': list(session.location_state.contents.all()),
+                }, action.log_statement)
 
     def execute_plant_action(self, action, session):
         """Executes a plant action, which moves a seed from the hero's inventory into the session contents"""
@@ -367,9 +429,9 @@ class ActionExecutor:
         session.save_data()
 
         return ({
-            'inventory': list(session.inventory.items.all()),
-            'place_contents': list(session.location_state.contents.all()),
-        }, action.log_statement)
+                    'inventory': list(session.inventory.items.all()),
+                    'place_contents': list(session.location_state.contents.all()),
+                }, action.log_statement)
 
     def execute_water_action(self, action, session):
         raise NotImplementedError()
@@ -383,9 +445,9 @@ class ActionExecutor:
         session.save_data()
 
         return ({
-            'inventory': list(session.inventory.items.all()),
-            'place_contents': list(session.location_state.contents.all()),
-        }, action.log_statement)
+                    'inventory': list(session.inventory.items.all()),
+                    'place_contents': list(session.location_state.contents.all()),
+                }, action.log_statement)
 
     def execute_gather_action(self, action, session):
         """Executes a gather action, which finds a random item in the current location's item pool
@@ -400,9 +462,74 @@ class ActionExecutor:
         log_statement = action.log_statement.format(result=item.name)
 
         return ({
-            'inventory': list(session.inventory.items.all()),
-            'clock': session.clock,
-        }, log_statement)
+                    'inventory': list(session.inventory.items.all()),
+                    'clock': session.clock,
+                }, log_statement)
+
+    def calc_gift_affinity_change(self, valence, rarity, friendliness):
+        """Calculates the change in affinity for a gift based on valence of villager's reaction,
+        item's rarity, villager's friendliness"""
+
+        VALENCE_VALUE_MAP = {
+            ItemTypePreference.LOVE: 20,
+            ItemTypePreference.LIKE: 6,
+            ItemTypePreference.NEUTRAL: 2,
+            ItemTypePreference.DISLIKE: 0,
+            ItemTypePreference.HATE: -2,
+        }
+
+        RARITY_MULTIPLIER_MAP = {
+            Item.COMMON: 0.5,
+            Item.UNCOMMON: 1,
+            Item.RARE: 2,
+            Item.EPIC: 4,
+        }
+
+        base_value = VALENCE_VALUE_MAP[valence]
+        multiplier = RARITY_MULTIPLIER_MAP[rarity]
+
+        return int((base_value * multiplier) + friendliness)
+
+    def update_affinity(self, villager, amount, session):
+        """Updates the villager's villager_state affinity
+        and returns whether the villager is in a new affinity tier"""
+
+        villager_state = session.occupant_states.filter(villager=villager).first()
+
+        old_affinity = villager_state.affinity
+        new_affinity = villager_state.add_affinity(amount)
+
+        print(f'Villager has gone from {old_affinity} hearts to {new_affinity} hearts')
+
+        return self.is_next_affinity_tier(old_affinity, new_affinity)
+
+    def is_next_affinity_tier(self, old_affinity, new_affinity, tier_size=VillagerState.AFFINITY_TIER_SIZE):
+        # e.g. tier size 20, old_affinity 35, new_affinity 45
+        # villager just crossed 40 so is now in new tier
+        old_tier = old_affinity // tier_size
+        new_tier = new_affinity // tier_size
+
+        return old_tier != new_tier
+
+    def add_affinity_tag_if_needed(self, base_statement, is_next_tier, villager):
+        if is_next_tier:
+            return base_statement + f' You and {villager.name} have developed more of a bond!'
+        else:
+            return base_statement
+
+    def get_valence_text(self, valence):
+        if valence == ItemTypePreference.LOVE:
+            return 'loved it!'
+        elif valence == ItemTypePreference.LIKE:
+            return 'liked it!'
+        elif valence == ItemTypePreference.NEUTRAL:
+            return 'felt okay about it.'
+        elif valence == ItemTypePreference.DISLIKE:
+            return 'weren\'t a fan of it.'
+        elif valence == ItemTypePreference.HATE:
+            return 'wish you hadn\'t!'
+        else:
+            return 'felt nothing about'
 
     def pull_item_from_pool(self, location):
         """Returns a random item from the given location's item pool, weighted by rarity"""
@@ -413,7 +540,7 @@ class ActionExecutor:
         rarities = [r for r in Item.RARITIES]
         while len(rarities) > 0:
             weights = [Item.RARITY_WEIGHTS[r] for r in rarities]
-            rarity = random.choice(rarities, weights=weights)
+            rarity = random.choices(rarities, weights=weights, k=1)[0]
             choices = location.item_pool.filter(rarity=rarity)
 
             if choices.count() > 0:

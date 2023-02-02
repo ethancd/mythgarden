@@ -4,7 +4,7 @@ from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.urls import reverse
 
-from .game_logic import ActionGenerator, ActionExecutor
+from .game_logic import ActionGenerator, ActionExecutor, can_afford_action
 from .static_helpers import srs_serialize
 import json
 
@@ -93,7 +93,7 @@ def action(request):
         else:  # len(matches) == 0
             return JsonResponse({'error': 'requested action not available'})
 
-        if not can_pay_cost(session.wallet, requested_action):
+        if not can_afford_action(session.wallet, requested_action):
             return JsonResponse({'error': 'hero cannot afford requested action'})
 
         updated_models, log_statement = ActionExecutor().execute(requested_action, session)
@@ -116,11 +116,4 @@ def get_current_actions(session):
     actions = ActionGenerator().gen_available_actions(place, inventory, contents, villagers)
 
     return actions
-
-
-def can_pay_cost(wallet, requested_action):
-    if requested_action.is_cost_in_money():
-        return wallet.money >= requested_action.cost_amount
-    else:
-        return True
 

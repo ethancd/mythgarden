@@ -5,15 +5,27 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.validators import MinValueValidator, MaxValueValidator, ValidationError
 
+import re
+
 from .static_helpers import generate_uuid
 
 
 class Inventory(models.Model):
+    MAX_ITEMS = 6
+
     session = models.OneToOneField('Session', on_delete=models.CASCADE, primary_key=True)
     items = models.ManyToManyField('Item', blank=True)
 
     def __str__(self):
         return 'Inventory ' + self.session.abbr_key_tag()
+
+    def clean(self):
+        if self.items.count() > self.MAX_ITEMS:
+            raise ValidationError('Inventory cannot contain more than 6 items.')
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
 
 class Clock(models.Model):
@@ -106,156 +118,6 @@ class Wallet(models.Model):
         return Action.KOIN_SIGN + str(self.money)
 
 
-class PlaceManager(models.Manager):
-    def get_by_natural_key(self, name):
-        return self.get(name=name)
-
-
-class Place(models.Model):
-    name = models.CharField(max_length=255, unique=True)
-    image = models.ImageField(upload_to='places/', default='places/idyllic-green-farm.png')
-
-    FARM = 'FARM'
-    TOWN = 'TOWN'
-    MOUNTAIN = 'MOUNTAIN'
-    FOREST = 'FOREST'
-    BEACH = 'BEACH'
-    SHOP = 'SHOP'
-    HOME = 'HOME'
-
-    WILD_TYPES = ['MOUNTAIN', 'FOREST', 'BEACH']
-
-    PLACE_TYPES = [
-        (FARM, 'Farm'),
-        (MOUNTAIN, 'Mountain'),
-        (FOREST, 'Forest'),
-        (BEACH, 'Beach'),
-        (TOWN, 'Town'),
-        (SHOP, 'Shop'),
-        (HOME, 'Home'),
-    ]
-
-    place_type = models.CharField(max_length=8, choices=PLACE_TYPES, default=TOWN)
-
-    default_contents = models.ManyToManyField('Item', blank=True)
-
-    item_pool = models.ManyToManyField('Item', blank=True, related_name='pool_locations')
-
-    objects = PlaceManager()
-
-    @classmethod
-    def get_default_pk(cls):
-        place, created = cls.objects.get_or_create(name='The Farm')
-        return place.pk
-
-    def __str__(self):
-        return self.name
-
-    def serialize(self):
-        return {
-            'name': self.name,
-            'image': {
-                'url': self.image.url if self.image else None
-            },
-        }
-
-
-class Building(Place):
-    surround = models.ForeignKey(Place, on_delete=models.CASCADE, related_name='buildings')
-
-    def __str__(self):
-        return super().__str__()
-
-    def serialize(self):
-        return super().serialize()
-
-
-class PlaceState(models.Model):
-    session = models.ForeignKey('Session', on_delete=models.CASCADE, related_name='place_states')
-    place = models.ForeignKey(Place, on_delete=models.CASCADE, related_name='states')
-
-    contents = models.ManyToManyField('Item', blank=True)
-    occupants = models.ManyToManyField('Villager', blank=True)
-
-    def __str__(self):
-        return f'{self.place} state ' + self.session.abbr_key_tag()
-
-    def save(self, *args, **kwargs):
-        # save place state first so we can have id and assign contents and occupants
-        super().save(*args, **kwargs)
-
-        # set contents and occupants based on place defaults
-
-        self.contents.set(self.place.default_contents.all())
-
-        try:
-            building = self.place.building
-            self.occupants.set(building.residents.all())
-        except Building.DoesNotExist:
-            pass
-
-
-class Session(models.Model):
-    key = models.CharField(max_length=32, primary_key=True, default=generate_uuid)
-    location = models.ForeignKey(Place, on_delete=models.CASCADE, null=True, default=Place.get_default_pk)
-    skip_post_save_signal = models.BooleanField(default=False)
-
-    def save_data(self):
-        """save objects related to the session, excluding:
-        place_session_data for non-current locations,
-        villager_session_data for non-present villagers
-        """
-
-        self.save()
-        self.hero.save()
-        self.clock.save()
-        self.wallet.save()
-        self.inventory.save()
-        self.location_state.save()
-        [o.save() for o in self.occupant_states]
-
-    @property
-    def location_state(self):
-        return self.place_states.get_or_create(place=self.location)[0]
-
-    @property
-    def occupants(self):
-        return self.location_state.occupants.all()
-
-    @property
-    def occupant_states(self):
-        occupant_states = []
-        for villager in self.occupants.all():
-            villager_state, created = self.villager_states.get_or_create(villager=villager, location=self.location)
-            occupant_states.append(villager_state)
-
-        return occupant_states
-
-    def abbr_key_tag(self):
-        return f'({self.key[:8]}...)'
-
-    def __str__(self):
-        return 'Session ' + self.abbr_key_tag()
-
-
-@receiver(post_save, sender=Session)
-def create_belongings(sender, instance, created, **kwargs):
-    if created and not instance.skip_post_save_signal:
-        Hero.objects.create(session=instance)
-        Inventory.objects.create(session=instance)
-        Clock.objects.create(session=instance)
-        Wallet.objects.create(session=instance)
-
-
-class Hero(models.Model):
-    session = models.OneToOneField(Session, on_delete=models.CASCADE, primary_key=True)
-    name = models.CharField(max_length=255, default='Squall')
-    portrait = models.ImageField(upload_to='portraits/', default='portraits/squall-farmer.png')
-
-    def __str__(self):
-        return 'Hero ' + self.session.abbr_key_tag()
-
-
 class ItemManager(models.Manager):
     def get_by_natural_key(self, name):
         return self.get(name=name)
@@ -266,12 +128,24 @@ class Item(models.Model):
     SPROUT = 'SPROUT'
     CROP = 'CROP'
     GIFT = 'GIFT'
+    FISH = 'FISH'
+    MINERAL = 'MINERAL'
+    ARTIFACT = 'ARTIFACT'
+    HERB = 'HERB'
+    FLOWER = 'FLOWER'
+    BERRY = 'BERRY'
 
     ITEM_TYPES = [
         (SEED, 'Seed'),
         (SPROUT, 'Sprout'),
         (CROP, 'Crop'),
         (GIFT, 'Gift'),
+        (FISH, 'Fish'),
+        (MINERAL, 'Mineral'),
+        (ARTIFACT, 'Artifact'),
+        (HERB, 'Herb'),
+        (FLOWER, 'Flower'),
+        (BERRY, 'Berry'),
     ]
 
     COMMON = 'COMMON'
@@ -302,7 +176,7 @@ class Item(models.Model):
 
     name = models.CharField(max_length=255, unique=True)
     icon = models.ImageField(upload_to='items/', null=True, blank=True)
-    item_type = models.CharField(max_length=6, choices=ITEM_TYPES, default=GIFT)
+    item_type = models.CharField(max_length=8, choices=ITEM_TYPES, default=GIFT)
     price = models.IntegerField(default=1)
     rarity = models.CharField(max_length=8, choices=RARITY_CHOICES, default=COMMON)
 
@@ -320,12 +194,238 @@ class Item(models.Model):
         }
 
 
+class PlaceManager(models.Manager):
+    def get_by_natural_key(self, name):
+        return self.get(name=name)
+
+
+class Place(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+    image = models.ImageField(upload_to='places/', default='places/idyllic-green-farm.png')
+
+    FARM = 'FARM'
+    TOWN = 'TOWN'
+    MOUNTAIN = 'MOUNTAIN'
+    FOREST = 'FOREST'
+    BEACH = 'BEACH'
+    SHOP = 'SHOP'
+    HOME = 'HOME'
+
+    WILD_TYPES = ['MOUNTAIN', 'FOREST', 'BEACH']
+
+    PLACE_TYPES = [
+        (FARM, 'Farm'),
+        (MOUNTAIN, 'Mountain'),
+        (FOREST, 'Forest'),
+        (BEACH, 'Beach'),
+        (TOWN, 'Town'),
+        (SHOP, 'Shop'),
+        (HOME, 'Home'),
+    ]
+
+    ITEM_POOL_TYPE_MAP = {
+        MOUNTAIN: [Item.MINERAL, Item.ARTIFACT],
+        BEACH: [Item.FISH],
+        FOREST: [Item.HERB, Item.FLOWER, Item.BERRY],
+    }
+
+    place_type = models.CharField(max_length=8, choices=PLACE_TYPES, default=TOWN)
+
+    default_contents = models.ManyToManyField('Item', blank=True)
+
+    item_pool = models.ManyToManyField('Item', blank=True, related_name='pool_locations')
+
+    objects = PlaceManager()
+
+    @classmethod
+    def get_default_pk(cls):
+        place, created = cls.objects.get_or_create(name='The Farm')
+        return place.pk
+
+    def __str__(self):
+        return self.name
+
+    def serialize(self):
+        return {
+            'name': self.name,
+            'image': {
+                'url': self.image.url if self.image else None
+            },
+        }
+
+    def save(self, *args, **kwargs):
+        if self._state.adding:
+            # save place state first so we can have id and assign item_pool
+            super().save(*args, **kwargs)
+            self.populate_item_pool()
+        else:
+            super().save(*args, **kwargs)
+
+    def populate_item_pool(self):
+        """ Populates the item pool by filtering on item types based on this place type. """
+        item_types = self.ITEM_POOL_TYPE_MAP.get(self.place_type)
+        if item_types is None:
+            return
+
+        all_items_of_correct_types = Item.objects.filter(item_type__in=item_types)
+        self.item_pool.set(all_items_of_correct_types)
+
+
+class Building(Place):
+    surround = models.ForeignKey(Place, on_delete=models.CASCADE, related_name='buildings')
+
+    def __str__(self):
+        return super().__str__()
+
+    def serialize(self):
+        return super().serialize()
+
+
+class PlaceState(models.Model):
+    session = models.ForeignKey('Session', on_delete=models.CASCADE, related_name='place_states')
+    place = models.ForeignKey(Place, on_delete=models.CASCADE, related_name='states')
+
+    contents = models.ManyToManyField('Item', blank=True)
+    occupants = models.ManyToManyField('Villager', blank=True)
+
+    def __str__(self):
+        return f'{self.place} state ' + self.session.abbr_key_tag()
+
+    def save(self, *args, **kwargs):
+        if self._state.adding:
+            # save place state first so we can have id and assign contents and occupants
+            super().save(*args, **kwargs)
+
+            # set contents and occupants based on place defaults
+            self.contents.set(self.place.default_contents.all())
+
+            try:
+                building = self.place.building
+                self.occupants.set(building.residents.all())
+            except Building.DoesNotExist:
+                pass
+        else:
+            super().save(*args, **kwargs)
+
+
+class Session(models.Model):
+    key = models.CharField(max_length=32, primary_key=True, default=generate_uuid)
+    location = models.ForeignKey(Place, on_delete=models.CASCADE, null=True, default=Place.get_default_pk)
+    skip_post_save_signal = models.BooleanField(default=False)
+
+    def save_data(self):
+        """save model objects that the current session has a handle on --
+        so excluding place_states and villager_states"""
+
+        self.save()
+        self.hero.save()
+        self.clock.save()
+        self.wallet.save()
+        self.inventory.save()  # probably unnecessary, since inventory doesn't have any fields right now
+
+    @property
+    def location_state(self):
+        return self.place_states.get_or_create(place=self.location)[0]
+
+    @property
+    def occupants(self):
+        return self.location_state.occupants.all()
+
+    @property
+    def occupant_states(self):
+        occupant_states = []
+
+        # ensure all occupants have a state
+        for villager in self.occupants.all():
+            villager_state, created = self.villager_states.get_or_create(villager=villager, location=self.location)
+            occupant_states.append(villager_state)
+
+        return self.villager_states.filter(villager__in=self.occupants)
+
+    def abbr_key_tag(self):
+        return f'({self.key[:8]}...)'
+
+    def __str__(self):
+        return 'Session ' + self.abbr_key_tag()
+
+
+@receiver(post_save, sender=Session)
+def create_belongings(sender, instance, created, **kwargs):
+    if created and not instance.skip_post_save_signal:
+        Hero.objects.create(session=instance)
+        Inventory.objects.create(session=instance)
+        Clock.objects.create(session=instance)
+        Wallet.objects.create(session=instance)
+
+
+class Hero(models.Model):
+    session = models.OneToOneField(Session, on_delete=models.CASCADE, primary_key=True)
+    name = models.CharField(max_length=255, default='Squall')
+    portrait = models.ImageField(upload_to='portraits/', default='portraits/squall-farmer.png')
+
+    def __str__(self):
+        return 'Hero ' + self.session.abbr_key_tag()
+
+
+class ItemTypePreference(models.Model):
+    LOVE = 'LOVE'
+    LIKE = 'LIKE'
+    NEUTRAL = 'NEUTRAL'
+    DISLIKE = 'DISLIKE'
+    HATE = 'HATE'
+
+    REACTIONS = [
+        (LOVE, 'love'),
+        (LIKE, 'like'),
+        (NEUTRAL, 'neutral'),
+        (DISLIKE, 'dislike'),
+        (HATE, 'hate'),
+    ]
+
+    UNIVERSAL_PREFERENCES = {
+        Item.CROP: LIKE,
+        Item.FLOWER: LIKE,
+        Item.BERRY: LIKE,
+        Item.SEED: DISLIKE,
+        Item.SPROUT: DISLIKE,
+        Item.FISH: DISLIKE,
+        Item.HERB: DISLIKE,
+    }
+
+    item_type = models.CharField(max_length=8, choices=Item.ITEM_TYPES)
+    valence = models.CharField(max_length=7, choices=REACTIONS, default=NEUTRAL)
+
+    def __str__(self):
+        return f'{self.villager} {self.get_reaction_display()}s {self.get_item_type_display()}s'
+
+    def save(self, *args, **kwargs):
+        # in our data intake, expect to call e.g. ItemTypePreference.objects.create('BERRY: LOVE')
+        # so hijack that create call to create a new instance from a string
+        if self._state.adding:
+            if re.fullmatch(args[0], r'^[A-Z]+: [A-Z]+$'):
+                return self.__class__.get_or_create_from_string(args[0])
+
+        return super().save(*args, **kwargs)
+
+    @classmethod
+    def get_or_create_from_string(cls, string):
+        # in our data intake, expect to have inputs like 'BERRY: LOVE'
+        # so get_or_create a new instance from a string
+        item_type, valence = string.split(': ')
+        item_type = item_type.upper()
+        valence = valence.upper()
+
+        return cls.get_or_create(item_type=item_type, valence=valence)
+
+
 class Villager(models.Model):
     name = models.CharField(max_length=255)
     full_name = models.CharField(max_length=255, null=True, blank=True)
     friendliness = models.IntegerField(default=4, validators=[MinValueValidator(1), MaxValueValidator(7)])
     portrait = models.ImageField(upload_to='portraits/', null=True, blank=True, default='portraits/squall-farmer.png')
     home = models.ForeignKey(Building, on_delete=models.SET_NULL, null=True, blank=True, related_name='residents')
+
+    item_type_preferences = models.ManyToManyField('ItemTypePreference', blank=True, related_name='preferred_by')
 
     def __str__(self):
         return self.name
@@ -344,16 +444,54 @@ class Villager(models.Model):
             }
         }
 
+    def gift_valence(self, item):
+        """return how villager feels about a gift"""
+        try:
+            preference = self.item_type_preferences.get(item_type=item.item_type)
+            return preference.valence
+        except ItemTypePreference.DoesNotExist:
+            valence = ItemTypePreference.UNIVERSAL_PREFERENCES[item.item_type]
+            return valence
+        except KeyError:
+            return ItemTypePreference.NEUTRAL
+
+    @property
+    def talk_duration(self):
+        FRIENDLINESS_TO_TALK_DURATION = {
+            1: 5,
+            2: 10,
+            3: 15,
+            4: 30,
+            5: 45,
+            6: 60,
+            7: 90,
+        }
+        return FRIENDLINESS_TO_TALK_DURATION[self.friendliness]
+
 
 class VillagerState(models.Model):
+    AFFINITY_TIER_SIZE = 20
+
     session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name='villager_states')
     villager = models.ForeignKey(Villager, on_delete=models.CASCADE, related_name='states')
 
-    affinity = models.IntegerField(default=0)
+    affinity = models.IntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])
     location = models.ForeignKey(Place, on_delete=models.CASCADE, related_name='villagers')  # , default=villager.home)
 
     def __str__(self):
         return f'{self.villager} state ' + self.session.abbr_key_tag()
+
+    def add_affinity(self, amount):
+        self.affinity += amount
+
+        if self.affinity > 100:
+            self.affinity = 100
+
+        if self.affinity < 0:
+            self.affinity = 0
+
+        self.save()
+        return self.affinity
 
 
 class Bridge(models.Model):
@@ -412,7 +550,7 @@ class Action(models.Model):
 
     COST_UNITS = [
         (MIN, 'min'),
-        (HOUR, 'hour'),
+        (HOUR, 'hr'),
         (DAY, 'day'),
         (KOIN, KOIN_SIGN),
     ]

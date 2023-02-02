@@ -1563,17 +1563,17 @@ class ExecuteActionsTests(TestCase):
             self.ae.execute(action, 'not a session')
 
 
-# for random.choice, return the first item in the list
+# for random.choices, return the first item in the list
 # this will make pull_item_from_pool go through rarities deterministically:
 # common -> uncommon -> rare -> epic
-@patch('random.choice', side_effect=lambda c, *args, **kwargs: c[0])
+@patch('random.choices', side_effect=lambda c, *args, **kwargs: [c[0]])
 class PullItemFromPoolTests(TestCase):
     def setUp(self) -> None:
         self.ae = ActionExecutor()
         self.session = MagicMock(spec=Session)
         self.location = create_place()
 
-    def test_pull_item_from_pool_returns_an_item(self, mock_random_choice):
+    def test_pull_item_from_pool_returns_an_item(self, mock_random_choices):
         """
         pull_item_from_pool returns an item
         """
@@ -1583,7 +1583,7 @@ class PullItemFromPoolTests(TestCase):
 
         self.assertIsInstance(item, Item)
 
-    def test_pull_returns_item_of_correct_rarity_when_only_rarity_in_pool(self, mock_random_choice):
+    def test_pull_returns_item_of_correct_rarity_when_only_rarity_in_pool(self, mock_random_choices):
         """
         pull_item_from_pool returns the right rarity of item when only that rarity of item is in the pool
         """
@@ -1599,10 +1599,10 @@ class PullItemFromPoolTests(TestCase):
 
                 self.assertEqual(item.rarity, rarity)
 
-    def test_pull_returns_valid_item_when_multiple_rarities_in_pool(self, mock_random_choice):
+    def test_pull_returns_valid_item_when_multiple_rarities_in_pool(self, mock_random_choices):
         """
         pull_item_from_pool returns a valid item when multiple rarities of item are in the pool
-        we've mocked random.choice to return first item in list, so expect a common item
+        we've mocked random.choices to return first item in list, so expect a common item
         """
         self.location.item_pool.set([
             create_item(rarity=Item.COMMON),
@@ -1615,20 +1615,21 @@ class PullItemFromPoolTests(TestCase):
 
         self.assertEqual(item.rarity, Item.COMMON)
 
-    def test_pull_calls_random_choice_with_correct_weights(self, mock_random_choice):
+    def test_pull_calls_random_choices_with_correct_weights(self, mock_random_choices):
         """
-        pull_item_from_pool calls random.choice with the correct weights
+        pull_item_from_pool calls random.choices with the correct weights
         """
         self.location.item_pool.set([create_item(), create_item()])
 
         self.ae.pull_item_from_pool(self.location)
 
-        mock_random_choice.assert_called_with(
+        mock_random_choices.assert_called_with(
             Item.RARITIES,
-            weights=[v for k, v in Item.RARITY_WEIGHTS.items()]
+            weights=[v for k, v in Item.RARITY_WEIGHTS.items()],
+            k=1
         )
 
-    def test_pull_item_from_pool_raises_error_if_pool_is_empty(self, mock_random_choice):
+    def test_pull_item_from_pool_raises_error_if_pool_is_empty(self, mock_random_choices):
         """
         pull_item_from_pool raises error if pool is empty
         """
