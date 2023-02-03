@@ -24,6 +24,10 @@ expected models:
         display_cost
     buildings[]:
         name
+    villager_states[]:
+        affinity
+        villager
+            name
     place_contents[]:
         name
 -->
@@ -77,9 +81,10 @@ expected models:
                 {% endfor %}
             </ul>
             <ul class="villagers vertical">
-                {% for villager in villagers %}
+                {% for villager_state in villager_states %}
                     <li class="villager">
-                        <span class="villager-name">{{ villager.name }}</span>
+                        <span class="villager-name">{{ villager_state.villager.name }}</span>
+                        <span class="affinity">{{ villager_state.display_affinity }}</span>
                     </li>
                 {% endfor %}
             </ul>

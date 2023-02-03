@@ -35,7 +35,7 @@ def home(request):
         'actions': actions,
         'buildings': session.location.buildings.all(),
         'place_contents': session.location_state.contents.all(),
-        'villagers': session.occupants.all(),
+        'villager_states': session.occupant_states.all(),
     }
 
     template_name = 'mythgarden/home.html'

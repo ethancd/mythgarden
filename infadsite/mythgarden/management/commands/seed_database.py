@@ -8,101 +8,10 @@ import re
 from mythgarden.models import *
 from ._command_helpers import str_to_class, snakecase_to_titlecase
 
-SKIP_VALUES = ['default', 'none', 'null', 'skip']
-
-
-def guard_format(expected_format, field_name):
-    """helper for checking that field_name matches expected_format"""
-    if re.fullmatch(expected_format, field_name) is None:
-        raise CommandError(f'Field name {field_name} does not conform to expected format: {expected_format}')
-
-
-def parse_field_name(field_name):
-    """helper for parsing field_names like fk__place__surround and m2m__place__contents
-    into the class and cleaned field name"""
-    foreign_classname_snakecase, cleaned_field_name = re.match(r'^\w+__(\w+)__(\w+)', field_name).group(1, 2)
-    foreign_classname = snakecase_to_titlecase(foreign_classname_snakecase)
-    foreign_cls = str_to_class(sys.modules[__name__], foreign_classname)
-
-    return foreign_cls, cleaned_field_name
-
-
-def get_foreign_instance(foreign_cls, field_value):
-    """helper for getting a foreign instance using natural key lookup"""
-
-    foreign_instance = foreign_cls.objects.get_by_natural_key(field_value)
-
-    if foreign_instance is None:
-        raise CommandError(f'Could not find instance of {foreign_cls} with natural key {field_value}')
-
-    return foreign_instance
-
-
-def parse_fk_cell(field_name, field_value):
-    """
-    1. get the class name of ref'd model from field_name (e.g. fk__place__surround -> Place)
-    2. get the ref'd instance using natural key lookup of field_value
-    3. get the cleaned field name (e.g. fk__place__surround -> surround)
-    4. return the cleaned field name as the key and the instance as the value
-
-    throw errors if the class or instance don't exist,
-    or if the field_name doesn't conform to expected format
-    """
-
-    guard_format(r'fk__\w+__\w+', field_name)
-
-    foreign_cls, cleaned_field_name = parse_field_name(field_name)
-    foreign_instance = get_foreign_instance(foreign_cls, field_value)
-
-    return cleaned_field_name, foreign_instance
-
-
-def parse_m2m_cell(field_name, field_value):
-    """
-    1. get the class name of ref'd model from field_name (e.g. m2m__place__contents -> Place)
-    2a. parse the field_value into a list of natural keys
-    2b. get all the ref'd instances using natural key lookup
-    3. get the cleaned field name (e.g. m2m__place__contents -> contents)
-    4. return the cleaned field name as the key and the instances as the value
-
-    throw errors if the class or any instances don't exist,
-    or if the field_name doesn't conform to expected format
-    """
-
-    guard_format(r'm2m__\w+__\w+', field_name)
-
-    foreign_cls, cleaned_field_name = parse_field_name(field_name)
-    foreign_instance_natural_keys = field_value.split(',')
-    foreign_instances = [get_foreign_instance(foreign_cls, key) for key in foreign_instance_natural_keys]
-
-    return cleaned_field_name, foreign_instances
-
-
-def parse_goc_m2m_cell(field_name, field_value):
-    """
-    1. get the class name of ref'd model from field_name (e.g. goc_m2m__item__belongings -> Item)
-    2a. parse the field_value into a list of custom creation strings
-    2b. create all the ref'd instances by assuming they have custom overrides to create from a string
-    3. get the cleaned field name (e.g. goc_m2m__item__belongings -> belongings)
-    4. return the cleaned field name as the key and the instances as the value
-
-    throw errors if the class doesn't exist or it doesn't have a get_or_create_from_string method,
-    or if the field_name doesn't conform to expected format
-    """
-
-    guard_format(r'goc_m2m__\w+__\w+', field_name)
-
-    foreign_cls, cleaned_field_name = parse_field_name(field_name)
-    if not hasattr(foreign_cls, 'get_or_create_from_string'):
-        raise CommandError(f'Class {foreign_cls} does not have a get_or_create_from_string method.')
-
-    foreign_creation_strings = field_value.split(',')
-    foreign_instances = [foreign_cls.get_or_create_from_string(str) for str in foreign_creation_strings]
-
-    return cleaned_field_name, foreign_instances
-
 
 class Command(BaseCommand):
+    SKIP_VALUES = ['default', 'none', 'null', 'skip']
+
     help = 'Seeds the database with initial data read in from a csv file.'
 
     def add_arguments(self, parser):
@@ -124,8 +33,9 @@ class Command(BaseCommand):
             field_names = []
             expecting_header = True
 
-            created_count = 0
-            found_count = 0
+            self.created_count = 0
+            self.found_count = 0
+            self.verbosity = options['verbosity']
 
             per_model_created_count = 0
             per_model_found_count = 0
@@ -140,7 +50,7 @@ class Command(BaseCommand):
                 # Model_B, value, value, value
                 # etc.
 
-                if options['verbosity'] == 3:
+                if self.verbosity == 3:
                     self.stdout.write(f'row {reader.line_num}: {row}')
 
                 # so we'll take blank rows as the signal that the next row is a header for the next model
@@ -187,7 +97,7 @@ class Command(BaseCommand):
                 m2m_lists = []
 
                 for i, field_name in enumerate(field_names):
-                    if field_values[i] in SKIP_VALUES:
+                    if field_values[i] in self.SKIP_VALUES:
                         continue
 
                     is_fk = field_name.startswith('fk__')
@@ -195,7 +105,7 @@ class Command(BaseCommand):
                     is_goc_m2m = field_name.startswith('goc_m2m__')
 
                     if is_fk:
-                        cleaned_field_name, foreign_instance = parse_fk_cell(field_name, field_values[i])
+                        cleaned_field_name, foreign_instance = self.parse_fk_cell(field_name, field_values[i])
 
                         cleaned_field_names[i] = cleaned_field_name
                         cleaned_field_values[i] = foreign_instance
@@ -205,10 +115,10 @@ class Command(BaseCommand):
                     # and accumulate the m2m fields to be set later
 
                     if is_m2m:
-                        cleaned_field_name, foreign_instances = parse_m2m_cell(field_name, field_values[i])
+                        cleaned_field_name, foreign_instances = self.parse_m2m_cell(field_name, field_values[i])
 
                     if is_goc_m2m:
-                        cleaned_field_name, foreign_instances = parse_goc_m2m_cell(field_name, field_values[i])
+                        cleaned_field_name, foreign_instances = self.parse_goc_m2m_cell(field_name, field_values[i])
 
                     if is_m2m or is_goc_m2m:
                         m2m_lists.append((cleaned_field_name, foreign_instances))
@@ -217,7 +127,7 @@ class Command(BaseCommand):
 
                 # we zip the field names & values into a dict of kwargs,
                 # but we'll skip any fields that have the value 'default', 'none', (or any other value in SKIP_VALUES)
-                kwargs = {k: v for k, v in zip(cleaned_field_names, cleaned_field_values) if v not in SKIP_VALUES}
+                kwargs = {k: v for k, v in zip(cleaned_field_names, cleaned_field_values) if v not in self.SKIP_VALUES}
 
                 instance, created = cls.objects.get_or_create(**kwargs)
 
@@ -230,21 +140,121 @@ class Command(BaseCommand):
                             raise CommandError(f'Could not set m2m field {m2m_field_name} on {cls.__name__} '
                                                f'with instances {m2m_instances}')
 
-                if options['verbosity'] == 3:
+                if self.verbosity == 3:
                     self.stdout.write(f'row {reader.line_num}: {cls.__name__} with kwargs {kwargs}'
                                       f'gives {instance}, and created? {created}')
 
                 if created:
-                    created_count += 1
+                    self.created_count += 1
                     per_model_created_count += 1
                     if options['verbosity'] >= 2:
                         self.stdout.write(self.style.SUCCESS(f'Used {cls.__name__} with kwargs {kwargs} to create {instance}'))
                 else:
-                    found_count += 1
+                    self.found_count += 1
                     per_model_found_count += 1
-                    if options['verbosity'] >= 2:
+                    if self.verbosity >= 2:
                         self.stdout.write(self.style.WARNING(f'Found {cls.__name__} with kwargs {kwargs}'))
 
         self.stdout.write(self.style.SUCCESS(
-            f'Successfully seeded database by creating {created_count} and finding {found_count} instances')
+            f'Successfully seeded database by creating {self.created_count} and finding {self.found_count} instances')
         )
+
+    def parse_fk_cell(self, field_name, field_value):
+        """
+        1. get the class name of ref'd model from field_name (e.g. fk__place__surround -> Place)
+        2. get the ref'd instance using natural key lookup of field_value
+        3. get the cleaned field name (e.g. fk__place__surround -> surround)
+        4. return the cleaned field name as the key and the instance as the value
+
+        throw errors if the class or instance don't exist,
+        or if the field_name doesn't conform to expected format
+        """
+
+        self.guard_format(r'fk__\w+__\w+', field_name)
+
+        foreign_cls, cleaned_field_name = self.parse_field_name(field_name)
+        foreign_instance = self.get_foreign_instance(foreign_cls, field_value)
+
+        return cleaned_field_name, foreign_instance
+
+    def parse_m2m_cell(self, field_name, field_value):
+        """
+        1. get the class name of ref'd model from field_name (e.g. m2m__place__contents -> Place)
+        2a. parse the field_value into a list of natural keys
+        2b. get all the ref'd instances using natural key lookup
+        3. get the cleaned field name (e.g. m2m__place__contents -> contents)
+        4. return the cleaned field name as the key and the instances as the value
+
+        throw errors if the class or any instances don't exist,
+        or if the field_name doesn't conform to expected format
+        """
+
+        self.guard_format(r'm2m__\w+__\w+', field_name)
+
+        foreign_cls, cleaned_field_name = self.parse_field_name(field_name)
+        foreign_instance_natural_keys = map(lambda s: s.strip(), field_value.split(', '))
+        foreign_instances = [self.get_foreign_instance(foreign_cls, key) for key in foreign_instance_natural_keys]
+
+        return cleaned_field_name, foreign_instances
+
+    def parse_goc_m2m_cell(self, field_name, field_value):
+        """
+        1. get the class name of ref'd model from field_name (e.g. goc_m2m__item__belongings -> Item)
+        2a. parse the field_value into a list of custom creation strings
+        2b. create all the ref'd instances by assuming they have custom overrides to create from a string
+        3. get the cleaned field name (e.g. goc_m2m__item__belongings -> belongings)
+        4. return the cleaned field name as the key and the instances as the value
+
+        throw errors if the class doesn't exist or it doesn't have a get_or_create_from_string method,
+        or if the field_name doesn't conform to expected format
+        """
+
+        self.guard_format(r'goc_m2m__\w+__\w+', field_name)
+
+        foreign_cls, cleaned_field_name = self.parse_field_name(field_name)
+        if not hasattr(foreign_cls, 'get_or_create_from_string'):
+            raise CommandError(f'Class {foreign_cls} does not have a get_or_create_from_string method.')
+
+        foreign_creation_strings = map(lambda s: s.strip(), field_value.split(', '))
+        foreign_instances = []
+
+        for string in foreign_creation_strings:
+            foreign_instance, created = foreign_cls.get_or_create_from_string(string)
+
+            if created:
+                self.created_count += 1
+                if self.verbosity >= 2:
+                    self.stdout.write(
+                        self.style.SUCCESS(f'Used {foreign_cls.__name__} with creation string {string} to create {foreign_instance}'))
+            else:
+                self.found_count += 1
+                if self.verbosity >= 2:
+                    self.stdout.write(self.style.WARNING(f'Found {foreign_cls.__name__} with creation string {string}'))
+
+            foreign_instances.append(foreign_instance)
+
+        return cleaned_field_name, foreign_instances
+
+    def guard_format(self, expected_format, field_name):
+        """helper for checking that field_name matches expected_format"""
+        if re.fullmatch(expected_format, field_name) is None:
+            raise CommandError(f'Field name {field_name} does not conform to expected format: {expected_format}')
+
+    def parse_field_name(self, field_name):
+        """helper for parsing field_names like fk__place__surround and m2m__place__contents
+        into the class and cleaned field name"""
+        foreign_classname_snakecase, cleaned_field_name = re.match(r'^\w+__(\w+)__(\w+)', field_name).group(1, 2)
+        foreign_classname = snakecase_to_titlecase(foreign_classname_snakecase)
+        foreign_cls = str_to_class(sys.modules[__name__], foreign_classname)
+
+        return foreign_cls, cleaned_field_name
+
+    def get_foreign_instance(self, foreign_cls, field_value):
+        """helper for getting a foreign instance using natural key lookup"""
+
+        foreign_instance = foreign_cls.objects.get_by_natural_key(field_value)
+
+        if foreign_instance is None:
+            raise CommandError(f'Could not find instance of {foreign_cls} with natural key {field_value}')
+
+        return foreign_instance

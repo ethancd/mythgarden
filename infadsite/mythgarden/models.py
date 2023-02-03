@@ -333,14 +333,20 @@ class Session(models.Model):
 
     @property
     def occupant_states(self):
-        occupant_states = []
+        # this runs a query for each villager and then another for the full list.
+        # would be better if we grabbed extant villager_states first, created any missing ones,
+        # and then returned the full unioned query set
+        occupant_states = self.villager_states.filter(villager__in=self.occupants)
 
         # ensure all occupants have a state
         for villager in self.occupants.all():
-            villager_state, created = self.villager_states.get_or_create(villager=villager, location=self.location)
-            occupant_states.append(villager_state)
+            if occupant_states.filter(villager=villager).exists():
+                continue
 
-        return self.villager_states.filter(villager__in=self.occupants)
+            villager_state = self.villager_states.create(villager=villager, location=self.location)
+            occupant_states |= villager_state
+
+        return occupant_states
 
     def abbr_key_tag(self):
         return f'({self.key[:8]}...)'
@@ -374,7 +380,7 @@ class ItemTypePreference(models.Model):
     DISLIKE = 'DISLIKE'
     HATE = 'HATE'
 
-    REACTIONS = [
+    VALENCES = [
         (LOVE, 'love'),
         (LIKE, 'like'),
         (NEUTRAL, 'neutral'),
@@ -393,19 +399,10 @@ class ItemTypePreference(models.Model):
     }
 
     item_type = models.CharField(max_length=8, choices=Item.ITEM_TYPES)
-    valence = models.CharField(max_length=7, choices=REACTIONS, default=NEUTRAL)
+    valence = models.CharField(max_length=7, choices=VALENCES, default=NEUTRAL)
 
     def __str__(self):
-        return f'{self.villager} {self.get_reaction_display()}s {self.get_item_type_display()}s'
-
-    def save(self, *args, **kwargs):
-        # in our data intake, expect to call e.g. ItemTypePreference.objects.create('BERRY: LOVE')
-        # so hijack that create call to create a new instance from a string
-        if self._state.adding:
-            if re.fullmatch(args[0], r'^[A-Z]+: [A-Z]+$'):
-                return self.__class__.get_or_create_from_string(args[0])
-
-        return super().save(*args, **kwargs)
+        return f'preference: {self.get_valence_display()}s {self.get_item_type_display()}s'
 
     @classmethod
     def get_or_create_from_string(cls, string):
@@ -415,7 +412,13 @@ class ItemTypePreference(models.Model):
         item_type = item_type.upper()
         valence = valence.upper()
 
-        return cls.get_or_create(item_type=item_type, valence=valence)
+        if item_type not in dict(Item.ITEM_TYPES):
+            raise ValueError(f'invalid item type: {item_type}')
+
+        if valence not in dict(cls.VALENCES):
+            raise ValueError(f'invalid valence: {valence}')
+
+        return cls.objects.get_or_create(item_type=item_type, valence=valence)
 
 
 class Villager(models.Model):
@@ -470,16 +473,34 @@ class Villager(models.Model):
 
 
 class VillagerState(models.Model):
+    MAX_AFFINITY = 100
     AFFINITY_TIER_SIZE = 20
+    TOTAL_TIERS = MAX_AFFINITY // AFFINITY_TIER_SIZE
 
     session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name='villager_states')
     villager = models.ForeignKey(Villager, on_delete=models.CASCADE, related_name='states')
 
-    affinity = models.IntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])
+    affinity = models.IntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(MAX_AFFINITY)])
     location = models.ForeignKey(Place, on_delete=models.CASCADE, related_name='villagers')  # , default=villager.home)
 
     def __str__(self):
         return f'{self.villager} state ' + self.session.abbr_key_tag()
+
+    def serialize(self):
+        return {
+            'villager': self.villager.serialize(),
+            'display_affinity': self.display_affinity,
+            'location': self.location.serialize(),
+        }
+
+    @property
+    def display_affinity(self):
+        tier = self.affinity // self.AFFINITY_TIER_SIZE  # 0-5
+
+        full_hearts = ['❤️' for _ in range(tier)]
+        empty_hearts = ['🖤' for _ in range(self.TOTAL_TIERS - tier)]
+
+        return ''.join(full_hearts + empty_hearts)
 
     def add_affinity(self, amount):
         self.affinity += amount
@@ -546,7 +567,7 @@ class Action(models.Model):
     DAY = 'DAY'
     KOIN = 'KOIN'
 
-    KOIN_SIGN = '₭'
+    KOIN_SIGN = '⚜️'
 
     COST_UNITS = [
         (MIN, 'min'),

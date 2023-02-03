@@ -337,7 +337,7 @@ class ActionExecutor:
                     'clock': session.clock,
                     'buildings': list(session.location.buildings.all()),
                     'place_contents': list(session.location_state.contents.all()),
-                    'villagers': list(session.occupants.all())
+                    'villager_states': list(session.occupant_states.all())
                 }, action.log_statement)
 
     def execute_talk_action(self, action, session):
@@ -356,6 +356,7 @@ class ActionExecutor:
 
         return ({
                     'clock': session.clock,
+                    'villager_states': list(session.occupant_states.all()),
                     # 'dialogue': dialogue,
                 }, log_statement)
 
@@ -385,6 +386,7 @@ class ActionExecutor:
 
         return ({
                     'inventory': list(session.inventory.items.all()),
+                    'villager_states': list(session.occupant_states.all()),
                     # 'dialogue': dialogue,
                 }, log_statement)
 
@@ -513,23 +515,23 @@ class ActionExecutor:
 
     def add_affinity_tag_if_needed(self, base_statement, is_next_tier, villager):
         if is_next_tier:
-            return base_statement + f' You and {villager.name} have developed more of a bond!'
+            return base_statement + f' You and {villager.name} have developed more of a bond! +❤️'
         else:
             return base_statement
 
     def get_valence_text(self, valence):
         if valence == ItemTypePreference.LOVE:
-            return 'loved it!'
+            return 'love it!'
         elif valence == ItemTypePreference.LIKE:
-            return 'liked it!'
+            return 'like it!'
         elif valence == ItemTypePreference.NEUTRAL:
-            return 'felt okay about it.'
+            return 'feel okay about it.'
         elif valence == ItemTypePreference.DISLIKE:
-            return 'weren\'t a fan of it.'
+            return 'aren\'t a fan of it.'
         elif valence == ItemTypePreference.HATE:
             return 'wish you hadn\'t!'
         else:
-            return 'felt nothing about'
+            raise ValueError(f'Invalid valence {valence}')
 
     def pull_item_from_pool(self, location):
         """Returns a random item from the given location's item pool, weighted by rarity"""
