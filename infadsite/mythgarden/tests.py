@@ -360,7 +360,7 @@ class GenShoppingActionsTests(TestCase):
         self.shop_contents = [create_item(name='Rock', price=5)]
         actions = self.ag.gen_shopping_actions(self.shop_contents, self.inventory)
 
-        self.assertEqual(actions[0].log_statement, 'You bought a Rock for 5 koin.')
+        self.assertEqual(actions[0].log_statement, 'You bought Rock for 5 koin.')
 
     def test_returns_buy_actions_with_correct_target_object(self):
         """
@@ -405,7 +405,7 @@ class GenShoppingActionsTests(TestCase):
         self.inventory = [create_item(name='Rock', price=5)]
         actions = self.ag.gen_shopping_actions(self.shop_contents, self.inventory)
 
-        self.assertEqual(actions[0].log_statement, 'You sold a Rock for 5 koin.')
+        self.assertEqual(actions[0].log_statement, 'You sold Rock for 5 koin.')
 
     def test_returns_sell_actions_with_correct_target_object(self):
         """
@@ -560,7 +560,7 @@ class GenSocialActionsTests(TestCase):
         self.villagers = [create_villager()]
         actions = self.ag.gen_social_actions(self.villagers, self.inventory)
 
-        self.assertEqual(actions[0].cost_amount, 1)
+        self.assertEqual(actions[0].cost_amount, 30)
 
     def test_returns_talk_actions_with_correct_cost_unit(self):
         """
@@ -569,7 +569,7 @@ class GenSocialActionsTests(TestCase):
         self.villagers = [create_villager()]
         actions = self.ag.gen_social_actions(self.villagers, self.inventory)
 
-        self.assertEqual(actions[0].cost_unit, Action.HOUR)
+        self.assertEqual(actions[0].cost_unit, Action.MIN)
 
     def test_returns_gift_actions_with_correct_description(self):
         """
@@ -593,7 +593,7 @@ class GenSocialActionsTests(TestCase):
 
         gift_action = [a for a in actions if a.action_type == Action.GIV][0]
 
-        self.assertEqual(gift_action.log_statement, 'You gave a Rock to Lea.')
+        self.assertEqual(gift_action.log_statement, 'You gave {item_name} to {villager_name}. Looks like they {valence_text}')
 
     def test_returns_gift_actions_with_correct_target_object(self):
         """
@@ -629,7 +629,7 @@ class GenSocialActionsTests(TestCase):
 
         gift_action = [a for a in actions if a.action_type == Action.GIV][0]
 
-        self.assertEqual(gift_action.cost_amount, 15)
+        self.assertEqual(gift_action.cost_amount, 5)
 
     def test_returns_gift_actions_with_correct_cost_unit(self):
         """
@@ -1254,7 +1254,7 @@ class GenGatherActionsTests(TestCase):
         """
         actions = self.ag.gen_gather_actions(self.forest)
 
-        self.assertEqual(actions[0].log_statement, 'You found a {result}!')
+        self.assertEqual(actions[0].log_statement, 'You found {result}!')
 
     def test_returns_action_of_gather_type_for_beach(self):
         """
@@ -1297,7 +1297,7 @@ class ActionModelTests(TestCase):
         """
         action = Action(action_type=Action.WAT, cost_amount=1, cost_unit=Action.HOUR)
 
-        self.assertEqual(action.display_cost, '1 hour')
+        self.assertEqual(action.display_cost, '1 hr')
 
     def test_computes_correct_display_cost_for_money_actions(self):
         """
@@ -1305,7 +1305,7 @@ class ActionModelTests(TestCase):
         """
         action = Action(action_type=Action.BUY, cost_amount=5, cost_unit=Action.KOIN)
 
-        self.assertEqual(action.display_cost, '₭5')
+        self.assertEqual(action.display_cost, '⚜️5')
 
 
 class ClockModelTests(TestCase):
@@ -1519,18 +1519,8 @@ class ExecuteActionsTests(TestCase):
         Each action type calls the correct execute_action method
         """
 
-        IMPLEMENTED_EXECUTIONS = [
-            (Action.TRA, 'Travel'),
-            (Action.BUY, 'Buy'),
-            (Action.SEL, 'Sell'),
-            (Action.PLA, 'Plant'),
-            (Action.HAR, 'Harvest'),
-            (Action.GAT, 'Gather'),
-        ]
-
         for action_type, display_type in Action.ACTION_TYPES:
             with self.subTest(action_type=action_type, display_type=display_type):
-                is_implemented = (action_type, display_type) in IMPLEMENTED_EXECUTIONS
                 print(action_type, display_type)
                 action = Action(action_type=action_type)
                 ex = f'execute_{display_type.lower()}_action'
@@ -1542,9 +1532,6 @@ class ExecuteActionsTests(TestCase):
                     self.ae.execute(action, self.session)
                     mock.assert_called_with(action, self.session)
 
-                if not is_implemented:
-                    with self.assertRaises(NotImplementedError):
-                        self.ae.execute(action, self.session)
 
     def test_throw_error_if_passed_non_action(self):
         """
