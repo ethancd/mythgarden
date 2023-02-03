@@ -809,7 +809,7 @@ class GenFarmingActionsTests(TestCase):
 
         water_action = [a for a in actions if a.action_type == Action.WAT][0]
 
-        self.assertEqual(water_action.cost_amount, 1)
+        self.assertEqual(water_action.cost_amount, 60)
 
     def test_returns_water_actions_with_correct_cost_unit(self):
         """
@@ -820,7 +820,7 @@ class GenFarmingActionsTests(TestCase):
 
         water_action = [a for a in actions if a.action_type == Action.WAT][0]
 
-        self.assertEqual(water_action.cost_unit, Action.HOUR)
+        self.assertEqual(water_action.cost_unit, Action.MIN)
 
     def test_returns_harvest_actions_when_field_has_crops(self):
         """
@@ -877,7 +877,7 @@ class GenFarmingActionsTests(TestCase):
 
         harvest_action = [a for a in actions if a.action_type == Action.HAR][0]
 
-        self.assertEqual(harvest_action.cost_amount, 1)
+        self.assertEqual(harvest_action.cost_amount, 60)
 
     def test_returns_harvest_actions_with_correct_cost_unit(self):
         """
@@ -888,7 +888,7 @@ class GenFarmingActionsTests(TestCase):
 
         harvest_action = [a for a in actions if a.action_type == Action.HAR][0]
 
-        self.assertEqual(harvest_action.cost_unit, Action.HOUR)
+        self.assertEqual(harvest_action.cost_unit, Action.MIN)
 
     def test_returns_plant_and_water_actions_when_there_are_seeds_and_sprouts(self):
         """
@@ -1133,7 +1133,7 @@ class GenTravelActionsTests(TestCase):
         self.bridges = [create_bridge(self.farm, self.store)]
         actions = self.ag.gen_travel_actions(self.farm, self.bridges)
 
-        self.assertEqual(actions[0].cost_amount, 1)
+        self.assertEqual(actions[0].cost_amount, 60)
 
     def test_returns_travel_actions_with_correct_cost_unit(self):
         """
@@ -1142,7 +1142,7 @@ class GenTravelActionsTests(TestCase):
         self.bridges = [create_bridge(self.farm, self.store)]
         actions = self.ag.gen_travel_actions(self.farm, self.bridges)
 
-        self.assertEqual(actions[0].cost_unit, Action.HOUR)
+        self.assertEqual(actions[0].cost_unit, Action.MIN)
 
     def test_returns_travel_actions_with_correct_direction_when_place_is_place_2_on_the_bridge(self):
         """
@@ -1311,96 +1311,42 @@ class ActionModelTests(TestCase):
 class ClockModelTests(TestCase):
     def setUp(self):
         session = create_session()
-        self.clock = Clock(session=session, day=Clock.MONDAY, time=9)
-
-    def test_parse_duration_returns_a_float(self):
-        """
-        parse_duration returns a float
-        """
-        duration = 1
-        unit = Action.HOUR
-
-        amount = self.clock.parse_duration(duration, unit)
-
-        self.assertTrue(isinstance(amount, float))
-
-    def test_parse_duration_returns_correct_amount_for_hours(self):
-        """
-        parse_duration returns the correct amount for hours
-        """
-        duration = 1
-        unit = Action.HOUR
-
-        amount = self.clock.parse_duration(duration, unit)
-
-        self.assertEqual(amount, 1.0)
-
-    def test_parse_duration_returns_correct_amount_for_minutes(self):
-        """
-        parse_duration returns the correct amount for minutes
-        """
-        duration = 30
-        unit = Action.MIN
-
-        amount = self.clock.parse_duration(duration, unit)
-
-        self.assertEqual(amount, 0.5)
-
-    def test_parse_duration_returns_correct_amount_for_days(self):
-        """
-        parse_duration returns the correct amount for days
-        """
-        duration = 2
-        unit = Action.DAY
-
-        amount = self.clock.parse_duration(duration, unit)
-
-        self.assertEqual(amount, 48.0)
-
-    def test_parse_duration_throws_error_for_invalid_unit(self):
-        """
-        parse_duration throws an error for an invalid unit
-        """
-        duration = 1
-        unit = 'q'
-
-        with self.assertRaises(ValueError):
-            self.clock.parse_duration(duration, unit)
+        self.clock = Clock(session=session, day=Clock.MONDAY, time=9*60)
 
     def test_advance_should_advance_the_time_by_the_amount_of_hours(self):
         """
         advance should advance the time by the amount of hours
         """
-        self.clock.time = 9
-        self.clock.advance(1, Action.HOUR)
+        self.clock.time = 9*60
+        self.clock.advance(60)
 
-        self.assertEqual(self.clock.time, 10)
+        self.assertEqual(self.clock.time, 10*60)
 
     def test_advance_should_roll_time_over_when_time_equals_24(self):
         """
-        advance should roll time over when time equals 24
+        advance should roll time over when time equals 24*60
         """
-        self.clock.time = 9
-        self.clock.advance(15, Action.HOUR)
+        self.clock.time = 9*60
+        self.clock.advance(15*60)
 
         self.assertEqual(self.clock.time, 0)
 
     def test_advance_should_roll_time_over_when_time_exceeds_24(self):
         """
-        advance should roll time over when time exceeds 24
+        advance should roll time over when time exceeds 24*60
         """
-        self.clock.time = 9
-        self.clock.advance(18, Action.HOUR)
+        self.clock.time = 9*60
+        self.clock.advance(18*60)
 
-        self.assertEqual(self.clock.time, 3)
+        self.assertEqual(self.clock.time, 3*60)
 
     def test_advance_should_roll_day_over_when_time_exceeds_24(self):
         """
-        advance should roll day over when time exceeds 24
+        advance should roll day over when time exceeds 24*60
         """
         self.clock.day = Clock.MONDAY
-        self.clock.time = 9
-        self.clock.advance(18, Action.HOUR)
+        self.clock.time = 9*60
+        self.clock.advance(18*60)
 
         self.assertEqual(self.clock.day, Clock.TUESDAY)
 
@@ -1409,8 +1355,8 @@ class ClockModelTests(TestCase):
         advance should roll day over multiple days when time exceeds 48+ hours
         """
         self.clock.day = Clock.MONDAY
-        self.clock.time = 9
-        self.clock.advance(2, Action.DAY)
+        self.clock.time = 9*60
+        self.clock.advance(2*60*24)
 
         self.assertEqual(self.clock.day, Clock.WEDNESDAY)
 
@@ -1419,34 +1365,17 @@ class ClockModelTests(TestCase):
         advance should roll back to start of week when day goes past Saturday
         """
         self.clock.day = Clock.SATURDAY
-        self.clock.time = 9
-        self.clock.advance(18, Action.HOUR)
+        self.clock.time = 9*60
+        self.clock.advance(18*60)
 
         self.assertEqual(self.clock.day, Clock.SUNDAY)
 
-    def test_advance_should_result_in_decimals_when_not_an_even_hour(self):
-        """
-        advance should result in decimals when not an even hour
-        """
-        self.clock.time = 9
-        self.clock.advance(30, Action.MIN)
-
-        self.assertEqual(self.clock.time, 9.5)
-
-    def test_advance_should_add_two_decimals_up_to_an_even_hour(self):
-        """
-        should add two decimals up to an even hour
-        """
-        self.clock.time = 9.5
-        self.clock.advance(30, Action.MIN)
-
-        self.assertEqual(self.clock.time, 10)
 
     def test_get_time_display_should_show_pm_if_time_is_after_12(self):
         """
         get_time_display should show pm if time is after 12
         """
-        self.clock.time = 13
+        self.clock.time = 13*60
 
         self.assertEqual(self.clock.get_time_display(), '1:00pm')
 
@@ -1454,7 +1383,7 @@ class ClockModelTests(TestCase):
         """
         get_time_display should show am if time is before 12
         """
-        self.clock.time = 9
+        self.clock.time = 9*60
 
         self.assertEqual(self.clock.get_time_display(), '9:00am')
 
@@ -1470,7 +1399,7 @@ class ClockModelTests(TestCase):
         """
         get_time_display should show 12pm if time is 12
         """
-        self.clock.time = 12
+        self.clock.time = 12*60
 
         self.assertEqual(self.clock.get_time_display(), '12:00pm')
 
@@ -1478,7 +1407,7 @@ class ClockModelTests(TestCase):
         """
         get_time_display should show 12:30 am if time is 0.5
         """
-        self.clock.time = 0.5
+        self.clock.time = 30
 
         self.assertEqual(self.clock.get_time_display(), '12:30am')
 
@@ -1486,7 +1415,7 @@ class ClockModelTests(TestCase):
         """
         get_time_display should show 12:30 pm if time is 12.5
         """
-        self.clock.time = 12.5
+        self.clock.time = 12*60 + 30
 
         self.assertEqual(self.clock.get_time_display(), '12:30pm')
 
@@ -1501,11 +1430,11 @@ class ClockModelTests(TestCase):
 
     def test_clock_should_error_if_time_is_set_to_greater_than_24(self):
         """
-        should error if time is greater than 24
+        should error if time is greater than 24*60
         """
 
         with self.assertRaises(ValidationError):
-            self.clock.time = 24.5
+            self.clock.time = 24*60 + 1
             self.clock.save()
 
 

@@ -29,6 +29,9 @@ class Inventory(models.Model):
 
 
 class Clock(models.Model):
+    MINUTES_IN_A_DAY = 24 * 60
+    MINUTES_IN_A_HALF_DAY = 12 * 60
+
     SUNDAY = 'SUN'
     MONDAY = 'MON'
     TUESDAY = 'TUE'
@@ -49,7 +52,7 @@ class Clock(models.Model):
 
     session = models.OneToOneField('Session', on_delete=models.CASCADE, primary_key=True)
     day = models.CharField(default=SUNDAY, max_length=9, choices=DAYS_OF_WEEK)
-    time = models.FloatField(default=0, validators=[MinValueValidator(0.0), MaxValueValidator(24.0)])
+    time = models.IntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(MINUTES_IN_A_DAY - 1)])
 
     def __str__(self):
         return 'Clock ' + self.session.abbr_key_tag()
@@ -62,35 +65,25 @@ class Clock(models.Model):
         return self.get_day_display() + ' ' + self.get_time_display()
 
     def get_time_display(self):
-        hours = int(self.time) % 12
+        """ Returns the time as a string in the format 'hh:mmam' or 'hh:mmpm' """
+        hours = (self.time % self.MINUTES_IN_A_HALF_DAY) // 60
         if hours == 0:
             hours = 12
-        minutes = int((self.time - int(self.time)) * 60)
-        suffix = 'pm' if self.time >= 12 else 'am'
+        minutes = self.time % 60
+        suffix = 'pm' if self.time >= self.MINUTES_IN_A_HALF_DAY else 'am'
 
         return f"{hours}:{minutes:02d}{suffix}"
 
-    def advance(self, duration, unit):
+    def advance(self, amount_in_minutes):
         """ Updates the day and time by the given amount of time,
         rolling the clock and days over at midnight and end of saturday respectively. """
 
-        amount_in_hours = self.parse_duration(duration, unit)
-        self.time += amount_in_hours
+        self.time += amount_in_minutes
 
-        if self.time >= 24:
-            days_to_add = int(self.time / 24)
-            self.time = self.time % 24
+        days_to_add = self.time // self.MINUTES_IN_A_DAY
+        if days_to_add > 0:
+            self.time = self.time % self.MINUTES_IN_A_DAY
             self.advance_day(days_to_add)
-
-    def parse_duration(self, duration, unit):
-        if unit == Action.HOUR:
-            return float(duration)
-        elif unit == Action.MIN:
-            return float(duration / 60)
-        elif unit == Action.DAY:
-            return float(duration * 24)
-        else:
-            raise ValueError(f"Invalid duration unit: {unit}")
 
     def advance_day(self, days_to_add):
         """ Advances the day by the given number of days, rolling over at the end of the week. """

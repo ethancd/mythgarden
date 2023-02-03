@@ -170,14 +170,12 @@ class ActionGenerator:
     def gen_talk_action(self, villager):
         """Returns an action that talks to given villager"""
 
-        talk_duration_amount, talk_duration_unit = self.get_talk_duration(villager)
-
         return Action(
             description=f'Talk to {villager.name}',
             action_type=Action.TAL,
             target_object=villager,
-            cost_amount=talk_duration_amount,
-            cost_unit=talk_duration_unit,
+            cost_amount=villager.talk_duration,
+            cost_unit=Action.MIN,
             log_statement=f'You talked to {villager.name}.',
         )
 
@@ -242,8 +240,8 @@ class ActionGenerator:
             description=f'Water {sprout.name}',
             action_type=Action.WAT,
             target_object=sprout,
-            cost_amount=1,
-            cost_unit=Action.HOUR,
+            cost_amount=60,
+            cost_unit=Action.MIN,
             log_statement=f'You watered the {sprout.name} sprouts.',
         )
 
@@ -253,8 +251,8 @@ class ActionGenerator:
             description=f'Harvest {crop.name}',
             action_type=Action.HAR,
             target_object=crop,
-            cost_amount=1,
-            cost_unit=Action.HOUR,
+            cost_amount=60,
+            cost_unit=Action.MIN,
             log_statement=f'You harvested the {crop.name} crop.',
         )
 
@@ -265,8 +263,8 @@ class ActionGenerator:
             action_type=Action.TRA,
             target_object=destination,
             direction=direction,
-            cost_amount=1,
-            cost_unit=Action.HOUR,
+            cost_amount=60,
+            cost_unit=Action.MIN,
             log_statement=f'You travelled {display_direction} to {destination.name}.',
         )
 
@@ -275,8 +273,8 @@ class ActionGenerator:
         return Action(
             description='Go fishing',
             action_type=Action.GAT,
-            cost_amount=1,
-            cost_unit=Action.HOUR,
+            cost_amount=60,
+            cost_unit=Action.MIN,
             log_statement='You caught a {result}!',
         )
 
@@ -285,8 +283,8 @@ class ActionGenerator:
         return Action(
             description='Dig for something interesting',
             action_type=Action.GAT,
-            cost_amount=1.5,
-            cost_unit=Action.HOUR,
+            cost_amount=90,
+            cost_unit=Action.MIN,
             log_statement='You dug up a {result}!',
         )
 
@@ -299,15 +297,6 @@ class ActionGenerator:
             cost_unit=Action.MIN,
             log_statement='You found {result}!',
         )
-
-    def get_talk_duration(self, villager):
-        """Returns the duration of a conversation with given villager"""
-        talk_duration_in_min = villager.talk_duration
-
-        if talk_duration_in_min > 60:
-            return talk_duration_in_min / 60, Action.HOUR
-        else:
-            return talk_duration_in_min, Action.MIN
 
 
 class ActionExecutor:
@@ -328,7 +317,7 @@ class ActionExecutor:
         """Executes a travel action, which updates the hero's current location and ticks the clock"""
 
         session.location = action.target_object
-        session.clock.advance(action.cost_amount, action.cost_unit)
+        session.clock.advance(action.cost_amount)
 
         session.save_data()
 
@@ -348,7 +337,7 @@ class ActionExecutor:
         is_next_tier = self.update_affinity(villager, villager.friendliness, session)
         # dialogue = villager.get_dialogue(session)
 
-        session.clock.advance(action.cost_amount, action.cost_unit)
+        session.clock.advance(action.cost_amount)
 
         session.save_data()
 
@@ -372,7 +361,7 @@ class ActionExecutor:
         is_next_tier = self.update_affinity(villager, affinity_amount, session)
         # dialogue = villager.get_dialogue(session)
 
-        session.clock.advance(action.cost_amount, action.cost_unit)
+        session.clock.advance(action.cost_amount)
         session.inventory.items.remove(gift)
 
         session.save_data()
@@ -457,7 +446,7 @@ class ActionExecutor:
 
         item = self.pull_item_from_pool(session.location)
         session.inventory.items.add(item)
-        session.clock.advance(action.cost_amount, action.cost_unit)
+        session.clock.advance(action.cost_amount)
 
         session.save_data()
 
