@@ -417,6 +417,7 @@ class ItemTypePreference(models.Model):
 class Villager(models.Model):
     name = models.CharField(max_length=255)
     full_name = models.CharField(max_length=255, null=True, blank=True)
+    description = models.CharField(max_length=255, null=True, blank=True)
     friendliness = models.IntegerField(default=4, validators=[MinValueValidator(1), MaxValueValidator(7)])
     portrait = models.ImageField(upload_to='portraits/', null=True, blank=True, default='portraits/squall-farmer.png')
     home = models.ForeignKey(Building, on_delete=models.SET_NULL, null=True, blank=True, related_name='residents')
