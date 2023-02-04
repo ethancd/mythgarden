@@ -1,11 +1,9 @@
 from django.db import models
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, m2m_changed
 from django.dispatch import receiver
 from django.core.validators import MinValueValidator, MaxValueValidator, ValidationError
-
-import re
 
 from .static_helpers import generate_uuid
 
@@ -19,13 +17,11 @@ class Inventory(models.Model):
     def __str__(self):
         return 'Inventory ' + self.session.abbr_key_tag()
 
-    def clean(self):
-        if self.items.count() > self.MAX_ITEMS:
-            raise ValidationError('Inventory cannot contain more than 6 items.')
 
-    def save(self, *args, **kwargs):
-        self.clean()
-        super().save(*args, **kwargs)
+@receiver(m2m_changed, sender=Inventory.items.through)
+def inventory_items_changed(sender, instance, action, **kwargs):
+    if action == 'post_add' and instance.items.count() > Inventory.MAX_ITEMS:
+        raise ValidationError(f'Inventory cannot hold more than {Inventory.MAX_ITEMS} items.')
 
 
 class Clock(models.Model):
@@ -90,6 +86,10 @@ class Clock(models.Model):
         current_day_index = self.DAYS_OF_WEEK.index((self.day, self.get_day_display()))
         new_day_index = (current_day_index + days_to_add) % 7
         self.day = self.DAYS_OF_WEEK[new_day_index][0]
+
+    @property
+    def minutes_to_midnight(self):
+        return self.MINUTES_IN_A_DAY - self.time
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -543,6 +543,7 @@ class Action(models.Model):
     BUY = 'BUY'
     SEL = 'SELL'
     GAT = 'GATHER'
+    SLP = 'SLEEP'
 
     ACTION_TYPES = [
         (TRA, 'Travel'),
@@ -554,6 +555,7 @@ class Action(models.Model):
         (BUY, 'Buy'),
         (SEL, 'Sell'),
         (GAT, 'Gather'),
+        (SLP, 'Sleep'),
     ]
 
     MIN = 'MINUTE'

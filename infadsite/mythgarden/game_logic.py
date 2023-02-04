@@ -13,7 +13,7 @@ def can_afford_action(wallet, requested_action):
 
 
 class ActionGenerator:
-    def gen_available_actions(self, place, inventory, contents, villagers):
+    def gen_available_actions(self, place, inventory, contents, villagers, clock):
         """Returns a list of available actions for the hero in the current session, taking into account:
         - the current inventory
         - the location's current present items/occupants (contents and villagers)
@@ -49,6 +49,8 @@ class ActionGenerator:
 
         if len(villagers) > 0:
             available_actions += self.gen_social_actions(villagers, inventory)
+
+        available_actions += [self.gen_sleep_action(clock)]
 
         return available_actions
 
@@ -296,6 +298,16 @@ class ActionGenerator:
             cost_amount=30,
             cost_unit=Action.MIN,
             log_statement='You found {result}!',
+        )
+
+    def gen_sleep_action(self, clock):
+        """Returns an action for the hero to go to sleep till the next day"""
+        return Action(
+            description='Go to sleep',
+            action_type=Action.SLP,
+            cost_amount=clock.minutes_to_midnight,
+            cost_unit=Action.MIN,
+            log_statement='You got a good night\'s sleep.',
         )
 
 

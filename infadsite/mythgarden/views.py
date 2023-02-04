@@ -3,6 +3,9 @@ from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.urls import reverse
+from django.core.validators import ValidationError
+from django.db import transaction
+from sqlite3 import IntegrityError
 
 from .game_logic import ActionGenerator, ActionExecutor, can_afford_action
 from .static_helpers import srs_serialize
@@ -96,7 +99,12 @@ def action(request):
         if not can_afford_action(session.wallet, requested_action):
             return JsonResponse({'error': 'hero cannot afford requested action'})
 
-        updated_models, log_statement = ActionExecutor().execute(requested_action, session)
+        try:
+            with transaction.atomic():
+                updated_models, log_statement = ActionExecutor().execute(requested_action, session)
+        except (ValidationError, IntegrityError) as e:
+            return JsonResponse({'error': e.message})
+
         updated_models['actions'] = get_current_actions(session)
 
         results = {k: srs_serialize(v) for k, v in updated_models.items()}
@@ -112,8 +120,9 @@ def get_current_actions(session):
     place = session.location
     contents = list(session.location_state.contents.all())
     villagers = list(session.occupants.all())
+    clock = session.clock
 
-    actions = ActionGenerator().gen_available_actions(place, inventory, contents, villagers)
+    actions = ActionGenerator().gen_available_actions(place, inventory, contents, villagers, clock)
 
     return actions
 
