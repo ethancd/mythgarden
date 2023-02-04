@@ -337,7 +337,7 @@ class Session(models.Model):
                 continue
 
             villager_state = self.villager_states.create(villager=villager, location=self.location)
-            occupant_states |= villager_state
+            occupant_states |= VillagerState.objects.filter(pk=villager_state.pk)
 
         return occupant_states
 
@@ -563,12 +563,13 @@ class Action(models.Model):
     DAY = 'DAY'
     KOIN = 'KOIN'
 
+    HOUR_ABBR = 'hr'
+    MIN_ABBR = 'min'
     KOIN_SIGN = '⚜️'
 
     COST_UNITS = [
-        (MIN, 'min'),
-        (HOUR, 'hr'),
-        (DAY, 'day'),
+        (MIN, MIN_ABBR),
+        (HOUR, HOUR_ABBR),
         (KOIN, KOIN_SIGN),
     ]
 
@@ -609,8 +610,11 @@ class Action(models.Model):
     def display_cost(self):
         if self.is_cost_in_money():
             return self.get_cost_unit_display() + str(self.cost_amount)
+        elif self.cost_amount > 60 and self.cost_unit == self.MIN:
+            return f'{self.cost_amount // 60}{self.HOUR_ABBR} ' \
+                   f'{self.cost_amount % 60}{self.MIN_ABBR}'
         else:
-            return str(self.cost_amount) + ' ' + self.get_cost_unit_display()
+            return str(self.cost_amount) + self.get_cost_unit_display()
 
     def is_cost_in_money(self):
         return self.cost_unit in self.MONEY_UNITS
