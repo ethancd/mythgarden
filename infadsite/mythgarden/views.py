@@ -34,10 +34,10 @@ def home(request):
         'clock': session.clock,
         'wallet': session.wallet,
         'place': session.location,
-        'inventory': session.inventory.items.all(),
+        'inventory': session.inventory.item_tokens.all(),
         'actions': actions,
         'buildings': session.location.buildings.all(),
-        'place_content_states': session.local_content_states.all(),
+        'local_item_tokens': session.local_item_tokens.all(),
         'villager_states': session.occupant_states.all(),
     }
 
@@ -116,13 +116,13 @@ def action(request):
 
 
 def get_current_actions(session):
-    inventory = list(session.inventory.items.all())
     place = session.location
-    contents = list(session.location_state.contents.all())
-    villagers = list(session.occupants.all())
+    inventory = list(session.inventory.item_tokens.all())
+    contents = list(session.local_item_tokens.all())
+    villager_states = list(session.occupant_states.all())
     clock = session.clock
 
-    actions = ActionGenerator().gen_available_actions(place, inventory, contents, villagers, clock)
+    actions = ActionGenerator().gen_available_actions(place, inventory, contents, villager_states, clock)
 
     return actions
 

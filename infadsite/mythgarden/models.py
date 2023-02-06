@@ -12,15 +12,15 @@ class Inventory(models.Model):
     MAX_ITEMS = 6
 
     session = models.OneToOneField('Session', on_delete=models.CASCADE, primary_key=True)
-    items = models.ManyToManyField('Item', blank=True)
+    item_tokens = models.ManyToManyField('ItemToken', blank=True)
 
     def __str__(self):
         return 'Inventory ' + self.session.abbr_key_tag()
 
 
-@receiver(m2m_changed, sender=Inventory.items.through)
+@receiver(m2m_changed, sender=Inventory.item_tokens.through)
 def inventory_items_changed(sender, instance, action, **kwargs):
-    if action == 'post_add' and instance.items.count() > Inventory.MAX_ITEMS:
+    if action == 'post_add' and instance.item_tokens.count() > Inventory.MAX_ITEMS:
         raise ValidationError(f'Inventory cannot hold more than {Inventory.MAX_ITEMS} items.')
 
 
@@ -28,6 +28,7 @@ class Clock(models.Model):
     MINUTES_IN_A_DAY = 24 * 60
     MINUTES_IN_A_HALF_DAY = 12 * 60
     MINUTES_IN_A_QUARTER_DAY = 6 * 60
+    DAWN = MINUTES_IN_A_QUARTER_DAY
 
     SUNDAY = 'SUN'
     MONDAY = 'MON'
@@ -47,9 +48,19 @@ class Clock(models.Model):
         (SATURDAY, 'Sat'),
     ]
 
+    DAY_TO_INDEX = {
+        SUNDAY: 0,
+        MONDAY: 1,
+        TUESDAY: 2,
+        WEDNESDAY: 3,
+        THURSDAY: 4,
+        FRIDAY: 5,
+        SATURDAY: 6,
+    }
+
     session = models.OneToOneField('Session', on_delete=models.CASCADE, primary_key=True)
     day = models.CharField(default=SUNDAY, max_length=9, choices=DAYS_OF_WEEK)
-    time = models.IntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(MINUTES_IN_A_DAY - 1)])
+    time = models.IntegerField(default=DAWN, validators=[MinValueValidator(0), MaxValueValidator(MINUTES_IN_A_DAY - 1)])
     is_new_day = models.BooleanField(default=False)
 
     def __str__(self):
@@ -90,13 +101,23 @@ class Clock(models.Model):
         self.day = self.DAYS_OF_WEEK[new_day_index][0]
         self.is_new_day = True
 
+    def is_now(self, day, time):
+        return self.day == day and self.time == time
+
+    def is_in_past(self, day, time):
+        is_past_day = self.DAY_TO_INDEX[self.day] > self.DAY_TO_INDEX[day]
+        return is_past_day or (self.day == day and self.time > time)
+
+    def is_now_or_in_past(self, day, time):
+        return self.is_now(day, time) or self.is_in_past(day, time)
+
     @property
     def minutes_to_midnight(self):
         return self.MINUTES_IN_A_DAY - self.time
 
     @property
     def minutes_to_dawn(self):
-        return self.MINUTES_IN_A_QUARTER_DAY - self.time
+        return self.DAWN - self.time
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -105,11 +126,13 @@ class Clock(models.Model):
 
 @receiver(post_save, sender=Clock)
 def time_has_passed(sender, instance, **kwargs):
+    instance.session.trigger_scheduled_events()
+
     if instance.is_new_day:
         instance.session.reset_for_new_day()
 
         instance.is_new_day = False
-        if instance.time < instance.MINUTES_IN_A_QUARTER_DAY:
+        if instance.time < instance.DAWN:
             instance.advance(instance.minutes_to_dawn)
 
         instance.save()
@@ -186,6 +209,8 @@ class Item(models.Model):
         EPIC: 0.02,
     }
 
+    CROP_PROFIT_MULTIPLIER = 10
+
     name = models.CharField(max_length=255, unique=True)
     icon = models.ImageField(upload_to='items/', null=True, blank=True)
     item_type = models.CharField(max_length=8, choices=ITEM_TYPES, default=GIFT)
@@ -225,17 +250,26 @@ class Item(models.Model):
             raise ValueError('Item is not a seed or sprout.')
 
     def get_next_name(self):
+        # could have some Item.name validation that ensures that the name ends with the item type for seed/sprout/crop
         curr_type_name = dict(Item.ITEM_TYPES)[self.item_type]
         next_type_name = dict(Item.ITEM_TYPES)[self.get_next_type()]
         return self.name.replace(curr_type_name, next_type_name)
 
     def get_next_price(self):
-        return self.price * 3
+        # seed -> sprout is mostly irrelevant, so goal is to make seed -> crop hit the CROP_PROFIT_MULTIPLIER
+        # let's be ridiculous and say that seeds and sprouts are =, and then you multiply when you get to the crop
+
+        if self.item_type == Item.SEED:
+            return self.price
+        elif self.item_type == Item.SPROUT:
+            return self.price * self.CROP_PROFIT_MULTIPLIER
+        else:
+            raise ValueError('Item is not a seed or sprout.')
 
 
-class ItemState(models.Model):
-    session = models.ForeignKey('Session', on_delete=models.CASCADE, related_name='item_states')
-    item = models.ForeignKey('Item', on_delete=models.CASCADE, related_name='states')
+class ItemToken(models.Model):
+    session = models.ForeignKey('Session', on_delete=models.CASCADE, related_name='item_tokens')
+    item = models.ForeignKey('Item', on_delete=models.CASCADE, related_name='tokens')
     has_been_watered = models.BooleanField(default=False)
 
     def __str__(self):
@@ -243,14 +277,60 @@ class ItemState(models.Model):
 
     def serialize(self):
         return {
-            'item': self.item.serialize(),
+            'name': self.name,
+            'rarity': self.item.get_rarity_display(),
             'has_been_watered': self.has_been_watered,
         }
+
+    @property
+    def name(self):
+        return self.item.name
+
+    @property
+    def item_type(self):
+        return self.item.item_type
+
+    @property
+    def rarity(self):
+        return self.item.rarity
+
+    @property
+    def price(self):
+        return self.item.price
 
 
 class PlaceManager(models.Manager):
     def get_by_natural_key(self, name):
         return self.get(name=name)
+
+
+class ScheduledEvent(models.Model):
+    ITEMS_APPEAR = 'ITEMS_APPEAR'
+
+    EVENT_TYPES = [
+        (ITEMS_APPEAR, 'Items appear'),
+    ]
+
+    day = models.CharField(default=Clock.SUNDAY, max_length=9, choices=Clock.DAYS_OF_WEEK)
+    time = models.IntegerField(default=Clock.DAWN,
+                               validators=[MinValueValidator(0), MaxValueValidator(Clock.MINUTES_IN_A_DAY - 1)])
+
+    place = models.ForeignKey('Place', on_delete=models.SET_NULL, null=True, blank=True, related_name='scheduled_events')
+    items = models.ManyToManyField('Item', blank=True, related_name='scheduled_events')
+
+    event_type = models.CharField(max_length=12, choices=EVENT_TYPES, default=ITEMS_APPEAR)
+
+    def __str__(self):
+        return f'Scheduled Event: {self.get_event_type_display()} in {self.place} at {self.time} on {self.day}'
+
+
+class ScheduledEventState(models.Model):
+    event = models.ForeignKey('ScheduledEvent', on_delete=models.CASCADE, related_name='states')
+    session = models.ForeignKey('Session', on_delete=models.CASCADE, related_name='scheduled_event_states')
+    has_occurred = models.BooleanField(default=False)
+
+    def __str__(self):
+        return str(self.event) + ' ' + self.session.abbr_key_tag()
 
 
 class Place(models.Model):
@@ -285,7 +365,7 @@ class Place(models.Model):
 
     place_type = models.CharField(max_length=8, choices=PLACE_TYPES, default=TOWN)
 
-    default_contents = models.ManyToManyField('Item', blank=True)
+    default_items = models.ManyToManyField('Item', blank=True)
 
     item_pool = models.ManyToManyField('Item', blank=True, related_name='pool_locations')
 
@@ -347,7 +427,7 @@ class PlaceState(models.Model):
     session = models.ForeignKey('Session', on_delete=models.CASCADE, related_name='place_states')
     place = models.ForeignKey(Place, on_delete=models.CASCADE, related_name='states')
 
-    contents = models.ManyToManyField('Item', blank=True)
+    item_tokens = models.ManyToManyField('ItemToken', blank=True)
     occupants = models.ManyToManyField('Villager', blank=True)
 
     def __str__(self):
@@ -359,7 +439,10 @@ class PlaceState(models.Model):
             super().save(*args, **kwargs)
 
             # set contents and occupants based on place defaults
-            self.contents.set(self.place.default_contents.all())
+
+            item_token_objs = [ItemToken(session=self.session, item=item) for item in self.place.default_items.all()]
+            item_tokens = ItemToken.objects.bulk_create(item_token_objs)
+            self.item_tokens.set(item_tokens)
 
             try:
                 building = self.place.building
@@ -385,32 +468,6 @@ class Session(models.Model):
         self.wallet.save()
         self.inventory.save()  # probably unnecessary, since inventory doesn't have any fields right now
 
-    def reset_for_new_day(self):
-        self.reset_villager_states()
-        self.grow_crops()
-
-    def reset_villager_states(self):
-        self.villager_states.all().update(has_been_talked_to=False, has_been_given_item=False)
-
-    def grow_crops(self):
-        farm_state = self.place_states.get(place__place_type=Place.FARM)
-        items = farm_state.contents.all()
-        new_contents = []
-
-        for item in items:
-            if item.item_type not in [Item.SEED, Item.SPROUT]:
-                new_contents.append(item)
-                continue
-
-            item_state = item.states.get(session=self)
-            if item_state.has_been_watered:
-                new_item = item.get_next_growth_stage()
-                new_contents.append(new_item)
-            else:
-                new_contents.append(item)
-
-        farm_state.contents.set(new_contents)
-
     @property
     def location_state(self):
         return self.place_states.get_or_create(place=self.location)[0]
@@ -434,22 +491,77 @@ class Session(models.Model):
         return occupant_states
 
     @property
-    def local_contents(self):
-        return self.location_state.contents.all()
+    def local_item_tokens(self):
+        return self.location_state.item_tokens.all()
 
     @property
-    def local_content_states(self):
-        content_states = self.item_states.filter(item__in=self.local_contents)
+    def event_states(self):
+        event_states = self.scheduled_event_states.all()
 
-        # ensure all contents have a state
-        for item in self.local_contents.all():
-            if content_states.filter(item=item).exists():
+        # ensure all events have a state
+        for event in ScheduledEvent.objects.all():
+            if event_states.filter(event=event).exists():
                 continue
 
-            item_state = self.item_states.create(item=item)
-            content_states |= ItemState.objects.filter(pk=item_state.pk)
+            event_state = self.scheduled_event_states.create(event=event)
+            event_states |= ScheduledEventState.objects.filter(pk=event_state.pk)
 
-        return content_states
+        return event_states
+
+    def trigger_scheduled_events(self):
+        """Check if the time for any scheduled events has come (or just passed)"""
+        for event_state in self.event_states.filter(has_occurred=False):
+            event = event_state.event
+
+            if self.clock.is_now_or_in_past(event.day, event.time):
+                self.trigger_event(event)
+                event_state.has_occurred = True
+                event_state.save()
+
+    def trigger_event(self, event):
+        """Trigger an event based on the event_type"""
+        if event.event_type == ScheduledEvent.ITEMS_APPEAR:
+            self.make_items_appear(event)
+
+    def make_items_appear(self, event):
+        """Make items appear in the place saved on the event"""
+        item_tokens = []
+        for item in event.items.all():
+            item_tokens.append(ItemToken(session=self, item=item))
+        ItemToken.objects.bulk_create(item_tokens)
+
+        place_state = self.place_states.get(place=event.place)
+
+        place_state.item_tokens.set(item_tokens)
+
+    def reset_for_new_day(self):
+        self.reset_villager_states()
+        self.grow_crops()
+
+    def reset_villager_states(self):
+        self.villager_states.all().update(has_been_talked_to=False, has_been_given_gift=False)
+
+    def grow_crops(self):
+        """Find all seeds/sprouts in the farm and "grow" them if they've been watered --
+        ie replace them with a new item token at the next growth stage."""
+        farm_state = self.place_states.get(place__place_type=Place.FARM)
+        item_tokens = farm_state.item_tokens.all()
+        new_contents = []
+
+        for token in item_tokens:
+            if token.item_type not in [Item.SEED, Item.SPROUT]:
+                new_contents.append(token)
+                continue
+
+            if not token.has_been_watered:
+                new_contents.append(token)
+                continue
+
+            new_item = token.item.get_next_growth_stage()
+            new_item_token = ItemToken.objects.create(session=self, item=new_item)
+            new_contents.append(new_item_token)
+
+        farm_state.item_tokens.set(new_contents)
 
     def abbr_key_tag(self):
         return f'({self.key[:8]}...)'
@@ -587,7 +699,7 @@ class VillagerState(models.Model):
     affinity = models.IntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(MAX_AFFINITY)])
     location = models.ForeignKey(Place, on_delete=models.CASCADE, related_name='villagers')  # , default=villager.home)
 
-    has_been_greeted = models.BooleanField(default=False)
+    has_been_talked_to = models.BooleanField(default=False)
     has_been_given_gift = models.BooleanField(default=False)
 
     def __str__(self):

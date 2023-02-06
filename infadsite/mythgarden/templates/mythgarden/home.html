@@ -28,8 +28,10 @@ expected models:
         affinity
         villager
             name
-    place_contents[]:
+    local_item_tokens[]:
         name
+        has_been_watered
+        rarity
 -->
 <div class="page">
     <section class="top-bar">
@@ -89,9 +91,9 @@ expected models:
                 {% endfor %}
             </ul>
             <ul class="contents horizontal">
-                {% for item_state in place_content_states %}
-                    <li class="item {{ item_state.has_been_watered|yesno:"watered," }}">
-                        <span class="item-name">{{ item_state.item.name }}</span>
+                {% for item_token in local_item_tokens %}
+                    <li class="item {{item.rarity}} {{ item_token.has_been_watered|yesno:"watered," }}">
+                        <span class="item-name">{{ item_token.name }}</span>
                     </li>
                 {% endfor %}
             </ul>

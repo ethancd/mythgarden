@@ -52,8 +52,7 @@ function updatePage(response: any) {
     if (response.place) updateLocation(response.place);
     if (response.inventory) updateInventory(response.inventory);
     if (response.buildings) updateBuildings(response.buildings);
-    if (response.place_contents) updatePlaceContents(response.place_contents);
-    if (response.place_content_states) updatePlaceContentsWithStates(response.place_content_states);
+    if (response.local_item_tokens) updateLocalItems(response.local_item_tokens);
     if (response.villager_states) updateVillagers(response.villager_states);
 
     appendLogEntry(response.log_statement);
@@ -95,7 +94,7 @@ function updateLocation(location: any) {
 
     setLocationNameValue(location.name);
     updateLocationLandscapeImage(location.image.url);
-    clearPlaceContents();
+    clearLocalItems();
 }
 
 // fn: update the displayed location name
@@ -124,10 +123,11 @@ function updateInventory(inventory: any[]) {
 }
 
 // fn: create an item element
-function createItemElement(item: any) {
+function createItemElement(item_token: any) {
     const itemEl = document.createElement('li');
     itemEl.className = 'item';
-    itemEl.innerHTML = `<span class="item-name">${item.name}</span>`;
+    itemEl.classList.toggle('watered', item_token.has_been_watered);
+    itemEl.innerHTML = `<span class="item-name">${item_token.name}</span>`;
 
     return itemEl;
 }
@@ -153,8 +153,8 @@ function createBuildingElement(building: any) {
     return buildingEl;
 }
 
-// fn: clear the displayed place contents
-function clearPlaceContents() {
+// fn: clear the displayed local items
+function clearLocalItems() {
     const contentsEl = findElementByClassName('contents');
 
     if (contentsEl) {
@@ -162,9 +162,9 @@ function clearPlaceContents() {
     }
 }
 
-// fn: update the displayed place contents
-function updatePlaceContents(place_contents: any[]) {
-    console.log('updating place contents');
+// fn: update the displayed local items
+function updateLocalItems(local_item_tokens: any[]) {
+    console.log('updating local items');
     const contentsEl = findElementByClassName('contents');
     if (!contentsEl) {
         console.log('no contents element found');
@@ -172,26 +172,8 @@ function updatePlaceContents(place_contents: any[]) {
     }
     clearList(contentsEl);
 
-    place_contents.forEach((item) => {
-        const itemEl = createItemElement(item);
-        contentsEl.appendChild(itemEl);
-    });
-}
-
-// fn: update the displayed place contents with states
-function updatePlaceContentsWithStates(place_content_states: any[]) {
-    console.log('updating place contents with states');
-    const contentsEl = findElementByClassName('contents');
-    if (!contentsEl) {
-        console.log('no contents element found');
-        return;
-    }
-    clearList(contentsEl);
-
-    place_content_states.forEach((item_state) => {
-        console.log(item_state)
-        const itemEl = createItemElement(item_state.item);
-        itemEl.classList.toggle('watered', item_state.has_been_watered);
+    local_item_tokens.forEach((item_token) => {
+        const itemEl = createItemElement(item_token);
         contentsEl.appendChild(itemEl);
     });
 }

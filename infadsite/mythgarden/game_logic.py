@@ -1,6 +1,6 @@
 import random
 
-from .models import Bridge, Action, Item, Villager, Place, Building, Session, VillagerState, ItemTypePreference
+from .models import Bridge, Action, Item, Villager, Place, Building, Session, VillagerState, ItemTypePreference, ItemToken
 
 from .static_helpers import guard_type, guard_types
 
@@ -13,13 +13,13 @@ def can_afford_action(wallet, requested_action):
 
 
 class ActionGenerator:
-    def gen_available_actions(self, place, inventory, contents, villagers, clock):
+    def gen_available_actions(self, place, inventory, contents, villager_states, clock):
         """Returns a list of available actions for the hero in the current session, taking into account:
         - the current inventory
         - the location's current present items/occupants (contents and villagers)
         - the place's static features (buildings and bridges)"""
 
-        print(f'gen_available_actions: place={place}, inventory={inventory}, contents={contents}, villagers={villagers}')
+        print(f'gen_available_actions: place={place}, inventory={inventory}, contents={contents}, villager_states={villager_states}, clock={clock}')
         available_actions = []
 
         buildings = list(place.buildings.all())
@@ -47,8 +47,8 @@ class ActionGenerator:
         if len(bridges) > 0:
             available_actions += self.gen_travel_actions(place, bridges)
 
-        if len(villagers) > 0:
-            available_actions += self.gen_social_actions(villagers, inventory)
+        if len(villager_states) > 0:
+            available_actions += self.gen_social_actions(villager_states, inventory)
 
         if place.is_farmhouse:
             available_actions += [self.gen_sleep_action(clock)]
@@ -59,8 +59,8 @@ class ActionGenerator:
         """Returns a list of farming actions: what seeds can be planted from the inventory,
         and what crops can be watered or harvested from the field contents"""
 
-        guard_types(field_contents, Item)
-        guard_types(inventory, Item)
+        guard_types(field_contents, ItemToken)
+        guard_types(inventory, ItemToken)
 
         actions = []
 
@@ -70,7 +70,8 @@ class ActionGenerator:
 
         growing_plants = [i for i in field_contents if i.item_type in [Item.SEED, Item.SPROUT]]
         for plant in growing_plants:
-            actions.append(self.gen_water_action(plant))
+            if not plant.has_been_watered:
+                actions.append(self.gen_water_action(plant))
 
         crops = [i for i in field_contents if i.item_type == Item.CROP]
 
@@ -82,16 +83,16 @@ class ActionGenerator:
     def gen_shopping_actions(self, shop_contents, inventory):
         """Returns a list of shopping actions: what items can be sold from inventory,
         and what items can be bought from the shop contents"""
-        guard_types(shop_contents, Item)
-        guard_types(inventory, Item)
+        guard_types(shop_contents, ItemToken)
+        guard_types(inventory, ItemToken)
 
         actions = []
 
-        for item in shop_contents:
-            actions.append(self.gen_buy_action(item))
+        for item_token in shop_contents:
+            actions.append(self.gen_buy_action(item_token))
 
-        for item in inventory:
-            actions.append(self.gen_sell_action(item))
+        for item_token in inventory:
+            actions.append(self.gen_sell_action(item_token))
 
         return actions
 
@@ -142,29 +143,32 @@ class ActionGenerator:
 
         return actions
 
-    def gen_social_actions(self, villagers, inventory):
+    def gen_social_actions(self, villager_states, inventory):
         """Returns a list of social actions: which villagers can be talked to,
         and what items can be given to them as gifts"""
-        guard_types(villagers, Villager)
-        guard_types(inventory, Item)
+        guard_types(villager_states, VillagerState)
+        guard_types(inventory, ItemToken)
 
         actions = []
 
-        for villager in villagers:
-            actions.append(self.gen_talk_action(villager))
+        for villager_state in villager_states:
+            villager = villager_state.villager
+            if not villager_state.has_been_talked_to:
+                actions.append(self.gen_talk_action(villager))
 
-            for item in inventory:
-                actions.append(self.gen_give_action(item, villager))
+            if not villager_state.has_been_given_gift:
+                for item_token in inventory:
+                    actions.append(self.gen_give_action(item_token, villager))
 
         return actions
 
-    def gen_give_action(self, item, villager):
+    def gen_give_action(self, item_token, villager):
         """Returns an action that gives passed item to passed villager"""
         return Action(
-            description=f'Give {item.name} to {villager.name}',
+            description=f'Give {item_token.name} to {villager.name}',
             action_type=Action.GIV,
             target_object=villager,
-            secondary_target_object=item,
+            secondary_target_object=item_token,
             cost_amount=5,
             cost_unit=Action.MIN,
             log_statement='You gave {item_name} to {villager_name}. Looks like they {valence_text}',
@@ -182,26 +186,26 @@ class ActionGenerator:
             log_statement=f'You talked to {villager.name}.',
         )
 
-    def gen_sell_action(self, item):
+    def gen_sell_action(self, item_token):
         """Returns an action that sells given item"""
         return Action(
-            description=f'Sell {item.name}',
+            description=f'Sell {item_token.name}',
             action_type=Action.SEL,
-            target_object=item,
-            cost_amount=item.price,
+            target_object=item_token,
+            cost_amount=item_token.price,
             cost_unit=Action.KOIN,
-            log_statement=f'You sold {item.name} for {item.price} koin.',
+            log_statement=f'You sold {item_token.name} for {item_token.price} koin.',
         )
 
-    def gen_buy_action(self, item):
+    def gen_buy_action(self, item_token):
         """Returns an action that buys given item"""
         return Action(
-            description=f'Buy {item.name}',
+            description=f'Buy {item_token.name}',
             action_type=Action.BUY,
-            target_object=item,
-            cost_amount=item.price,
+            target_object=item_token,
+            cost_amount=item_token.price,
             cost_unit=Action.KOIN,
-            log_statement=f'You bought {item.name} for {item.price} koin.',
+            log_statement=f'You bought {item_token.name} for {item_token.price} koin.',
         )
 
     def gen_enter_action(self, building):
@@ -226,37 +230,37 @@ class ActionGenerator:
             log_statement=f'You exited {building.name} back out to {surround.name}.',
         )
 
-    def gen_plant_action(self, seed):
+    def gen_plant_action(self, seed_token):
         """Returns an action that plants given seed"""
         return Action(
-            description=f'Plant {seed.name}',
+            description=f'Plant {seed_token.name}',
             action_type=Action.PLA,
-            target_object=seed,
+            target_object=seed_token,
             cost_amount=30,
             cost_unit=Action.MIN,
-            log_statement=f'You planted some {seed.name} in the field.',
+            log_statement=f'You planted some {seed_token.name} in the field.',
         )
 
-    def gen_water_action(self, plant):
+    def gen_water_action(self, plant_token):
         """Returns an action that waters given seed/sprout"""
         return Action(
-            description=f'Water {plant.name}',
+            description=f'Water {plant_token.name}',
             action_type=Action.WAT,
-            target_object=plant,
+            target_object=plant_token,
             cost_amount=60,
             cost_unit=Action.MIN,
-            log_statement=f'You watered the {plant.name}.',
+            log_statement=f'You watered the {plant_token.name}.',
         )
 
-    def gen_harvest_action(self, crop):
+    def gen_harvest_action(self, crop_token):
         """Returns an action that harvests given crop"""
         return Action(
-            description=f'Harvest {crop.name}',
+            description=f'Harvest {crop_token.name}',
             action_type=Action.HAR,
-            target_object=crop,
+            target_object=crop_token,
             cost_amount=60,
             cost_unit=Action.MIN,
-            log_statement=f'You harvested the {crop.name}.',
+            log_statement=f'You harvested the {crop_token.name}.',
         )
 
     def gen_travel_action(self, destination, direction, display_direction):
@@ -338,7 +342,7 @@ class ActionExecutor:
                     'place': session.location,
                     'clock': session.clock,
                     'buildings': list(session.location.buildings.all()),
-                    'place_content_states': list(session.local_content_states.all()),
+                    'local_item_tokens': list(session.local_item_tokens.all()),
                     'villager_states': list(session.occupant_states.all())
                 }, action.log_statement)
 
@@ -348,7 +352,7 @@ class ActionExecutor:
 
         villager = action.target_object
         villager_state = session.occupant_states.filter(villager=villager).first()
-        villager_state.has_been_greeted = True
+        villager_state.has_been_talked_to = True
         is_next_tier = self.update_affinity(villager_state, villager.friendliness, session)
         villager_state.save()
 
@@ -377,12 +381,12 @@ class ActionExecutor:
         affinity_amount = self.calc_gift_affinity_change(valence, gift.rarity, villager.friendliness)
 
         villager_state = session.occupant_states.filter(villager=villager).first()
-        villager_state.has_been_gifted = True
+        villager_state.has_been_given_gift = True
         is_next_tier = self.update_affinity(villager_state, affinity_amount, session)
         # dialogue = villager.get_dialogue(session)
 
         session.clock.advance(action.cost_amount)
-        session.inventory.items.remove(gift)
+        session.inventory.item_tokens.remove(gift)
 
         session.save_data()
 
@@ -394,7 +398,7 @@ class ActionExecutor:
         session.save_data()
 
         return ({
-                    'inventory': list(session.inventory.items.all()),
+                    'inventory': list(session.inventory.item_tokens.all()),
                     'villager_states': list(session.occupant_states.all()),
                     # 'dialogue': dialogue,
                 }, log_statement)
@@ -403,16 +407,16 @@ class ActionExecutor:
         """Executes a sell action, which moves an item from the hero's inventory into the session contents
         and adds the price in koin to the hero's wallet"""
 
-        session.inventory.items.remove(action.target_object)
-        session.location_state.contents.add(action.target_object)
+        session.inventory.item_tokens.remove(action.target_object)
+        session.location_state.item_tokens.add(action.target_object)
         session.wallet.money += action.cost_amount
 
         session.save_data()
 
         return ({
                     'wallet': session.wallet,
-                    'inventory': list(session.inventory.items.all()),
-                    'place_content_states': list(session.local_content_states.all()),
+                    'inventory': list(session.inventory.item_tokens.all()),
+                    'local_item_tokens': list(session.local_item_tokens.all()),
                 }, action.log_statement)
 
     def execute_buy_action(self, action, session):
@@ -421,10 +425,8 @@ class ActionExecutor:
 
         item = action.target_object
 
-        session.inventory.items.add(item)
-        # special case seeds so they always stay in stock
-        if item.item_type != Item.SEED:
-            session.location_state.contents.remove(item)
+        session.inventory.item_tokens.add(item)
+        session.location_state.item_tokens.remove(item)
 
         session.wallet.money -= action.cost_amount
 
@@ -432,31 +434,30 @@ class ActionExecutor:
 
         return ({
                     'wallet': session.wallet,
-                    'inventory': list(session.inventory.items.all()),
-                    'place_content_states': list(session.local_content_states.all()),
+                    'inventory': list(session.inventory.item_tokens.all()),
+                    'local_item_tokens': list(session.local_item_tokens.all()),
                 }, action.log_statement)
 
     def execute_plant_action(self, action, session):
         """Executes a plant action, which moves a seed from the hero's inventory into the session contents"""
 
-        session.inventory.items.remove(action.target_object)
-        session.location_state.contents.add(action.target_object)
+        session.inventory.item_tokens.remove(action.target_object)
+        session.location_state.item_tokens.add(action.target_object)
 
         session.clock.advance(action.cost_amount)
 
         return ({
                     'clock': session.clock,
-                    'inventory': list(session.inventory.items.all()),
-                    'place_content_states': list(session.local_content_states.all()),
+                    'inventory': list(session.inventory.item_tokens.all()),
+                    'local_item_tokens': list(session.local_item_tokens.all()),
                 }, action.log_statement)
 
     def execute_water_action(self, action, session):
-        """Executes a water action, which sets the plant_state's has_been_watered attribute to True"""
+        """Executes a water action, which sets the item_token's has_been_watered attribute to True"""
 
-        item = action.target_object
-        plant_state = session.local_content_states.filter(item=item).first()
-        plant_state.has_been_watered = True
-        plant_state.save()
+        item_token = action.target_object
+        item_token.has_been_watered = True
+        item_token.save()
 
         session.clock.advance(action.cost_amount)
 
@@ -464,14 +465,14 @@ class ActionExecutor:
 
         return ({
                     'clock': session.clock,
-                    'place_content_states': list(session.local_content_states.all()),
+                    'local_item_tokens': list(session.local_item_tokens.all()),
                 }, action.log_statement)
 
     def execute_harvest_action(self, action, session):
         """Executes a harvest action, which moves a crop from the session contents into the hero's inventory"""
 
-        session.inventory.items.add(action.target_object)
-        session.location_state.contents.remove(action.target_object)
+        session.inventory.item_tokens.add(action.target_object)
+        session.location_state.item_tokens.remove(action.target_object)
 
         session.clock.advance(action.cost_amount)
 
@@ -479,8 +480,8 @@ class ActionExecutor:
 
         return ({
                     'clock': session.clock,
-                    'inventory': list(session.inventory.items.all()),
-                    'place_content_states': list(session.local_content_states.all()),
+                    'inventory': list(session.inventory.item_tokens.all()),
+                    'local_item_tokens': list(session.local_item_tokens.all()),
                 }, action.log_statement)
 
     def execute_gather_action(self, action, session):
@@ -488,7 +489,7 @@ class ActionExecutor:
         and adds a copy to the hero's inventory"""
 
         item = self.pull_item_from_pool(session.location)
-        session.inventory.items.add(item)
+        session.inventory.item_tokens.add(ItemToken.objects.create(session=session, item=item))
         session.clock.advance(action.cost_amount)
 
         session.save_data()
@@ -496,7 +497,7 @@ class ActionExecutor:
         log_statement = action.log_statement.format(result=item.name)
 
         return ({
-                    'inventory': list(session.inventory.items.all()),
+                    'inventory': list(session.inventory.item_tokens.all()),
                     'clock': session.clock,
                 }, log_statement)
 
@@ -595,3 +596,6 @@ class ActionExecutor:
                 continue
 
         raise ValueError(f'No items found in location {location.name} of any rarity')
+
+
+# class EventOperator
