@@ -89,9 +89,9 @@ expected models:
                 {% endfor %}
             </ul>
             <ul class="contents horizontal">
-                {% for item in place_contents %}
-                    <li class="item">
-                        <span class="item-name">{{ item.name }}</span>
+                {% for item_state in place_content_states %}
+                    <li class="item {{ item_state.has_been_watered|yesno:"watered," }}">
+                        <span class="item-name">{{ item_state.item.name }}</span>
                     </li>
                 {% endfor %}
             </ul>

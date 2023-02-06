@@ -50,7 +50,8 @@ class ActionGenerator:
         if len(villagers) > 0:
             available_actions += self.gen_social_actions(villagers, inventory)
 
-        available_actions += [self.gen_sleep_action(clock)]
+        if place.is_farmhouse:
+            available_actions += [self.gen_sleep_action(clock)]
 
         return available_actions
 
@@ -67,9 +68,9 @@ class ActionGenerator:
         for seed in seeds:
             actions.append(self.gen_plant_action(seed))
 
-        sprouts = [i for i in field_contents if i.item_type == Item.SPROUT]
-        for sprout in sprouts:
-            actions.append(self.gen_water_action(sprout))
+        growing_plants = [i for i in field_contents if i.item_type in [Item.SEED, Item.SPROUT]]
+        for plant in growing_plants:
+            actions.append(self.gen_water_action(plant))
 
         crops = [i for i in field_contents if i.item_type == Item.CROP]
 
@@ -236,15 +237,15 @@ class ActionGenerator:
             log_statement=f'You planted some {seed.name} in the field.',
         )
 
-    def gen_water_action(self, sprout):
-        """Returns an action that waters given sprout"""
+    def gen_water_action(self, plant):
+        """Returns an action that waters given seed/sprout"""
         return Action(
-            description=f'Water {sprout.name}',
+            description=f'Water {plant.name}',
             action_type=Action.WAT,
-            target_object=sprout,
+            target_object=plant,
             cost_amount=60,
             cost_unit=Action.MIN,
-            log_statement=f'You watered the {sprout.name} sprouts.',
+            log_statement=f'You watered the {plant.name}.',
         )
 
     def gen_harvest_action(self, crop):
@@ -255,7 +256,7 @@ class ActionGenerator:
             target_object=crop,
             cost_amount=60,
             cost_unit=Action.MIN,
-            log_statement=f'You harvested the {crop.name} crop.',
+            log_statement=f'You harvested the {crop.name}.',
         )
 
     def gen_travel_action(self, destination, direction, display_direction):
@@ -337,7 +338,7 @@ class ActionExecutor:
                     'place': session.location,
                     'clock': session.clock,
                     'buildings': list(session.location.buildings.all()),
-                    'place_contents': list(session.location_state.contents.all()),
+                    'place_content_states': list(session.local_content_states.all()),
                     'villager_states': list(session.occupant_states.all())
                 }, action.log_statement)
 
@@ -346,7 +347,11 @@ class ActionExecutor:
         # also want to set villager_state to has_been_greeted so we can't talk to them again till tomorrow
 
         villager = action.target_object
-        is_next_tier = self.update_affinity(villager, villager.friendliness, session)
+        villager_state = session.occupant_states.filter(villager=villager).first()
+        villager_state.has_been_greeted = True
+        is_next_tier = self.update_affinity(villager_state, villager.friendliness, session)
+        villager_state.save()
+
         # dialogue = villager.get_dialogue(session)
 
         session.clock.advance(action.cost_amount)
@@ -370,7 +375,10 @@ class ActionExecutor:
         gift = action.secondary_target_object
         valence = villager.gift_valence(gift)
         affinity_amount = self.calc_gift_affinity_change(valence, gift.rarity, villager.friendliness)
-        is_next_tier = self.update_affinity(villager, affinity_amount, session)
+
+        villager_state = session.occupant_states.filter(villager=villager).first()
+        villager_state.has_been_gifted = True
+        is_next_tier = self.update_affinity(villager_state, affinity_amount, session)
         # dialogue = villager.get_dialogue(session)
 
         session.clock.advance(action.cost_amount)
@@ -404,15 +412,20 @@ class ActionExecutor:
         return ({
                     'wallet': session.wallet,
                     'inventory': list(session.inventory.items.all()),
-                    'place_contents': list(session.location_state.contents.all()),
+                    'place_content_states': list(session.local_content_states.all()),
                 }, action.log_statement)
 
     def execute_buy_action(self, action, session):
         """Executes a buy action, which moves an item from the session contents into the hero's inventory
         and deducts the price in koin from the hero's wallet"""
 
-        session.inventory.items.add(action.target_object)
-        session.location_state.contents.remove(action.target_object)
+        item = action.target_object
+
+        session.inventory.items.add(item)
+        # special case seeds so they always stay in stock
+        if item.item_type != Item.SEED:
+            session.location_state.contents.remove(item)
+
         session.wallet.money -= action.cost_amount
 
         session.save_data()
@@ -420,7 +433,7 @@ class ActionExecutor:
         return ({
                     'wallet': session.wallet,
                     'inventory': list(session.inventory.items.all()),
-                    'place_contents': list(session.location_state.contents.all()),
+                    'place_content_states': list(session.local_content_states.all()),
                 }, action.log_statement)
 
     def execute_plant_action(self, action, session):
@@ -429,15 +442,30 @@ class ActionExecutor:
         session.inventory.items.remove(action.target_object)
         session.location_state.contents.add(action.target_object)
 
-        session.save_data()
+        session.clock.advance(action.cost_amount)
 
         return ({
+                    'clock': session.clock,
                     'inventory': list(session.inventory.items.all()),
-                    'place_contents': list(session.location_state.contents.all()),
+                    'place_content_states': list(session.local_content_states.all()),
                 }, action.log_statement)
 
     def execute_water_action(self, action, session):
-        raise NotImplementedError()
+        """Executes a water action, which sets the plant_state's has_been_watered attribute to True"""
+
+        item = action.target_object
+        plant_state = session.local_content_states.filter(item=item).first()
+        plant_state.has_been_watered = True
+        plant_state.save()
+
+        session.clock.advance(action.cost_amount)
+
+        session.save_data()
+
+        return ({
+                    'clock': session.clock,
+                    'place_content_states': list(session.local_content_states.all()),
+                }, action.log_statement)
 
     def execute_harvest_action(self, action, session):
         """Executes a harvest action, which moves a crop from the session contents into the hero's inventory"""
@@ -445,11 +473,14 @@ class ActionExecutor:
         session.inventory.items.add(action.target_object)
         session.location_state.contents.remove(action.target_object)
 
+        session.clock.advance(action.cost_amount)
+
         session.save_data()
 
         return ({
+                    'clock': session.clock,
                     'inventory': list(session.inventory.items.all()),
-                    'place_contents': list(session.location_state.contents.all()),
+                    'place_content_states': list(session.local_content_states.all()),
                 }, action.log_statement)
 
     def execute_gather_action(self, action, session):
@@ -468,6 +499,17 @@ class ActionExecutor:
                     'inventory': list(session.inventory.items.all()),
                     'clock': session.clock,
                 }, log_statement)
+
+    def execute_sleep_action(self, action, session):
+        """Executes a sleep action, which advances the clock to midnight"""
+
+        session.clock.advance(action.cost_amount)
+
+        session.save_data()
+
+        return ({
+                    'clock': session.clock,
+                }, action.log_statement)
 
     def calc_gift_affinity_change(self, valence, rarity, friendliness):
         """Calculates the change in affinity for a gift based on valence of villager's reaction,
@@ -493,11 +535,9 @@ class ActionExecutor:
 
         return int((base_value * multiplier) + friendliness)
 
-    def update_affinity(self, villager, amount, session):
+    def update_affinity(self, villager_state, amount, session):
         """Updates the villager's villager_state affinity
         and returns whether the villager is in a new affinity tier"""
-
-        villager_state = session.occupant_states.filter(villager=villager).first()
 
         old_affinity = villager_state.affinity
         new_affinity = villager_state.add_affinity(amount)

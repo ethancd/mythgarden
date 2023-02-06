@@ -27,6 +27,7 @@ def inventory_items_changed(sender, instance, action, **kwargs):
 class Clock(models.Model):
     MINUTES_IN_A_DAY = 24 * 60
     MINUTES_IN_A_HALF_DAY = 12 * 60
+    MINUTES_IN_A_QUARTER_DAY = 6 * 60
 
     SUNDAY = 'SUN'
     MONDAY = 'MON'
@@ -49,6 +50,7 @@ class Clock(models.Model):
     session = models.OneToOneField('Session', on_delete=models.CASCADE, primary_key=True)
     day = models.CharField(default=SUNDAY, max_length=9, choices=DAYS_OF_WEEK)
     time = models.IntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(MINUTES_IN_A_DAY - 1)])
+    is_new_day = models.BooleanField(default=False)
 
     def __str__(self):
         return 'Clock ' + self.session.abbr_key_tag()
@@ -86,14 +88,31 @@ class Clock(models.Model):
         current_day_index = self.DAYS_OF_WEEK.index((self.day, self.get_day_display()))
         new_day_index = (current_day_index + days_to_add) % 7
         self.day = self.DAYS_OF_WEEK[new_day_index][0]
+        self.is_new_day = True
 
     @property
     def minutes_to_midnight(self):
         return self.MINUTES_IN_A_DAY - self.time
 
+    @property
+    def minutes_to_dawn(self):
+        return self.MINUTES_IN_A_QUARTER_DAY - self.time
+
     def save(self, *args, **kwargs):
         self.full_clean()
         return super().save(*args, **kwargs)
+
+
+@receiver(post_save, sender=Clock)
+def time_has_passed(sender, instance, **kwargs):
+    if instance.is_new_day:
+        instance.session.reset_for_new_day()
+
+        instance.is_new_day = False
+        if instance.time < instance.MINUTES_IN_A_QUARTER_DAY:
+            instance.advance(instance.minutes_to_dawn)
+
+        instance.save()
 
 
 class Wallet(models.Model):
@@ -186,6 +205,48 @@ class Item(models.Model):
             }
         }
 
+    def get_next_growth_stage(self):
+        next_type = self.get_next_type()
+        next_name = self.get_next_name()
+        next_price = self.get_next_price()
+
+        instance, created = Item.objects.get_or_create(
+                            name=next_name, item_type=next_type, price=next_price,
+                            rarity=self.rarity, icon=self.icon)
+
+        return instance
+
+    def get_next_type(self):
+        if self.item_type == Item.SEED:
+            return Item.SPROUT
+        elif self.item_type == Item.SPROUT:
+            return Item.CROP
+        else:
+            raise ValueError('Item is not a seed or sprout.')
+
+    def get_next_name(self):
+        curr_type_name = dict(Item.ITEM_TYPES)[self.item_type]
+        next_type_name = dict(Item.ITEM_TYPES)[self.get_next_type()]
+        return self.name.replace(curr_type_name, next_type_name)
+
+    def get_next_price(self):
+        return self.price * 3
+
+
+class ItemState(models.Model):
+    session = models.ForeignKey('Session', on_delete=models.CASCADE, related_name='item_states')
+    item = models.ForeignKey('Item', on_delete=models.CASCADE, related_name='states')
+    has_been_watered = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.item.name + ' ' + self.session.abbr_key_tag()
+
+    def serialize(self):
+        return {
+            'item': self.item.serialize(),
+            'has_been_watered': self.has_been_watered,
+        }
+
 
 class PlaceManager(models.Manager):
     def get_by_natural_key(self, name):
@@ -254,6 +315,14 @@ class Place(models.Model):
         else:
             super().save(*args, **kwargs)
 
+    @property
+    def is_farmhouse(self):
+        try:
+            is_building_on_farm = self.building.surround.pk == Place.get_default_pk()
+            return is_building_on_farm and self.place_type == Place.HOME
+        except Building.DoesNotExist:
+            return False
+
     def populate_item_pool(self):
         """ Populates the item pool by filtering on item types based on this place type. """
         item_types = self.ITEM_POOL_TYPE_MAP.get(self.place_type)
@@ -316,6 +385,32 @@ class Session(models.Model):
         self.wallet.save()
         self.inventory.save()  # probably unnecessary, since inventory doesn't have any fields right now
 
+    def reset_for_new_day(self):
+        self.reset_villager_states()
+        self.grow_crops()
+
+    def reset_villager_states(self):
+        self.villager_states.all().update(has_been_talked_to=False, has_been_given_item=False)
+
+    def grow_crops(self):
+        farm_state = self.place_states.get(place__place_type=Place.FARM)
+        items = farm_state.contents.all()
+        new_contents = []
+
+        for item in items:
+            if item.item_type not in [Item.SEED, Item.SPROUT]:
+                new_contents.append(item)
+                continue
+
+            item_state = item.states.get(session=self)
+            if item_state.has_been_watered:
+                new_item = item.get_next_growth_stage()
+                new_contents.append(new_item)
+            else:
+                new_contents.append(item)
+
+        farm_state.contents.set(new_contents)
+
     @property
     def location_state(self):
         return self.place_states.get_or_create(place=self.location)[0]
@@ -326,9 +421,6 @@ class Session(models.Model):
 
     @property
     def occupant_states(self):
-        # this runs a query for each villager and then another for the full list.
-        # would be better if we grabbed extant villager_states first, created any missing ones,
-        # and then returned the full unioned query set
         occupant_states = self.villager_states.filter(villager__in=self.occupants)
 
         # ensure all occupants have a state
@@ -340,6 +432,24 @@ class Session(models.Model):
             occupant_states |= VillagerState.objects.filter(pk=villager_state.pk)
 
         return occupant_states
+
+    @property
+    def local_contents(self):
+        return self.location_state.contents.all()
+
+    @property
+    def local_content_states(self):
+        content_states = self.item_states.filter(item__in=self.local_contents)
+
+        # ensure all contents have a state
+        for item in self.local_contents.all():
+            if content_states.filter(item=item).exists():
+                continue
+
+            item_state = self.item_states.create(item=item)
+            content_states |= ItemState.objects.filter(pk=item_state.pk)
+
+        return content_states
 
     def abbr_key_tag(self):
         return f'({self.key[:8]}...)'
@@ -477,6 +587,9 @@ class VillagerState(models.Model):
     affinity = models.IntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(MAX_AFFINITY)])
     location = models.ForeignKey(Place, on_delete=models.CASCADE, related_name='villagers')  # , default=villager.home)
 
+    has_been_greeted = models.BooleanField(default=False)
+    has_been_given_gift = models.BooleanField(default=False)
+
     def __str__(self):
         return f'{self.villager} state ' + self.session.abbr_key_tag()
 
@@ -582,6 +695,9 @@ class Action(models.Model):
     cost_amount = models.IntegerField(default=1)
     cost_unit = models.CharField(max_length=6, choices=COST_UNITS)
 
+    # let's be real: we should have a target_item (nullable), target_villager (nullable), and target_location (nullable)
+    # goofy over-engineered content_type should be nixed
+
     content_type = models.ForeignKey(ContentType, on_delete=models.SET_NULL, null=True, blank=True)
     object_id = models.PositiveIntegerField(null=True, blank=True)
     target_object = GenericForeignKey('content_type', 'object_id')  # this can be an Item or a Villager
@@ -611,8 +727,11 @@ class Action(models.Model):
         if self.is_cost_in_money():
             return self.get_cost_unit_display() + str(self.cost_amount)
         elif self.cost_amount > 60 and self.cost_unit == self.MIN:
-            return f'{self.cost_amount // 60}{self.HOUR_ABBR} ' \
-                   f'{self.cost_amount % 60}{self.MIN_ABBR}'
+            if self.cost_amount % 60 == 0:
+                return f'{self.cost_amount // 60}{self.HOUR_ABBR}'
+            else:
+                return f'{self.cost_amount // 60}{self.HOUR_ABBR} ' \
+                       f'{self.cost_amount % 60}{self.MIN_ABBR}'
         else:
             return str(self.cost_amount) + self.get_cost_unit_display()
 

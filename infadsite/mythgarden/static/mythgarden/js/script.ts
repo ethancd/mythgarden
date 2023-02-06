@@ -53,6 +53,7 @@ function updatePage(response: any) {
     if (response.inventory) updateInventory(response.inventory);
     if (response.buildings) updateBuildings(response.buildings);
     if (response.place_contents) updatePlaceContents(response.place_contents);
+    if (response.place_content_states) updatePlaceContentsWithStates(response.place_content_states);
     if (response.villager_states) updateVillagers(response.villager_states);
 
     appendLogEntry(response.log_statement);
@@ -173,6 +174,24 @@ function updatePlaceContents(place_contents: any[]) {
 
     place_contents.forEach((item) => {
         const itemEl = createItemElement(item);
+        contentsEl.appendChild(itemEl);
+    });
+}
+
+// fn: update the displayed place contents with states
+function updatePlaceContentsWithStates(place_content_states: any[]) {
+    console.log('updating place contents with states');
+    const contentsEl = findElementByClassName('contents');
+    if (!contentsEl) {
+        console.log('no contents element found');
+        return;
+    }
+    clearList(contentsEl);
+
+    place_content_states.forEach((item_state) => {
+        console.log(item_state)
+        const itemEl = createItemElement(item_state.item);
+        itemEl.classList.toggle('watered', item_state.has_been_watered);
         contentsEl.appendChild(itemEl);
     });
 }

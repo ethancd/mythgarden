@@ -37,7 +37,7 @@ def home(request):
         'inventory': session.inventory.items.all(),
         'actions': actions,
         'buildings': session.location.buildings.all(),
-        'place_contents': session.location_state.contents.all(),
+        'place_content_states': session.local_content_states.all(),
         'villager_states': session.occupant_states.all(),
     }
 

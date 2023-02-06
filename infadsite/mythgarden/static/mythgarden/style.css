@@ -191,6 +191,10 @@ li.building {
     overflow: hidden;
 }
 
+.contents .watered {
+    border: 1px solid blue;
+}
+
 .log {
     position: absolute;
     bottom: 0;
