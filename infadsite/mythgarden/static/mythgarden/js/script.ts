@@ -60,6 +60,11 @@ function updatePage(response: any) {
     if (response.buildings) updateBuildings(response.buildings);
     if (response.local_item_tokens) updateLocalItems(response.local_item_tokens);
     if (response.villager_states) updateVillagers(response.villager_states);
+    if (response.dialogue) {
+        showDialogue(response.dialogue);
+    } else {
+        hideDialogue();
+    }
 
     appendLogEntry(response.log_statement);
     updateActions(response.actions);
@@ -214,6 +219,39 @@ function createVillagerElement(villager_state: any) {
     return villagerEl;
 }
 
+
+// fn: show the dialogue box with dialogue text and speaker info
+function showDialogue(dialogue: any) {
+    console.log('showing dialogue');
+    const dialogueEl = findElementByClassName('dialogue');
+    const dialogueTextEl = findElementByClassName('dialogue-text');
+    const dialogueSpeakerNameEl = findElementByClassName('speaker-name');
+    const dialogueSpeakerPortraitEl = findElementByClassName('speaker-portrait');
+
+    dialogueTextEl.innerText = dialogue.full_text;
+    dialogueSpeakerNameEl.innerText = dialogue.speaker.name;
+    //@ts-ignore
+    dialogueSpeakerPortraitEl.src = dialogue.speaker.portrait.url;
+
+    show(dialogueEl);
+}
+
+// fn: hide the dialogue box and empty its contents
+function hideDialogue() {
+    console.log('hiding dialogue');
+    const dialogueEl = findElementByClassName('dialogue');
+    hide(dialogueEl);
+
+    const dialogueTextEl = findElementByClassName('dialogue-text');
+    const dialogueSpeakerNameEl = findElementByClassName('speaker-name');
+    const dialogueSpeakerPortraitEl = findElementByClassName('speaker-portrait');
+
+    dialogueTextEl.innerText = '';
+    dialogueSpeakerNameEl.innerText = '';
+    //@ts-ignore
+    dialogueSpeakerPortraitEl.src = '';
+}
+
 // fn: append a log entry based on the passed text
 function appendLogEntry(text: string) {
     console.log('appending log entry');
@@ -251,6 +289,7 @@ function setup() {
     console.log('setting up')
 
     listenOnElement('message', 'click', hide);
+    listenOnElement('dialogue', 'click', hide);
     listenOnElements('action', 'click', executeAction);
 }
 

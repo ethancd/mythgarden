@@ -693,8 +693,13 @@ class ItemTypePreference(models.Model):
         return cls.objects.get_or_create(item_type=item_type, valence=valence)
 
 
+class VillagerManager(models.Manager):
+    def get_by_natural_key(self, name):
+        return self.get(name=name)
+
+
 class Villager(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     full_name = models.CharField(max_length=255, null=True, blank=True)
     description = models.CharField(max_length=255, null=True, blank=True)
     friendliness = models.IntegerField(default=4, validators=[MinValueValidator(1), MaxValueValidator(7)])
@@ -702,6 +707,8 @@ class Villager(models.Model):
     home = models.ForeignKey(Building, on_delete=models.SET_NULL, null=True, blank=True, related_name='residents')
 
     item_type_preferences = models.ManyToManyField('ItemTypePreference', blank=True, related_name='preferred_by')
+
+    objects = VillagerManager()
 
     def __str__(self):
         return self.name
@@ -732,6 +739,15 @@ class Villager(models.Model):
             except KeyError:
                 return ItemTypePreference.NEUTRAL
 
+    def get_dialogue(self, trigger, affinity_tier=None):
+        """return a dialogue object for a given trigger and affinity tier"""
+        try:
+            dialogue = self.dialogue_lines.get(trigger=trigger, affinity_tier=affinity_tier)
+        except DialogueLine.DoesNotExist:
+            raise DialogueLine.DoesNotExist(f'no dialogue for {self.name} with trigger {trigger} and affinity tier {affinity_tier}')
+
+        return dialogue
+
     @property
     def talk_duration(self):
         FRIENDLINESS_TO_TALK_DURATION = {
@@ -758,6 +774,7 @@ class VillagerState(models.Model):
     location = models.ForeignKey(Place, on_delete=models.CASCADE, related_name='villagers')  # , default=villager.home)
 
     has_been_talked_to = models.BooleanField(default=False)
+    has_ever_been_talked_to = models.BooleanField(default=False)
     has_been_given_gift = models.BooleanField(default=False)
 
     def __str__(self):
@@ -912,3 +929,41 @@ class Action(models.Model):
         indexes = [
             models.Index(fields=["content_type", "object_id"]),
         ]
+
+
+class DialogueLine(models.Model):
+    LOVED_GIFT = 'LOVED_GIFT'
+    LIKED_GIFT = 'LIKED_GIFT'
+    NEUTRAL_GIFT = 'NEUTRAL_GIFT'
+    DISLIKED_GIFT = 'DISLIKED_GIFT'
+    HATED_GIFT = 'HATED_GIFT'
+    FIRST_MEETING = 'FIRST_MEETING'
+    TALKED_TO = 'TALKED_TO'
+
+    DIALOGUE_TRIGGERS = [
+        (LOVED_GIFT, 'Loved Gift'),
+        (LIKED_GIFT, 'Liked Gift'),
+        (NEUTRAL_GIFT, 'Neutral Gift'),
+        (DISLIKED_GIFT, 'Disliked Gift'),
+        (HATED_GIFT, 'Hated Gift'),
+        (FIRST_MEETING, 'First Meeting'),
+        (TALKED_TO, 'Talked To'),
+    ]
+
+    speaker = models.ForeignKey(Villager, on_delete=models.CASCADE, related_name='dialogue_lines')
+    affinity_tier = models.IntegerField(null=True, blank=True)
+    trigger = models.CharField(max_length=13, choices=DIALOGUE_TRIGGERS, default=TALKED_TO)
+    full_text = models.TextField()
+
+    def __str__(self):
+        return f'{self.speaker.name} says: {self.abbr_text}'
+
+    def serialize(self):
+        return {
+            'speaker': self.speaker.serialize(),
+            'full_text': self.full_text,
+        }
+
+    @property
+    def abbr_text(self):
+        return f"{self.full_text[:50]}{'...' if len(self.full_text) > 50 else ''}"

@@ -1,6 +1,6 @@
 import random
 
-from .models import Bridge, Action, Item, Villager, Place, Building, Session, VillagerState, ItemTypePreference, ItemToken
+from .models import Bridge, Action, Item, Villager, Place, Building, Session, VillagerState, ItemTypePreference, ItemToken, DialogueLine
 
 from .static_helpers import guard_type, guard_types
 
@@ -359,15 +359,20 @@ class ActionExecutor:
 
         villager = action.target_object
         villager_state = session.occupant_states.filter(villager=villager).first()
-        villager_state.has_been_talked_to = True
         old_tier, new_tier = self.update_affinity(villager_state, villager.friendliness, session)
 
         session.hero.hearts_earned += (new_tier - old_tier)
         is_next_tier = new_tier > old_tier
 
-        villager_state.save()
+        trigger = self.get_talk_dialogue_trigger(villager_state)
+        if trigger == DialogueLine.FIRST_MEETING:
+            dialogue = villager.get_dialogue(trigger)
+        else:
+            dialogue = villager.get_dialogue(trigger, old_tier)
 
-        # dialogue = villager.get_dialogue(session)
+        villager_state.has_been_talked_to = True
+        villager_state.has_ever_been_talked_to = True
+        villager_state.save()
 
         session.clock.advance(action.cost_amount)
 
@@ -379,7 +384,7 @@ class ActionExecutor:
                     'hero': session.hero,
                     'clock': session.clock,
                     'villager_states': list(session.occupant_states.all()),
-                    # 'dialogue': dialogue,
+                    'dialogue': dialogue,
                 }, log_statement)
 
     def execute_give_action(self, action, session):
@@ -399,7 +404,10 @@ class ActionExecutor:
         session.hero.hearts_earned += (new_tier - old_tier)
         is_next_tier = new_tier > old_tier
 
-        # dialogue = villager.get_dialogue(session)
+        villager_state.save()
+
+        trigger = self.get_gift_dialogue_trigger(valence)
+        dialogue = villager.get_dialogue(trigger)
 
         session.clock.advance(action.cost_amount)
         session.inventory.item_tokens.remove(gift)
@@ -417,7 +425,7 @@ class ActionExecutor:
                     'hero': session.hero,
                     'inventory': list(session.inventory.item_tokens.all()),
                     'villager_states': list(session.occupant_states.all()),
-                    # 'dialogue': dialogue,
+                    'dialogue': dialogue,
                 }, log_statement)
 
     def execute_sell_action(self, action, session):
@@ -609,5 +617,23 @@ class ActionExecutor:
 
         raise ValueError(f'No items found in location {location.name} of any rarity')
 
+    def get_talk_dialogue_trigger(self, villager_state):
+        """Returns a dialogue trigger for a talk action based on whether they've been talked to before or not"""
+        if villager_state.has_ever_been_talked_to:
+            return DialogueLine.TALKED_TO
+        else:
+            return DialogueLine.FIRST_MEETING
+
+    def get_gift_dialogue_trigger(self, valence):
+        """Returns a trigger object for a gift action based on the valence of their reaction"""
+
+        VALENCE_TO_DIALOGUE_TRIGGER_MAP = {
+            ItemTypePreference.LOVE: DialogueLine.LOVED_GIFT,
+            ItemTypePreference.LIKE: DialogueLine.LIKED_GIFT,
+            ItemTypePreference.NEUTRAL: DialogueLine.NEUTRAL_GIFT,
+            ItemTypePreference.DISLIKE: DialogueLine.DISLIKED_GIFT,
+            ItemTypePreference.HATE: DialogueLine.HATED_GIFT,
+        }
+        return VALENCE_TO_DIALOGUE_TRIGGER_MAP[valence]
 
 # class EventOperator

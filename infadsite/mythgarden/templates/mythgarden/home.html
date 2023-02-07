@@ -10,6 +10,8 @@ expected models:
         portrait:
             url
         score
+        koin_earned
+        hearts_earned
     clock:
         display
     wallet
@@ -34,6 +36,7 @@ expected models:
         name
         has_been_watered
         rarity
+    message: string
 -->
 <div class="page">
     <section class="top-bar">
@@ -108,6 +111,13 @@ expected models:
             <ul class="log vertical">
                 <li class="log-entry cursor">&nbsp;</li>
             </ul>
+            <div class="dialogue" style="display:none;">
+                <div class="speaker">
+                    <img class="speaker-portrait" src="">
+                    <span class="speaker-name"></span>
+                </div>
+                <span class="dialogue-text"></span>
+            </div>
         </section>
     </section>
 </div>

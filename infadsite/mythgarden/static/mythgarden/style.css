@@ -251,3 +251,45 @@ li.log-entry.cursor::after {
   50% { opacity: 0.0; }
   100% { opacity: 1.0; }
 }
+
+.dialogue {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 40%;
+    background-color: rgba(225, 115, 20, .8);
+    color: #133;
+}
+
+.dialogue .speaker {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.dialogue .speaker-name, .dialogue .dialogue-text {
+    color: #133;
+}
+
+.dialogue .speaker-portrait {
+    width: 10vh;
+    height: 10vh;
+    border: 2px solid #008f11;
+}
+
+.dialogue-text {
+    position: absolute;
+    top: 12vh;
+    width: 90%;
+    height: 100%;
+    overflow: auto;
+}
+
+.dialogue:hover::after {
+    content: '×';
+    color: #8f0011;
+    position: absolute;
+    font-size: 6vh;
+    top: -3vh;
+    right: 0;
+}
