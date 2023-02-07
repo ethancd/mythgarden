@@ -9,6 +9,7 @@ expected models:
         name
         portrait:
             url
+        score
     clock:
         display
     wallet
@@ -19,6 +20,7 @@ expected models:
             url
     inventory[]:
         name
+        rarity
     actions[]:
         description
         display_cost
@@ -40,7 +42,13 @@ expected models:
                 <div class="player-avatar">
                     <img src="{{ hero.portrait.url }}">
                 </div>
-                <div class="player-name">{{ hero.name }}</div>
+                <div>
+                    <div class="player-name">{{ hero.name }}</div>
+                    <div class="score-cont">
+                        <span class="score">{{ hero.score }} (⚜️{{hero.koin_earned}} x {{hero.hearts_earned}}❤️)</span>
+                    </div>
+                </div>
+
             </li>
             <li class="location">{{ place.name }}</li>
             <li class="stats">
@@ -50,10 +58,10 @@ expected models:
                 </ul>
             </li>
         </ul>
-        <p class="message">Welcome to Mythgarden :)</p>
+        <p class="message">{{ message }}</p>
         <ul class="horizontal inventory">
             {% for item in inventory %}
-                <li class="item">
+                <li class="item {{ item.rarity }}">
                     <span class="item-name">{{ item.name }}</span>
                 </li>
             {% endfor %}

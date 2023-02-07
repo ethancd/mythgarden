@@ -27,6 +27,11 @@ function executeAction(element: HTMLElement) {
             if (response.error) {
                 throw response;
             }
+
+            if (response.game_over) {
+                window.location.href = '/mythgarden';
+            }
+
             updatePage(response);
 
             element.classList.toggle('executing');
@@ -47,6 +52,7 @@ function getActionDescription(element: HTMLElement) {
 
 // fn: update the page with the results of an action
 function updatePage(response: any) {
+    if (response.hero) setScoreValue(response.hero);
     if (response.clock) setClockValue(response.clock);
     if (response.wallet) setWalletValue(response.wallet);
     if (response.place) updateLocation(response.place);
@@ -72,6 +78,13 @@ function passErrorToUser(response: any) {
     }
 
     show(message);
+}
+
+// fn: update the displayed score
+function setScoreValue(hero: any) {
+    console.log('updating score')
+    const scoreEl = findElementByClassName('score');
+    scoreEl.innerText = `${hero.score} (⚜️${hero.koin_earned} x ${hero.hearts_earned}❤️)`
 }
 
 // fn: update the display value of the clock element
@@ -127,6 +140,7 @@ function createItemElement(item_token: any) {
     const itemEl = document.createElement('li');
     itemEl.className = 'item';
     itemEl.classList.toggle('watered', item_token.has_been_watered);
+    itemEl.classList.add(item_token.rarity);
     itemEl.innerHTML = `<span class="item-name">${item_token.name}</span>`;
 
     return itemEl;

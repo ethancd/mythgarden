@@ -326,9 +326,16 @@ class ActionExecutor:
         ex = f'execute_{action.get_action_type_display().lower()}_action'
 
         if hasattr(self, ex) and callable(getattr(self, ex)):
-            return getattr(self, ex)(action, session)
+            updated_models, log_statement = getattr(self, ex)(action, session)
         else:
             raise Exception(f'Unknown action type: {action.get_action_type_display().lower()}')
+
+        if session.message:
+            log_statement = log_statement + '\n' + session.message
+            session.message = ''
+            session.save()
+
+        return updated_models, log_statement
 
     def execute_travel_action(self, action, session):
         """Executes a travel action, which updates the hero's current location and ticks the clock"""
@@ -353,7 +360,11 @@ class ActionExecutor:
         villager = action.target_object
         villager_state = session.occupant_states.filter(villager=villager).first()
         villager_state.has_been_talked_to = True
-        is_next_tier = self.update_affinity(villager_state, villager.friendliness, session)
+        old_tier, new_tier = self.update_affinity(villager_state, villager.friendliness, session)
+
+        session.hero.hearts_earned += (new_tier - old_tier)
+        is_next_tier = new_tier > old_tier
+
         villager_state.save()
 
         # dialogue = villager.get_dialogue(session)
@@ -365,6 +376,7 @@ class ActionExecutor:
         log_statement = self.add_affinity_tag_if_needed(action.log_statement, is_next_tier, villager)
 
         return ({
+                    'hero': session.hero,
                     'clock': session.clock,
                     'villager_states': list(session.occupant_states.all()),
                     # 'dialogue': dialogue,
@@ -382,7 +394,11 @@ class ActionExecutor:
 
         villager_state = session.occupant_states.filter(villager=villager).first()
         villager_state.has_been_given_gift = True
-        is_next_tier = self.update_affinity(villager_state, affinity_amount, session)
+        old_tier, new_tier = self.update_affinity(villager_state, affinity_amount, session)
+
+        session.hero.hearts_earned += (new_tier - old_tier)
+        is_next_tier = new_tier > old_tier
+
         # dialogue = villager.get_dialogue(session)
 
         session.clock.advance(action.cost_amount)
@@ -398,25 +414,26 @@ class ActionExecutor:
         session.save_data()
 
         return ({
+                    'hero': session.hero,
                     'inventory': list(session.inventory.item_tokens.all()),
                     'villager_states': list(session.occupant_states.all()),
                     # 'dialogue': dialogue,
                 }, log_statement)
 
     def execute_sell_action(self, action, session):
-        """Executes a sell action, which moves an item from the hero's inventory into the session contents
+        """Executes a sell action, which removes an item from the hero's inventory
         and adds the price in koin to the hero's wallet"""
 
         session.inventory.item_tokens.remove(action.target_object)
-        session.location_state.item_tokens.add(action.target_object)
         session.wallet.money += action.cost_amount
+        session.hero.koin_earned += action.cost_amount
 
         session.save_data()
 
         return ({
+                    'hero': session.hero,
                     'wallet': session.wallet,
                     'inventory': list(session.inventory.item_tokens.all()),
-                    'local_item_tokens': list(session.local_item_tokens.all()),
                 }, action.log_statement)
 
     def execute_buy_action(self, action, session):
@@ -445,6 +462,7 @@ class ActionExecutor:
         session.location_state.item_tokens.add(action.target_object)
 
         session.clock.advance(action.cost_amount)
+        session.save_data()
 
         return ({
                     'clock': session.clock,
@@ -504,6 +522,7 @@ class ActionExecutor:
     def execute_sleep_action(self, action, session):
         """Executes a sleep action, which advances the clock to midnight"""
 
+        session.hero.is_in_bed = True
         session.clock.advance(action.cost_amount)
 
         session.save_data()
@@ -538,22 +557,15 @@ class ActionExecutor:
 
     def update_affinity(self, villager_state, amount, session):
         """Updates the villager's villager_state affinity
-        and returns whether the villager is in a new affinity tier"""
+        and returns the old and new affinity tiers"""
 
         old_affinity = villager_state.affinity
         new_affinity = villager_state.add_affinity(amount)
 
-        print(f'Villager has gone from {old_affinity} hearts to {new_affinity} hearts')
+        old_tier = old_affinity // VillagerState.AFFINITY_TIER_SIZE
+        new_tier = new_affinity // VillagerState.AFFINITY_TIER_SIZE
 
-        return self.is_next_affinity_tier(old_affinity, new_affinity)
-
-    def is_next_affinity_tier(self, old_affinity, new_affinity, tier_size=VillagerState.AFFINITY_TIER_SIZE):
-        # e.g. tier size 20, old_affinity 35, new_affinity 45
-        # villager just crossed 40 so is now in new tier
-        old_tier = old_affinity // tier_size
-        new_tier = new_affinity // tier_size
-
-        return old_tier != new_tier
+        return old_tier, new_tier
 
     def add_affinity_tag_if_needed(self, base_statement, is_next_tier, villager):
         if is_next_tier:

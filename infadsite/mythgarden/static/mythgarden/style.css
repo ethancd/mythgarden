@@ -129,6 +129,22 @@ ul.inventory {
     row-gap: 0;
 }
 
+.inventory .common {
+    border: 2px solid sandybrown;
+}
+
+.inventory .uncommon {
+    border: 2px solid limegreen;
+}
+
+.inventory .rare {
+    border: 2px solid dodgerblue;
+}
+
+.inventory .epic {
+    border: 2px solid rebeccapurple;
+}
+
 /* sidebar elements */
 
 ul.actions {

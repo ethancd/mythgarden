@@ -33,6 +33,7 @@ def home(request):
         'hero': session.hero,
         'clock': session.clock,
         'wallet': session.wallet,
+        'message': session.message,
         'place': session.location,
         'inventory': session.inventory.item_tokens.all(),
         'actions': actions,
@@ -89,10 +90,8 @@ def action(request):
         print(f'looking for {description} in {actions}')
         matches = [a for a in actions if a.description == description]
 
-        if len(matches) == 1:
+        if len(matches) >= 1:
             requested_action = matches[0]
-        elif len(matches) > 1:
-            return JsonResponse({'error': f'Multiple actions match description: {description}'})
         else:  # len(matches) == 0
             return JsonResponse({'error': 'requested action not available'})
 
@@ -104,6 +103,10 @@ def action(request):
                 updated_models, log_statement = ActionExecutor().execute(requested_action, session)
         except (ValidationError, IntegrityError) as e:
             return JsonResponse({'error': e.message})
+
+        if session.game_over:
+            session.trigger_game_over()
+            return JsonResponse({'game_over': True})
 
         updated_models['actions'] = get_current_actions(session)
 

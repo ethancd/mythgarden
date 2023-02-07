@@ -29,6 +29,7 @@ class Clock(models.Model):
     MINUTES_IN_A_HALF_DAY = 12 * 60
     MINUTES_IN_A_QUARTER_DAY = 6 * 60
     DAWN = MINUTES_IN_A_QUARTER_DAY
+    OVERSLEPT_TIME = 10 * 60
 
     SUNDAY = 'SUN'
     MONDAY = 'MON'
@@ -119,6 +120,10 @@ class Clock(models.Model):
     def minutes_to_dawn(self):
         return self.DAWN - self.time
 
+    @property
+    def minutes_to_overslept_time(self):
+        return self.OVERSLEPT_TIME - self.time
+
     def save(self, *args, **kwargs):
         self.full_clean()
         return super().save(*args, **kwargs)
@@ -126,14 +131,27 @@ class Clock(models.Model):
 
 @receiver(post_save, sender=Clock)
 def time_has_passed(sender, instance, **kwargs):
+    # refactor all this ish into game_logic.py
     instance.session.trigger_scheduled_events()
 
     if instance.is_new_day:
+        if instance.day == Clock.SUNDAY:
+            instance.session.game_over = True
+            return
+        instance.is_new_day = False
+
         instance.session.reset_for_new_day()
 
-        instance.is_new_day = False
-        if instance.time < instance.DAWN:
-            instance.advance(instance.minutes_to_dawn)
+        if instance.session.hero.is_in_bed:
+            instance.session.hero.is_in_bed = False
+            instance.session.hero.save()
+
+            if instance.time < instance.DAWN:
+                instance.advance(instance.minutes_to_dawn)
+        else:
+            instance.session.message = "You passed out at midnight and overslept! You're just now waking up."
+            if instance.time < instance.OVERSLEPT_TIME:
+                instance.advance(instance.minutes_to_overslept_time)
 
         instance.save()
 
@@ -204,9 +222,9 @@ class Item(models.Model):
 
     RARITY_WEIGHTS = {
         COMMON: 0.65,
-        UNCOMMON: 0.25,
-        RARE: 0.08,
-        EPIC: 0.02,
+        UNCOMMON: 0.2,
+        RARE: 0.1,
+        EPIC: 0.05,
     }
 
     CROP_PROFIT_MULTIPLIER = 10
@@ -227,7 +245,8 @@ class Item(models.Model):
             'name': self.name,
             'icon': {
                 'url': self.icon.url if self.icon else None
-            }
+            },
+            'rarity': self.get_rarity_display(),
         }
 
     def get_next_growth_stage(self):
@@ -457,6 +476,8 @@ class Session(models.Model):
     key = models.CharField(max_length=32, primary_key=True, default=generate_uuid)
     location = models.ForeignKey(Place, on_delete=models.CASCADE, null=True, default=Place.get_default_pk)
     skip_post_save_signal = models.BooleanField(default=False)
+    message = models.TextField(blank=True, null=True)
+    game_over = models.BooleanField(default=False)
 
     def save_data(self):
         """save model objects that the current session has a handle on --
@@ -464,9 +485,9 @@ class Session(models.Model):
 
         self.save()
         self.hero.save()
-        self.clock.save()
         self.wallet.save()
         self.inventory.save()  # probably unnecessary, since inventory doesn't have any fields right now
+        self.clock.save()
 
     @property
     def location_state(self):
@@ -563,6 +584,26 @@ class Session(models.Model):
 
         farm_state.item_tokens.set(new_contents)
 
+    def trigger_game_over(self):
+        koin = self.hero.koin_earned
+        hearts = self.hero.hearts_earned
+        score = self.hero.score
+
+        new_session = self.reset_session_state()
+
+        # new_session.new_game = True
+        new_session.message = f'You made it to the end of the week! You earned {koin} koin and {hearts} hearts, for a total score of {score}.'\
+        'Prepare to enter the time loop and start over again!'
+
+        new_session.save()
+
+    def reset_session_state(self):
+        key = self.key
+
+        self.delete()
+
+        return Session.objects.create(key=key)
+
     def abbr_key_tag(self):
         return f'({self.key[:8]}...)'
 
@@ -584,8 +625,24 @@ class Hero(models.Model):
     name = models.CharField(max_length=255, default='Squall')
     portrait = models.ImageField(upload_to='portraits/', default='portraits/squall-farmer.png')
 
+    koin_earned = models.IntegerField(default=0)
+    hearts_earned = models.IntegerField(default=0)
+
+    is_in_bed = models.BooleanField(default=False)
+
     def __str__(self):
         return 'Hero ' + self.session.abbr_key_tag()
+
+    def serialize(self):
+        return {
+            'score': self.score,
+            'koin_earned': self.koin_earned,
+            'hearts_earned': self.hearts_earned,
+        }
+
+    @property
+    def score(self):
+        return self.koin_earned * self.hearts_earned * 10
 
 
 class ItemTypePreference(models.Model):
@@ -669,10 +726,11 @@ class Villager(models.Model):
             preference = self.item_type_preferences.get(item_type=item.item_type)
             return preference.valence
         except ItemTypePreference.DoesNotExist:
-            valence = ItemTypePreference.UNIVERSAL_PREFERENCES[item.item_type]
-            return valence
-        except KeyError:
-            return ItemTypePreference.NEUTRAL
+            try:
+                valence = ItemTypePreference.UNIVERSAL_PREFERENCES[item.item_type]
+                return valence
+            except KeyError:
+                return ItemTypePreference.NEUTRAL
 
     @property
     def talk_duration(self):
