@@ -1,7 +1,7 @@
 import random
 
-from .models import Bridge, Action, Item, Villager, Place, Building, Session, VillagerState, ItemTypePreference, ItemToken, DialogueLine
-
+from .models import Bridge, Action, Item, Place, Building, Session, VillagerState, ItemTypePreference, ItemToken, \
+    DialogueLine
 from .static_helpers import guard_type, guard_types
 
 
@@ -19,7 +19,8 @@ class ActionGenerator:
         - the location's current present items/occupants (contents and villagers)
         - the place's static features (buildings and bridges)"""
 
-        print(f'gen_available_actions: place={place}, inventory={inventory}, contents={contents}, villager_states={villager_states}, clock={clock}')
+        print(
+            f'gen_available_actions: place={place}, inventory={inventory}, contents={contents}, villager_states={villager_states}, clock={clock}')
         available_actions = []
 
         buildings = list(place.buildings.all())
@@ -40,7 +41,7 @@ class ActionGenerator:
         try:
             building = place.building
             if building.surround is not None:
-                available_actions += [self.gen_exit_action(building, building.surround)]
+                available_actions += [self.gen_exit_action(building)]
         except Building.DoesNotExist:
             pass
 
@@ -219,15 +220,15 @@ class ActionGenerator:
             log_statement=f'You entered {building.name}.',
         )
 
-    def gen_exit_action(self, building, surround):
+    def gen_exit_action(self, building):
         """Returns an action that exits the current place"""
         return Action(
             description=f'Exit {building.name}',
             action_type=Action.TRA,
-            target_object=surround,
+            target_object=building.surround,
             cost_amount=5,
             cost_unit=Action.MIN,
-            log_statement=f'You exited {building.name} back out to {surround.name}.',
+            log_statement=f'You exited {building.name} back out to {building.surround.name}.',
         )
 
     def gen_plant_action(self, seed_token):
@@ -328,17 +329,15 @@ class ActionExecutor:
         if hasattr(self, ex) and callable(getattr(self, ex)):
             updated_models, log_statement = getattr(self, ex)(action, session)
         else:
-            raise Exception(f'Unknown action type: {action.get_action_type_display().lower()}')
+            raise ValueError(f'Unknown action type: {action.get_action_type_display().lower()}')
 
         if session.message:
-            log_statement = log_statement + '\n' + session.message
-            session.message = ''
-            session.save()
+            log_statement = self.__append_session_message(log_statement, session)
 
         return updated_models, log_statement
 
     def execute_travel_action(self, action, session):
-        """Executes a travel action, which updates the hero's current location and ticks the clock"""
+        """Executes a travel action, which updates the current location and ticks the clock"""
 
         session.location = action.target_object
         session.clock.advance(action.cost_amount)
@@ -355,37 +354,37 @@ class ActionExecutor:
 
     def execute_talk_action(self, action, session):
         """Executes a talk action, which displays some dialogue, adds to the villager's affinity, and ticks the clock"""
-        # also want to set villager_state to has_been_greeted so we can't talk to them again till tomorrow
 
         villager = action.target_object
-        villager_state = session.occupant_states.filter(villager=villager).first()
-        old_tier, new_tier = self.update_affinity(villager_state, villager.friendliness, session)
+        villager_state = session.get_villager_state(villager)
 
-        session.hero.hearts_earned += (new_tier - old_tier)
-        is_next_tier = new_tier > old_tier
+        dialogue = self.__get_dialogue_for_talk_action(villager_state, villager)
+        hearts_gained = self.__update_affinity(villager_state, villager.friendliness, session.hero)
 
-        trigger = self.get_talk_dialogue_trigger(villager_state)
-        if trigger == DialogueLine.FIRST_MEETING:
-            dialogue = villager.get_dialogue(trigger)
-        else:
-            dialogue = villager.get_dialogue(trigger, old_tier)
-
-        villager_state.has_been_talked_to = True
-        villager_state.has_ever_been_talked_to = True
-        villager_state.save()
-
+        session.hero.hearts_earned += hearts_gained
         session.clock.advance(action.cost_amount)
+        villager_state.mark_as_talked_to()
+        action.log_statement += self.__make_affinity_tag_if_any(hearts_gained, villager)
 
+        villager_state.save()
         session.save_data()
-
-        log_statement = self.add_affinity_tag_if_needed(action.log_statement, is_next_tier, villager)
 
         return ({
                     'hero': session.hero,
                     'clock': session.clock,
                     'villager_states': list(session.occupant_states.all()),
                     'dialogue': dialogue,
-                }, log_statement)
+                }, action.log_statement)
+
+    def __get_dialogue_for_talk_action(self, villager_state, villager):
+        if villager_state.has_ever_been_talked_to:
+            trigger = DialogueLine.TALKED_TO
+            affinity_tier = villager_state.affinity_tier
+        else:
+            trigger = DialogueLine.FIRST_MEETING
+            affinity_tier = None
+
+        return villager.get_dialogue(trigger, affinity_tier)
 
     def execute_give_action(self, action, session):
         """Executes a give action, which removes an item from the hero's inventory
@@ -395,18 +394,18 @@ class ActionExecutor:
         villager = action.target_object
         gift = action.secondary_target_object
         valence = villager.gift_valence(gift)
-        affinity_amount = self.calc_gift_affinity_change(valence, gift.rarity, villager.friendliness)
+        affinity_amount = self.__calc_gift_affinity_change(valence, gift.rarity, villager.friendliness)
 
         villager_state = session.occupant_states.filter(villager=villager).first()
         villager_state.has_been_given_gift = True
-        old_tier, new_tier = self.update_affinity(villager_state, affinity_amount, session)
+        old_tier, new_tier = self.__update_affinity(villager_state, affinity_amount)
 
         session.hero.hearts_earned += (new_tier - old_tier)
         is_next_tier = new_tier > old_tier
 
         villager_state.save()
 
-        trigger = self.get_gift_dialogue_trigger(valence)
+        trigger = self.__get_gift_dialogue_trigger(valence)
         dialogue = villager.get_dialogue(trigger)
 
         session.clock.advance(action.cost_amount)
@@ -414,10 +413,11 @@ class ActionExecutor:
 
         session.save_data()
 
-        valence_text = self.get_valence_text(valence)
-        base_statement = action.log_statement.format(item_name=gift.name, villager_name=villager.name, valence_text=valence_text)
+        valence_text = self.__get_valence_text(valence)
+        base_statement = action.log_statement.format(item_name=gift.name, villager_name=villager.name,
+                                                     valence_text=valence_text)
 
-        log_statement = self.add_affinity_tag_if_needed(base_statement, is_next_tier, villager)
+        log_statement = self.__add_affinity_tag_if_needed(base_statement, is_next_tier, villager)
 
         session.save_data()
 
@@ -514,7 +514,7 @@ class ActionExecutor:
         """Executes a gather action, which finds a random item in the current location's item pool
         and adds a copy to the hero's inventory"""
 
-        item = self.pull_item_from_pool(session.location)
+        item = self.__pull_item_from_pool(session.location)
         session.inventory.item_tokens.add(ItemToken.objects.create(session=session, item=item))
         session.clock.advance(action.cost_amount)
 
@@ -539,7 +539,38 @@ class ActionExecutor:
                     'clock': session.clock,
                 }, action.log_statement)
 
-    def calc_gift_affinity_change(self, valence, rarity, friendliness):
+    # private methods
+    def __append_session_message(self, log_statement, session):
+        log_statement = log_statement + '\n' + session.message
+
+        session.message = ''
+        session.save()
+
+        return log_statement
+
+    def __pull_item_from_pool(self, location):
+        """Returns a random item from the given location's item pool, weighted by rarity"""
+
+        # Pick a rarity, find an item of that rarity;
+        # if none found, try again with another rarity;
+        # if no items at all, error out
+        rarities = [r for r in Item.RARITIES]
+        while len(rarities) > 0:
+            weights = [Item.RARITY_WEIGHTS[r] for r in rarities]
+            rarity = random.choices(rarities, weights=weights, k=1)[0]
+            choices = location.item_pool.filter(rarity=rarity)
+
+            if choices.count() > 0:
+                item = choices.order_by('?').first()
+                return item
+            else:
+                print(f'No items found in {location.name} of rarity {rarity}, trying other rarities...')
+                rarities.remove(rarity)
+                continue
+
+        raise ValueError(f'No items found in location {location.name} of any rarity')
+
+    def __calc_gift_affinity_change(self, valence, rarity, friendliness):
         """Calculates the change in affinity for a gift based on valence of villager's reaction,
         item's rarity, villager's friendliness"""
 
@@ -563,25 +594,33 @@ class ActionExecutor:
 
         return int((base_value * multiplier) + friendliness)
 
-    def update_affinity(self, villager_state, amount, session):
-        """Updates the villager's villager_state affinity
-        and returns the old and new affinity tiers"""
+    def __update_affinity(self, villager_state, amount, hero):
+        """Updates the villager's villager_state affinity and returns the number of "hearts" gained (affinity tier diff)"""
 
-        old_affinity = villager_state.affinity
-        new_affinity = villager_state.add_affinity(amount)
+        old_tier = villager_state.affinity_tier
+        villager_state.add_affinity(amount)
+        new_tier = villager_state.affinity_tier
 
-        old_tier = old_affinity // VillagerState.AFFINITY_TIER_SIZE
-        new_tier = new_affinity // VillagerState.AFFINITY_TIER_SIZE
+        return new_tier - old_tier
+
+        hero.hearts_earned += diff
+
+        if diff > 0:
+            return f' You and {villager.name} have developed more of a bond! +❤️'
+        else:
+            return ''
+
 
         return old_tier, new_tier
 
-    def add_affinity_tag_if_needed(self, base_statement, is_next_tier, villager):
-        if is_next_tier:
-            return base_statement + f' You and {villager.name} have developed more of a bond! +❤️'
+    def __make_affinity_tag_if_any(self, hearts_gained, villager):
+        if hearts_gained > 0:
+            hearts = ''.join(['❤️'for _ in range(hearts_gained)])
+            return f" You and {villager.name} have developed more of a bond! +{hearts}"
         else:
-            return base_statement
+            return ''
 
-    def get_valence_text(self, valence):
+    def __get_valence_text(self, valence):
         if valence == ItemTypePreference.LOVE:
             return 'love it!'
         elif valence == ItemTypePreference.LIKE:
@@ -595,36 +634,14 @@ class ActionExecutor:
         else:
             raise ValueError(f'Invalid valence {valence}')
 
-    def pull_item_from_pool(self, location):
-        """Returns a random item from the given location's item pool, weighted by rarity"""
-
-        # Pick a rarity, find an item of that rarity;
-        # if none found, try again with another rarity;
-        # if no items at all, error out
-        rarities = [r for r in Item.RARITIES]
-        while len(rarities) > 0:
-            weights = [Item.RARITY_WEIGHTS[r] for r in rarities]
-            rarity = random.choices(rarities, weights=weights, k=1)[0]
-            choices = location.item_pool.filter(rarity=rarity)
-
-            if choices.count() > 0:
-                item = choices.order_by('?').first()
-                return item
-            else:
-                print(f'No items found in {location.name} of rarity {rarity}, trying other rarities...')
-                rarities.remove(rarity)
-                continue
-
-        raise ValueError(f'No items found in location {location.name} of any rarity')
-
-    def get_talk_dialogue_trigger(self, villager_state):
+    def __get_talk_dialogue_trigger(self, villager_state):
         """Returns a dialogue trigger for a talk action based on whether they've been talked to before or not"""
         if villager_state.has_ever_been_talked_to:
             return DialogueLine.TALKED_TO
         else:
             return DialogueLine.FIRST_MEETING
 
-    def get_gift_dialogue_trigger(self, valence):
+    def __get_gift_dialogue_trigger(self, valence):
         """Returns a trigger object for a gift action based on the valence of their reaction"""
 
         VALENCE_TO_DIALOGUE_TRIGGER_MAP = {

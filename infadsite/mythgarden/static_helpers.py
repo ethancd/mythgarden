@@ -4,6 +4,11 @@ import uuid
 
 def guard_types(lst, cls):
     """Returns True if all objects in lst are instances of cls, else raises a TypeError"""
+    try:
+        iter(lst)
+    except TypeError:
+        raise TypeError(f"{lst} is not iterable")
+
     for obj in lst:
         guard_type(obj, cls)
     return True

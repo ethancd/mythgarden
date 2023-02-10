@@ -392,7 +392,7 @@ class Place(models.Model):
 
     @classmethod
     def get_default_pk(cls):
-        place, created = cls.objects.get_or_create(name='The Farm')
+        place, created = cls.objects.get_or_create(name='The Farm', place_type=cls.FARM)
         return place.pk
 
     def __str__(self):
@@ -510,6 +510,9 @@ class Session(models.Model):
             occupant_states |= VillagerState.objects.filter(pk=villager_state.pk)
 
         return occupant_states
+
+    def get_villager_state(self, villager):
+        return self.occupant_states.filter(villager=villager).first()
 
     @property
     def local_item_tokens(self):
@@ -789,12 +792,14 @@ class VillagerState(models.Model):
 
     @property
     def display_affinity(self):
-        tier = self.affinity // self.AFFINITY_TIER_SIZE  # 0-5
-
-        full_hearts = ['❤️' for _ in range(tier)]
-        empty_hearts = ['🖤' for _ in range(self.TOTAL_TIERS - tier)]
+        full_hearts = ['❤️' for _ in range(self.affinity_tier)]
+        empty_hearts = ['🖤' for _ in range(self.TOTAL_TIERS - self.affinity_tier)]
 
         return ''.join(full_hearts + empty_hearts)
+
+    @property
+    def affinity_tier(self):
+        return self.affinity // self.AFFINITY_TIER_SIZE
 
     def add_affinity(self, amount):
         self.affinity += amount
@@ -808,6 +813,10 @@ class VillagerState(models.Model):
         self.save()
         return self.affinity
 
+    def mark_as_talked_to(self):
+        self.has_been_talked_to = True
+        self.has_ever_been_talked_to = True
+        self.save()
 
 class Bridge(models.Model):
     NORTH = 'NORTH'
