@@ -1,1 +1,5 @@
 mythgarden/__pycache__/
+app-env
+__pycache__
+.DS_Store
+*.pyc
