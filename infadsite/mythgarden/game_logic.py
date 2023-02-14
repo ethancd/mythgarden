@@ -398,10 +398,9 @@ class ActionExecutor:
 
         villager_state = session.occupant_states.filter(villager=villager).first()
         villager_state.has_been_given_gift = True
-        old_tier, new_tier = self.__update_affinity(villager_state, affinity_amount)
+        hearts_gained = self.__update_affinity(villager_state, affinity_amount, session.hero)
 
-        session.hero.hearts_earned += (new_tier - old_tier)
-        is_next_tier = new_tier > old_tier
+        session.hero.hearts_earned += hearts_gained
 
         villager_state.save()
 
@@ -414,10 +413,10 @@ class ActionExecutor:
         session.save_data()
 
         valence_text = self.__get_valence_text(valence)
-        base_statement = action.log_statement.format(item_name=gift.name, villager_name=villager.name,
+        log_statement = action.log_statement.format(item_name=gift.name, villager_name=villager.name,
                                                      valence_text=valence_text)
 
-        log_statement = self.__add_affinity_tag_if_needed(base_statement, is_next_tier, villager)
+        log_statement += self.__make_affinity_tag_if_any(hearts_gained, villager)
 
         session.save_data()
 
