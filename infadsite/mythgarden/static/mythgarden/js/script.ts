@@ -29,7 +29,7 @@ function executeAction(element: HTMLElement) {
             }
 
             if (response.game_over) {
-                window.location.href = '/mythgarden';
+                window.location.href = '/';
             }
 
             updatePage(response);

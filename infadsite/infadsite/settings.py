@@ -34,7 +34,7 @@ DEBUG = env('DEBUG')
 # exception if SECRET_KEY not in os.environ
 SECRET_KEY = env('SECRET_KEY')
 
-ALLOWED_HOSTS = ['django-mythgarden-fly.fly.dev', 'mythgarden.ashkie.com']
+ALLOWED_HOSTS = ['127.0.0.1', 'django-mythgarden-fly.fly.dev', 'mythgarden.ashkie.com']
 CSRF_TRUSTED_ORIGINS = ['https://django-mythgarden-fly.fly.dev', 'https://mythgarden.ashkie.com']
 STATIC_ROOT = BASE_DIR / 'static'
 
