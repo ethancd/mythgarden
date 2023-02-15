@@ -554,7 +554,7 @@ class Session(models.Model):
             item_tokens.append(ItemToken(session=self, item=item))
         ItemToken.objects.bulk_create(item_tokens)
 
-        place_state = self.place_states.get(place=event.place)
+        place_state, created = self.place_states.get_or_create(place=event.place)
 
         place_state.item_tokens.set(item_tokens)
 
