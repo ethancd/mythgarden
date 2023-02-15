@@ -20,6 +20,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='session',
             name='location',
-            field=models.ForeignKey(default=mythgarden.models.Place.get_default_pk, null=True, on_delete=django.db.models.deletion.CASCADE, to='mythgarden.place'),
+            field=models.ForeignKey(default=mythgarden.models.place.Place.get_default_pk, null=True, on_delete=django.db.models.deletion.CASCADE, to='mythgarden.place'),
         ),
     ]

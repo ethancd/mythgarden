@@ -8,6 +8,9 @@ from mythgarden.game_logic import ActionGenerator
 # noinspection PyUnresolvedReferences
 from mythgarden.models import Item, Action, Villager, Place, Bridge, Building, Hero, Clock, Session, ItemToken, \
     VillagerState
+# noinspection PyUnresolvedReferences
+from mythgarden.models._constants import NORTH, SOUTH, EAST, WEST, GIFT, COMMON, SEED, SPROUT, CROP, TOWN, FARM, \
+    MOUNTAIN, FOREST, BEACH, HOME, SHOP
 
 
 def assertAnyActionsOfType(actions, action_type):
@@ -18,7 +21,7 @@ def assertAnyActionsOfType(actions, action_type):
     raise AssertionError(f"No actions of type {action_type} found in {actions}")
 
 
-def create_item(name=None, item_type=Item.GIFT, price=1, rarity=Item.COMMON, counter=count()):
+def create_item(name=None, item_type=GIFT, price=1, rarity=COMMON, counter=count()):
     if name is None:
         name = f'Mock Item #{next(counter)}'
 
@@ -49,11 +52,11 @@ def create_villager_state(villager=None, session=None, name='Lea'):
     return VillagerState.objects.create(villager=villager, session=session, location=create_place())
 
 
-def create_place(name='Nowheresville', place_type=Place.TOWN):
+def create_place(name='Nowheresville', place_type=TOWN):
     return Place.objects.get_or_create(name=name, place_type=place_type)[0]
 
 
-def create_bridge(place_1, place_2, direction_1=Bridge.WEST, direction_2=Bridge.EAST):
+def create_bridge(place_1, place_2, direction_1=WEST, direction_2=EAST):
     return Bridge.objects.create(place_1=place_1, place_2=place_2, direction_1=direction_1, direction_2=direction_2)
 
 
@@ -105,12 +108,12 @@ class GenAvailableActionsTests(TestCase):
         self.sleep_action = ['sleep']
         self.ag.gen_sleep_action.return_value = self.sleep_action
 
-        self.town = create_place('The Town', Place.TOWN)
-        self.farm = create_place('The Farm', Place.FARM)
-        self.mountains = create_place('The Mountains', Place.MOUNTAIN)
-        self.beach = create_place('The Beach', Place.BEACH)
-        self.forest = create_place('The Forest', Place.FOREST)
-        self.farmhouse = create_building('The Farmhouse', self.farm, Place.HOME)
+        self.town = create_place('The Town', TOWN)
+        self.farm = create_place('The Farm', FARM)
+        self.mountains = create_place('The Mountains', MOUNTAIN)
+        self.beach = create_place('The Beach', BEACH)
+        self.forest = create_place('The Forest', FOREST)
+        self.farmhouse = create_building('The Farmhouse', self.farm, HOME)
         self.inventory = []
         self.contents = []
         self.villagers = []
@@ -146,7 +149,7 @@ class GenAvailableActionsTests(TestCase):
 
     def test_calls_gen_shopping_actions_when_place_is_a_shop_building(self):
         """Calls gen_shopping_actions when place is a building with place_type shop"""
-        self.shop = create_building('Shop', self.town, Place.SHOP)
+        self.shop = create_building('Shop', self.town, SHOP)
 
         self.gen_actions(self.shop)
 
@@ -154,7 +157,7 @@ class GenAvailableActionsTests(TestCase):
 
     def test_returns_shopping_actions_when_place_is_a_shop_building(self):
         """Returns shopping actions when place has a shop landmark"""
-        self.shop = create_building('Shop', self.town, Place.SHOP)
+        self.shop = create_building('Shop', self.town, SHOP)
 
         actions = self.gen_actions(self.shop)
 
@@ -169,7 +172,7 @@ class GenAvailableActionsTests(TestCase):
 
     def test_does_not_call_gen_shopping_actions_when_place_is_a_building_but_not_shop(self):
         """Does not call gen_shopping_actions when place is a building but not a shop"""
-        self.neighbor_house = create_building('Neighbor House', self.town, Place.HOME)
+        self.neighbor_house = create_building('Neighbor House', self.town, HOME)
 
         self.gen_actions(self.neighbor_house)
 
@@ -243,7 +246,7 @@ class GenAvailableActionsTests(TestCase):
         self.ag.gen_social_actions.assert_not_called()
 
     def test_calls_gen_gather_actions_when_place_is_a_wild_type(self):
-        """Calls gen_gather_actions when place is a wild type (in Place.WILD_TYPES)"""
+        """Calls gen_gather_actions when place is a wild type (in WILD_TYPES)"""
 
         for place in [self.beach, self.forest, self.mountains]:
             with self.subTest(place=place):
@@ -252,7 +255,7 @@ class GenAvailableActionsTests(TestCase):
                 self.ag.gen_gather_actions.assert_called_once_with(place)
 
     def test_returns_gather_actions_when_place_is_a_wild_type(self):
-        """Returns gather actions when place is a wild type (in Place.WILD_TYPES)"""
+        """Returns gather actions when place is a wild type (in WILD_TYPES)"""
         for place in [self.beach, self.forest, self.mountains]:
             with self.subTest(place=place):
                 actions = self.gen_actions(place)
@@ -260,20 +263,20 @@ class GenAvailableActionsTests(TestCase):
                     self.assertIn(a, actions)
 
     def test_does_not_call_gen_gather_actions_when_place_is_not_a_wild_type(self):
-        """Does not call gen_gather_actions when place is not a wild type (not in Place.WILD_TYPES)"""
+        """Does not call gen_gather_actions when place is not a wild type (not in WILD_TYPES)"""
         self.gen_actions(self.town)
         self.ag.gen_gather_actions.assert_not_called()
 
     def test_calls_gen_enter_actions_when_place_has_buildings(self):
         """Calls gen_enter_actions when place has buildings"""
-        pub_building = create_building('the pub', self.town, Place.SHOP)
+        pub_building = create_building('the pub', self.town, SHOP)
 
         self.gen_actions(self.town)
         self.ag.gen_enter_actions.assert_called_once_with([pub_building])
 
     def test_returns_enter_actions_when_place_has_buildings(self):
         """Returns enter actions when place has buildings"""
-        create_building('the pub', self.town, Place.SHOP)
+        create_building('the pub', self.town, SHOP)
 
         actions = self.gen_actions(self.town)
         for a in self.enter_actions:
@@ -286,14 +289,14 @@ class GenAvailableActionsTests(TestCase):
 
     def test_calls_gen_exit_action_when_place_is_a_building(self):
         """Calls gen_exit_action when place is a building"""
-        pub_building = create_building('the pub', self.town, Place.SHOP)
+        pub_building = create_building('the pub', self.town, SHOP)
 
         self.gen_actions(pub_building)
         self.ag.gen_exit_action.assert_called_once_with(pub_building)
 
     def test_returns_exit_action_when_place_is_a_building(self):
         """Returns exit action when place is a building"""
-        pub_building = create_building('the pub', self.town, Place.SHOP)
+        pub_building = create_building('the pub', self.town, SHOP)
 
         actions = self.gen_actions(pub_building)
         self.assertIn(self.exit_action, actions)
@@ -315,7 +318,7 @@ class GenAvailableActionsTests(TestCase):
 
     def test_does_not_call_gen_sleep_action_when_place_is_not_on_the_farm(self):
         """Does not call gen_sleep_action when place is not on the farm"""
-        pub_building = create_building('the pub', self.town, Place.SHOP)
+        pub_building = create_building('the pub', self.town, SHOP)
 
         self.gen_actions(pub_building)
         self.ag.gen_sleep_action.assert_not_called()
@@ -364,22 +367,22 @@ class GenFarmingActionsTests(TestCase):
         Returns plant actions when inventory has seeds
         """
         self.inventory = [
-            create_item_token(name='Parsnip', item_type=Item.SEED),
-            create_item_token(name='Strawberry', item_type=Item.SEED),
+            create_item_token(name='Parsnip', item_type=SEED),
+            create_item_token(name='Strawberry', item_type=SEED),
         ]
         actions = self.ag.gen_farming_actions(self.field_contents, self.inventory)
 
         for i in range(len(actions)):
-            self.assertEqual(actions[i].action_type, Action.PLA)
+            self.assertEqual(actions[i].action_type, Action.PLANT)
 
     def test_returns_plant_actions_with_correct_description(self):
         """
         Returns a list with plant actions with the correct description
         """
-        self.inventory = [create_item_token(name='Parsnip', item_type=Item.SEED)]
+        self.inventory = [create_item_token(name='Parsnip', item_type=SEED)]
         actions = self.ag.gen_farming_actions(self.field_contents, self.inventory)
 
-        plant_action = [a for a in actions if a.action_type == Action.PLA][0]
+        plant_action = [a for a in actions if a.action_type == Action.PLANT][0]
 
         self.assertEqual(plant_action.description, 'Plant Parsnip')
 
@@ -387,10 +390,10 @@ class GenFarmingActionsTests(TestCase):
         """
         Returns a list with plant actions with the correct log_statement
         """
-        self.inventory = [create_item_token(name='Parsnip', item_type=Item.SEED)]
+        self.inventory = [create_item_token(name='Parsnip', item_type=SEED)]
 
         actions = self.ag.gen_farming_actions(self.field_contents, self.inventory)
-        plant_action = [a for a in actions if a.action_type == Action.PLA][0]
+        plant_action = [a for a in actions if a.action_type == Action.PLANT][0]
 
         self.assertEqual(plant_action.log_statement, 'You planted some Parsnip in the field.')
 
@@ -398,10 +401,10 @@ class GenFarmingActionsTests(TestCase):
         """
         Returns a list with plant actions with the correct item as target_object
         """
-        self.inventory = [create_item_token(name='Parsnip', item_type=Item.SEED)]
+        self.inventory = [create_item_token(name='Parsnip', item_type=SEED)]
 
         actions = self.ag.gen_farming_actions(self.field_contents, self.inventory)
-        plant_action = [a for a in actions if a.action_type == Action.PLA][0]
+        plant_action = [a for a in actions if a.action_type == Action.PLANT][0]
 
         self.assertEqual(plant_action.target_object, self.inventory[0])
 
@@ -409,10 +412,10 @@ class GenFarmingActionsTests(TestCase):
         """
         Returns a list with plant actions with the correct cost_amount
         """
-        self.inventory = [create_item_token(name='Parsnip', item_type=Item.SEED)]
+        self.inventory = [create_item_token(name='Parsnip', item_type=SEED)]
         actions = self.ag.gen_farming_actions(self.field_contents, self.inventory)
 
-        plant_action = [a for a in actions if a.action_type == Action.PLA][0]
+        plant_action = [a for a in actions if a.action_type == Action.PLANT][0]
 
         self.assertEqual(plant_action.cost_amount, 15)
 
@@ -420,10 +423,10 @@ class GenFarmingActionsTests(TestCase):
         """
         Returns a list with plant actions with the correct cost_unit
         """
-        self.inventory = [create_item_token(name='Parsnip', item_type=Item.SEED)]
+        self.inventory = [create_item_token(name='Parsnip', item_type=SEED)]
         actions = self.ag.gen_farming_actions(self.field_contents, self.inventory)
 
-        plant_action = [a for a in actions if a.action_type == Action.PLA][0]
+        plant_action = [a for a in actions if a.action_type == Action.PLANT][0]
 
         self.assertEqual(plant_action.cost_unit, Action.MIN)
 
@@ -432,22 +435,22 @@ class GenFarmingActionsTests(TestCase):
         Returns water actions when field has sprouts
         """
         self.field_contents = [
-            create_item_token(name='Parsnip', item_type=Item.SPROUT),
-            create_item_token(name='Strawberry', item_type=Item.SPROUT),
+            create_item_token(name='Parsnip', item_type=SPROUT),
+            create_item_token(name='Strawberry', item_type=SPROUT),
         ]
         actions = self.ag.gen_farming_actions(self.field_contents, self.inventory)
 
         for i in range(len(actions)):
-            self.assertEqual(actions[i].action_type, Action.WAT)
+            self.assertEqual(actions[i].action_type, Action.WATER)
 
     def test_returns_water_actions_with_correct_description(self):
         """
         Returns a list with water actions with the correct description
         """
-        self.field_contents = [create_item_token(name='Parsnip', item_type=Item.SPROUT)]
+        self.field_contents = [create_item_token(name='Parsnip', item_type=SPROUT)]
         actions = self.ag.gen_farming_actions(self.field_contents, self.inventory)
 
-        water_action = [a for a in actions if a.action_type == Action.WAT][0]
+        water_action = [a for a in actions if a.action_type == Action.WATER][0]
 
         self.assertEqual(water_action.description, 'Water Parsnip')
 
@@ -455,10 +458,10 @@ class GenFarmingActionsTests(TestCase):
         """
         Returns a list with water actions with the correct log_statement
         """
-        self.field_contents = [create_item_token(name='Parsnip', item_type=Item.SPROUT)]
+        self.field_contents = [create_item_token(name='Parsnip', item_type=SPROUT)]
         actions = self.ag.gen_farming_actions(self.field_contents, self.inventory)
 
-        water_action = [a for a in actions if a.action_type == Action.WAT][0]
+        water_action = [a for a in actions if a.action_type == Action.WATER][0]
 
         self.assertEqual(water_action.log_statement, 'You watered the Parsnip.')
 
@@ -466,10 +469,10 @@ class GenFarmingActionsTests(TestCase):
         """
         Returns a list with water actions with the correct item as target_object
         """
-        self.field_contents = [create_item_token(name='Parsnip', item_type=Item.SPROUT)]
+        self.field_contents = [create_item_token(name='Parsnip', item_type=SPROUT)]
         actions = self.ag.gen_farming_actions(self.field_contents, self.inventory)
 
-        water_action = [a for a in actions if a.action_type == Action.WAT][0]
+        water_action = [a for a in actions if a.action_type == Action.WATER][0]
 
         self.assertEqual(water_action.target_object, self.field_contents[0])
 
@@ -477,10 +480,10 @@ class GenFarmingActionsTests(TestCase):
         """
         Returns a list with water actions with the correct cost_amount
         """
-        self.field_contents = [create_item_token(name='Parsnip', item_type=Item.SPROUT)]
+        self.field_contents = [create_item_token(name='Parsnip', item_type=SPROUT)]
         actions = self.ag.gen_farming_actions(self.field_contents, self.inventory)
 
-        water_action = [a for a in actions if a.action_type == Action.WAT][0]
+        water_action = [a for a in actions if a.action_type == Action.WATER][0]
 
         self.assertEqual(water_action.cost_amount, 30)
 
@@ -488,10 +491,10 @@ class GenFarmingActionsTests(TestCase):
         """
         Returns a list with water actions with the correct cost_unit
         """
-        self.field_contents = [create_item_token(name='Parsnip', item_type=Item.SPROUT)]
+        self.field_contents = [create_item_token(name='Parsnip', item_type=SPROUT)]
         actions = self.ag.gen_farming_actions(self.field_contents, self.inventory)
 
-        water_action = [a for a in actions if a.action_type == Action.WAT][0]
+        water_action = [a for a in actions if a.action_type == Action.WATER][0]
 
         self.assertEqual(water_action.cost_unit, Action.MIN)
 
@@ -500,22 +503,22 @@ class GenFarmingActionsTests(TestCase):
         Returns harvest actions when field has crops
         """
         self.field_contents = [
-            create_item_token(name='Parsnip', item_type=Item.CROP),
-            create_item_token(name='Strawberry', item_type=Item.CROP),
+            create_item_token(name='Parsnip', item_type=CROP),
+            create_item_token(name='Strawberry', item_type=CROP),
         ]
         actions = self.ag.gen_farming_actions(self.field_contents, self.inventory)
 
         for i in range(len(actions)):
-            self.assertEqual(actions[i].action_type, Action.HAR)
+            self.assertEqual(actions[i].action_type, Action.HARVEST)
 
     def test_returns_harvest_actions_with_correct_description(self):
         """
         Returns a list with harvest actions with the correct description
         """
-        self.field_contents = [create_item_token(name='Parsnip', item_type=Item.CROP)]
+        self.field_contents = [create_item_token(name='Parsnip', item_type=CROP)]
         actions = self.ag.gen_farming_actions(self.field_contents, self.inventory)
 
-        harvest_action = [a for a in actions if a.action_type == Action.HAR][0]
+        harvest_action = [a for a in actions if a.action_type == Action.HARVEST][0]
 
         self.assertEqual(harvest_action.description, 'Harvest Parsnip')
 
@@ -523,10 +526,10 @@ class GenFarmingActionsTests(TestCase):
         """
         Returns a list with harvest actions with the correct log_statement
         """
-        self.field_contents = [create_item_token(name='Parsnip', item_type=Item.CROP)]
+        self.field_contents = [create_item_token(name='Parsnip', item_type=CROP)]
         actions = self.ag.gen_farming_actions(self.field_contents, self.inventory)
 
-        harvest_action = [a for a in actions if a.action_type == Action.HAR][0]
+        harvest_action = [a for a in actions if a.action_type == Action.HARVEST][0]
 
         self.assertEqual(harvest_action.log_statement, 'You harvested the Parsnip.')
 
@@ -534,10 +537,10 @@ class GenFarmingActionsTests(TestCase):
         """
         Returns a list with harvest actions with the correct item as target_object
         """
-        self.field_contents = [create_item_token(name='Parsnip', item_type=Item.CROP)]
+        self.field_contents = [create_item_token(name='Parsnip', item_type=CROP)]
         actions = self.ag.gen_farming_actions(self.field_contents, self.inventory)
 
-        harvest_action = [a for a in actions if a.action_type == Action.HAR][0]
+        harvest_action = [a for a in actions if a.action_type == Action.HARVEST][0]
 
         self.assertEqual(harvest_action.target_object, self.field_contents[0])
 
@@ -545,10 +548,10 @@ class GenFarmingActionsTests(TestCase):
         """
         Returns a list with harvest actions with the correct cost_amount
         """
-        self.field_contents = [create_item_token(name='Parsnip', item_type=Item.CROP)]
+        self.field_contents = [create_item_token(name='Parsnip', item_type=CROP)]
         actions = self.ag.gen_farming_actions(self.field_contents, self.inventory)
 
-        harvest_action = [a for a in actions if a.action_type == Action.HAR][0]
+        harvest_action = [a for a in actions if a.action_type == Action.HARVEST][0]
 
         self.assertEqual(harvest_action.cost_amount, 15)
 
@@ -556,10 +559,10 @@ class GenFarmingActionsTests(TestCase):
         """
         Returns a list with harvest actions with the correct cost_unit
         """
-        self.field_contents = [create_item_token(name='Parsnip', item_type=Item.CROP)]
+        self.field_contents = [create_item_token(name='Parsnip', item_type=CROP)]
         actions = self.ag.gen_farming_actions(self.field_contents, self.inventory)
 
-        harvest_action = [a for a in actions if a.action_type == Action.HAR][0]
+        harvest_action = [a for a in actions if a.action_type == Action.HARVEST][0]
 
         self.assertEqual(harvest_action.cost_unit, Action.MIN)
 
@@ -568,53 +571,53 @@ class GenFarmingActionsTests(TestCase):
         Returns plant and water actions when there are seeds and sprouts
         """
         self.field_contents = [
-            create_item_token(name='Parsnip Sprout', item_type=Item.SPROUT),
-            create_item_token(name='Strawberry Sprout', item_type=Item.SPROUT),
+            create_item_token(name='Parsnip Sprout', item_type=SPROUT),
+            create_item_token(name='Strawberry Sprout', item_type=SPROUT),
         ]
         self.inventory = [
-            create_item_token(name='Parsnip Seed', item_type=Item.SEED),
-            create_item_token(name='Strawberry Seed', item_type=Item.SEED),
+            create_item_token(name='Parsnip Seed', item_type=SEED),
+            create_item_token(name='Strawberry Seed', item_type=SEED),
         ]
         actions = self.ag.gen_farming_actions(self.field_contents, self.inventory)
 
-        assertAnyActionsOfType(actions, Action.PLA)
-        assertAnyActionsOfType(actions, Action.WAT)
+        assertAnyActionsOfType(actions, Action.PLANT)
+        assertAnyActionsOfType(actions, Action.WATER)
 
         for i in range(len(actions)):
-            self.assertIn(actions[i].action_type, [Action.PLA, Action.WAT])
+            self.assertIn(actions[i].action_type, [Action.PLANT, Action.WATER])
 
     def test_returns_water_and_harvest_actions_when_there_are_sprouts_and_crops(self):
         """
         Returns water and harvest actions when there are sprouts and crops
         """
         self.field_contents = [
-            create_item_token(name='Parsnip', item_type=Item.SPROUT),
-            create_item_token(name='Strawberry', item_type=Item.CROP),
+            create_item_token(name='Parsnip', item_type=SPROUT),
+            create_item_token(name='Strawberry', item_type=CROP),
         ]
         actions = self.ag.gen_farming_actions(self.field_contents, self.inventory)
 
-        assertAnyActionsOfType(actions, Action.WAT)
-        assertAnyActionsOfType(actions, Action.HAR)
+        assertAnyActionsOfType(actions, Action.WATER)
+        assertAnyActionsOfType(actions, Action.HARVEST)
 
         for i in range(len(actions)):
-            self.assertIn(actions[i].action_type, [Action.WAT, Action.HAR])
+            self.assertIn(actions[i].action_type, [Action.WATER, Action.HARVEST])
 
     def test_returns_plant_and_harvest_actions_when_there_are_seeds_and_crops(self):
         """
         Returns plant and harvest actions when there are seeds and crops
         """
         self.field_contents = [
-            create_item_token(name='Parsnip Crop', item_type=Item.CROP),
-            create_item_token(name='Strawberry Crop', item_type=Item.CROP),
+            create_item_token(name='Parsnip Crop', item_type=CROP),
+            create_item_token(name='Strawberry Crop', item_type=CROP),
         ]
         self.inventory = [
-            create_item_token(name='Parsnip Seed', item_type=Item.SEED),
-            create_item_token(name='Strawberry Seed', item_type=Item.SEED),
+            create_item_token(name='Parsnip Seed', item_type=SEED),
+            create_item_token(name='Strawberry Seed', item_type=SEED),
         ]
         actions = self.ag.gen_farming_actions(self.field_contents, self.inventory)
 
-        plant_actions = [a for a in actions if a.action_type == Action.PLA]
-        harvest_actions = [a for a in actions if a.action_type == Action.HAR]
+        plant_actions = [a for a in actions if a.action_type == Action.PLANT]
+        harvest_actions = [a for a in actions if a.action_type == Action.HARVEST]
 
         self.assertEqual(len(plant_actions), 2)
         self.assertEqual(len(harvest_actions), 2)
@@ -624,33 +627,33 @@ class GenFarmingActionsTests(TestCase):
         Returns plant, water and harvest actions when there are seeds, sprouts and crops
         """
         self.field_contents = [
-            create_item_token(name='Parsnip Sprout', item_type=Item.SPROUT),
-            create_item_token(name='Strawberry Crop', item_type=Item.CROP),
+            create_item_token(name='Parsnip Sprout', item_type=SPROUT),
+            create_item_token(name='Strawberry Crop', item_type=CROP),
         ]
         self.inventory = [
-            create_item_token(name='Parsnip Seed', item_type=Item.SEED),
-            create_item_token(name='Strawberry Seed', item_type=Item.SEED),
+            create_item_token(name='Parsnip Seed', item_type=SEED),
+            create_item_token(name='Strawberry Seed', item_type=SEED),
         ]
         actions = self.ag.gen_farming_actions(self.field_contents, self.inventory)
 
-        assertAnyActionsOfType(actions, Action.PLA)
-        assertAnyActionsOfType(actions, Action.WAT)
-        assertAnyActionsOfType(actions, Action.HAR)
+        assertAnyActionsOfType(actions, Action.PLANT)
+        assertAnyActionsOfType(actions, Action.WATER)
+        assertAnyActionsOfType(actions, Action.HARVEST)
 
         for i in range(len(actions)):
-            self.assertIn(actions[i].action_type, [Action.PLA, Action.WAT, Action.HAR])
+            self.assertIn(actions[i].action_type, [Action.PLANT, Action.WATER, Action.HARVEST])
 
     def test_does_not_return_plant_actions_when_seeds_are_only_in_field_contents(self):
         """
         Does not return plant actions when seeds are only in field_contents and not in the inventory
         """
         self.field_contents = [
-            create_item_token(name='Parsnip', item_type=Item.SEED),
-            create_item_token(name='Strawberry', item_type=Item.SEED),
+            create_item_token(name='Parsnip', item_type=SEED),
+            create_item_token(name='Strawberry', item_type=SEED),
         ]
         actions = self.ag.gen_farming_actions(self.field_contents, self.inventory)
 
-        plant_actions = [a for a in actions if a.action_type == Action.PLA]
+        plant_actions = [a for a in actions if a.action_type == Action.PLANT]
 
         self.assertEqual(len(plant_actions), 0)
 
@@ -659,12 +662,12 @@ class GenFarmingActionsTests(TestCase):
         Does not return water actions when sprouts are only in inventory and not in the field contents
         """
         self.inventory = [
-            create_item_token(name='Parsnip', item_type=Item.SPROUT),
-            create_item_token(name='Strawberry', item_type=Item.SPROUT),
+            create_item_token(name='Parsnip', item_type=SPROUT),
+            create_item_token(name='Strawberry', item_type=SPROUT),
         ]
         actions = self.ag.gen_farming_actions(self.field_contents, self.inventory)
 
-        water_actions = [a for a in actions if a.action_type == Action.WAT]
+        water_actions = [a for a in actions if a.action_type == Action.WATER]
 
         self.assertEqual(len(water_actions), 0)
 
@@ -673,12 +676,12 @@ class GenFarmingActionsTests(TestCase):
         Does not return harvest actions when crops are only in inventory and not in the field contents
         """
         self.inventory = [
-            create_item_token(name='Parsnip', item_type=Item.CROP),
-            create_item_token(name='Strawberry', item_type=Item.CROP),
+            create_item_token(name='Parsnip', item_type=CROP),
+            create_item_token(name='Strawberry', item_type=CROP),
         ]
         actions = self.ag.gen_farming_actions(self.field_contents, self.inventory)
 
-        harvest_actions = [a for a in actions if a.action_type == Action.HAR]
+        harvest_actions = [a for a in actions if a.action_type == Action.HARVEST]
 
         self.assertEqual(len(harvest_actions), 0)
 
@@ -687,7 +690,7 @@ class GenFarmingActionsTests(TestCase):
         Throws error if passed non-items in field_contents
         """
         self.field_contents = [
-            create_item_token(name='Parsnip', item_type=Item.SPROUT),
+            create_item_token(name='Parsnip', item_type=SPROUT),
             'Strawberry',
         ]
 
@@ -699,7 +702,7 @@ class GenFarmingActionsTests(TestCase):
         Throws error if passed non-items in inventory
         """
         self.inventory = [
-            create_item_token(name='Parsnip', item_type=Item.SPROUT),
+            create_item_token(name='Parsnip', item_type=SPROUT),
             'Strawberry',
         ]
 
@@ -747,7 +750,7 @@ class GenShoppingActionsTests(TestCase):
         actions = self.ag.gen_shopping_actions(self.shop_contents, self.inventory)
 
         for i in range(len(actions)):
-            self.assertEqual(actions[i].action_type, Action.SEL)
+            self.assertEqual(actions[i].action_type, Action.SELL)
 
     def test_returns_buy_and_sell_actions_if_shop_contents_and_inventory(self):
         """
@@ -758,10 +761,10 @@ class GenShoppingActionsTests(TestCase):
         actions = self.ag.gen_shopping_actions(self.shop_contents, self.inventory)
 
         assertAnyActionsOfType(actions, Action.BUY)
-        assertAnyActionsOfType(actions, Action.SEL)
+        assertAnyActionsOfType(actions, Action.SELL)
 
         for i in range(len(actions)):
-            self.assertIn(actions[i].action_type, [Action.BUY, Action.SEL])
+            self.assertIn(actions[i].action_type, [Action.BUY, Action.SELL])
 
     def test_returns_buy_actions_with_correct_description(self):
         """
@@ -878,9 +881,9 @@ class GenShoppingActionsTests(TestCase):
 class GenGatherActionsTests(TestCase):
     def setUp(self):
         self.ag = ActionGenerator()
-        self.mountains = create_place('Mountains', Place.MOUNTAIN)
-        self.forest = create_place('Forest', Place.FOREST)
-        self.beach = create_place('Beach', Place.BEACH)
+        self.mountains = create_place('Mountains', MOUNTAIN)
+        self.forest = create_place('Forest', FOREST)
+        self.beach = create_place('Beach', BEACH)
 
     def test_returns_list(self):
         """
@@ -896,7 +899,7 @@ class GenGatherActionsTests(TestCase):
         """
         actions = self.ag.gen_gather_actions(self.mountains)
 
-        self.assertEqual(actions[0].action_type, Action.GAT)
+        self.assertEqual(actions[0].action_type, Action.GATHER)
 
     @patch('mythgarden.game_logic.ActionGenerator.gen_digging_action')
     def test_calls_gen_digging_action_for_mountains(self, mock_gen_digging_action):
@@ -929,7 +932,7 @@ class GenGatherActionsTests(TestCase):
         """
         actions = self.ag.gen_gather_actions(self.forest)
 
-        self.assertEqual(actions[0].action_type, Action.GAT)
+        self.assertEqual(actions[0].action_type, Action.GATHER)
 
     @patch('mythgarden.game_logic.ActionGenerator.gen_foraging_action')
     def test_calls_gen_foraging_action_for_forest(self, mock_gen_foraging_action):
@@ -962,7 +965,7 @@ class GenGatherActionsTests(TestCase):
         """
         actions = self.ag.gen_gather_actions(self.beach)
 
-        self.assertEqual(actions[0].action_type, Action.GAT)
+        self.assertEqual(actions[0].action_type, Action.GATHER)
 
     @patch('mythgarden.game_logic.ActionGenerator.gen_fishing_action')
     def test_calls_gen_fishing_action_for_beach(self, mock_gen_fishing_action):
@@ -997,12 +1000,12 @@ class GenEnterActionsTests(TestCase):
         self.beach = create_place(name='The Beach')
 
         self.farm = create_place(name='The Farm')
-        self.farmhouse = create_building(name='The Farmhouse', place=self.farm, place_type=Place.HOME)
+        self.farmhouse = create_building(name='The Farmhouse', place=self.farm, place_type=HOME)
         self.farm_buildings = [self.farmhouse]
 
         self.town = create_place(name='The Town')
-        self.store = create_building(name='The Store', place=self.town, place_type=Place.SHOP)
-        self.neighbor_house = create_building(name='Neighbor House', place=self.town, place_type=Place.HOME)
+        self.store = create_building(name='The Store', place=self.town, place_type=SHOP)
+        self.neighbor_house = create_building(name='Neighbor House', place=self.town, place_type=HOME)
         self.town_buildings = [self.store, self.neighbor_house]
 
     def test_returns_list(self):
@@ -1051,7 +1054,7 @@ class GenEnterActionsTests(TestCase):
         """
         actions = self.ag.gen_enter_actions(self.town_buildings)
 
-        self.assertEqual(actions[0].action_type, Action.TRA)
+        self.assertEqual(actions[0].action_type, Action.TRAVEL)
 
     def test_returns_action_with_correct_description(self):
         """
@@ -1092,7 +1095,7 @@ class GenExitActionTests(TestCase):
         self.ag = ActionGenerator()
 
         self.farm = create_place(name='The Farm')
-        self.farmhouse = create_building(name='The Farmhouse', place=self.farm, place_type=Place.HOME)
+        self.farmhouse = create_building(name='The Farmhouse', place=self.farm, place_type=HOME)
 
     def test_returns_action(self):
         """
@@ -1125,7 +1128,7 @@ class GenExitActionTests(TestCase):
         """
         action = self.ag.gen_exit_action(self.farmhouse)
 
-        self.assertEqual(action.action_type, Action.TRA)
+        self.assertEqual(action.action_type, Action.TRAVEL)
 
     def test_returns_action_with_correct_description(self):
         """
@@ -1208,11 +1211,11 @@ class GenTravelActionsTests(TestCase):
         """
         self.bridges = [
             create_bridge(self.farm, self.store),
-            create_bridge(self.farm, self.beach, Bridge.NORTH, Bridge.SOUTH),
+            create_bridge(self.farm, self.beach, NORTH, SOUTH),
         ]
         actions = self.ag.gen_travel_actions(self.farm, self.bridges)
 
-        travel_actions = [a for a in actions if a.action_type == Action.TRA]
+        travel_actions = [a for a in actions if a.action_type == Action.TRAVEL]
 
         self.assertEqual(len(travel_actions), 2)
 
@@ -1220,7 +1223,7 @@ class GenTravelActionsTests(TestCase):
         """
         Returns travel actions with the correct description
         """
-        self.bridges = [create_bridge(self.farm, self.store, Bridge.WEST, Bridge.EAST)]
+        self.bridges = [create_bridge(self.farm, self.store, WEST, EAST)]
         actions = self.ag.gen_travel_actions(self.farm, self.bridges)
 
         self.assertEqual(actions[0].description, 'Walk East')
@@ -1229,7 +1232,7 @@ class GenTravelActionsTests(TestCase):
         """
         Returns travel actions with the correct log statement
         """
-        self.bridges = [create_bridge(self.farm, self.store, Bridge.WEST, Bridge.EAST)]
+        self.bridges = [create_bridge(self.farm, self.store, WEST, EAST)]
         actions = self.ag.gen_travel_actions(self.farm, self.bridges)
 
         self.assertEqual(actions[0].log_statement, 'You travelled East to The Store.')
@@ -1238,16 +1241,16 @@ class GenTravelActionsTests(TestCase):
         """
         Returns travel actions with the correct direction
         """
-        self.bridges = [create_bridge(self.farm, self.store, Bridge.WEST, Bridge.EAST)]
+        self.bridges = [create_bridge(self.farm, self.store, WEST, EAST)]
         actions = self.ag.gen_travel_actions(self.farm, self.bridges)
 
-        self.assertEqual(actions[0].direction, Bridge.EAST)
+        self.assertEqual(actions[0].direction, EAST)
 
     def test_returns_travel_actions_with_correct_destination(self):
         """
         Returns travel actions with the correct destination
         """
-        self.bridges = [create_bridge(self.farm, self.store, Bridge.WEST, Bridge.EAST)]
+        self.bridges = [create_bridge(self.farm, self.store, WEST, EAST)]
         actions = self.ag.gen_travel_actions(self.farm, self.bridges)
 
         self.assertEqual(actions[0].target_object, self.store)
@@ -1275,17 +1278,17 @@ class GenTravelActionsTests(TestCase):
         Returns travel actions with the correct direction
         when the current place is stored as place 2 on the bridge
         """
-        self.bridges = [create_bridge(self.store, self.farm, Bridge.EAST, Bridge.WEST)]
+        self.bridges = [create_bridge(self.store, self.farm, EAST, WEST)]
         actions = self.ag.gen_travel_actions(self.farm, self.bridges)
 
-        self.assertEqual(actions[0].direction, Bridge.EAST)
+        self.assertEqual(actions[0].direction, EAST)
 
     def test_returns_travel_actions_with_correct_description_when_place_is_place_2_on_the_bridge(self):
         """
         Returns travel actions with the correct description
         when the current place is stored as place 2 on the bridge
         """
-        self.bridges = [create_bridge(self.store, self.farm, Bridge.EAST, Bridge.WEST)]
+        self.bridges = [create_bridge(self.store, self.farm, EAST, WEST)]
         actions = self.ag.gen_travel_actions(self.farm, self.bridges)
 
         self.assertEqual(actions[0].description, 'Walk East')
@@ -1295,7 +1298,7 @@ class GenTravelActionsTests(TestCase):
         Returns travel actions with the correct log statement
         when the current place is stored as place 2 on the bridge
         """
-        self.bridges = [create_bridge(self.store, self.farm, Bridge.EAST, Bridge.WEST)]
+        self.bridges = [create_bridge(self.store, self.farm, EAST, WEST)]
         actions = self.ag.gen_travel_actions(self.farm, self.bridges)
 
         self.assertEqual(actions[0].log_statement, 'You travelled East to The Store.')
@@ -1332,7 +1335,7 @@ class GenSocialActionsTests(TestCase):
         actions = self.ag.gen_social_actions(self.villager_states, self.inventory)
 
         for i in range(len(actions)):
-            self.assertEqual(actions[i].action_type, Action.TAL)
+            self.assertEqual(actions[i].action_type, Action.TALK)
 
     def test_returns_talk_actions_and_gift_actions_if_villagers_and_inventory(self):
         """
@@ -1342,11 +1345,11 @@ class GenSocialActionsTests(TestCase):
         self.inventory = [create_item_token()]
         actions = self.ag.gen_social_actions(self.villager_states, self.inventory)
 
-        assertAnyActionsOfType(actions, Action.TAL)
-        assertAnyActionsOfType(actions, Action.GIV)
+        assertAnyActionsOfType(actions, Action.TALK)
+        assertAnyActionsOfType(actions, Action.GIVE)
 
         for i in range(len(actions)):
-            self.assertIn(actions[i].action_type, [Action.TAL, Action.GIV])
+            self.assertIn(actions[i].action_type, [Action.TALK, Action.GIVE])
 
     def test_returns_one_talk_action_per_villager(self):
         """
@@ -1359,7 +1362,7 @@ class GenSocialActionsTests(TestCase):
         ]
         actions = self.ag.gen_social_actions(self.villager_states, self.inventory)
 
-        talk_actions = [a for a in actions if a.action_type == Action.TAL]
+        talk_actions = [a for a in actions if a.action_type == Action.TALK]
 
         self.assertEqual(len(talk_actions), 3)
 
@@ -1375,7 +1378,7 @@ class GenSocialActionsTests(TestCase):
         self.inventory = [create_item_token(), create_item_token()]
         actions = self.ag.gen_social_actions(self.villager_states, self.inventory)
 
-        gift_actions = [a for a in actions if a.action_type == Action.GIV]
+        gift_actions = [a for a in actions if a.action_type == Action.GIVE]
 
         self.assertEqual(len(gift_actions), 6)
 
@@ -1432,7 +1435,7 @@ class GenSocialActionsTests(TestCase):
         self.inventory = [create_item_token(create_item(name='Rock'))]
         actions = self.ag.gen_social_actions(self.villager_states, self.inventory)
 
-        gift_action = [a for a in actions if a.action_type == Action.GIV][0]
+        gift_action = [a for a in actions if a.action_type == Action.GIVE][0]
 
         self.assertEqual(gift_action.description, 'Give Rock to Lea')
 
@@ -1444,7 +1447,7 @@ class GenSocialActionsTests(TestCase):
         self.inventory = [create_item_token(create_item(name='Rock'))]
         actions = self.ag.gen_social_actions(self.villager_states, self.inventory)
 
-        gift_action = [a for a in actions if a.action_type == Action.GIV][0]
+        gift_action = [a for a in actions if a.action_type == Action.GIVE][0]
 
         self.assertEqual(gift_action.log_statement,
                          'You gave {item_name} to {villager_name}. Looks like they {valence_text}')
@@ -1457,7 +1460,7 @@ class GenSocialActionsTests(TestCase):
         self.inventory = [create_item_token()]
         actions = self.ag.gen_social_actions(self.villager_states, self.inventory)
 
-        gift_action = [a for a in actions if a.action_type == Action.GIV][0]
+        gift_action = [a for a in actions if a.action_type == Action.GIVE][0]
 
         self.assertEqual(gift_action.target_object, self.villager_states[0].villager)
 
@@ -1469,7 +1472,7 @@ class GenSocialActionsTests(TestCase):
         self.inventory = [create_item_token()]
         actions = self.ag.gen_social_actions(self.villager_states, self.inventory)
 
-        gift_action = [a for a in actions if a.action_type == Action.GIV][0]
+        gift_action = [a for a in actions if a.action_type == Action.GIVE][0]
 
         self.assertEqual(gift_action.secondary_target_object, self.inventory[0])
 
@@ -1481,7 +1484,7 @@ class GenSocialActionsTests(TestCase):
         self.inventory = [create_item_token()]
         actions = self.ag.gen_social_actions(self.villager_states, self.inventory)
 
-        gift_action = [a for a in actions if a.action_type == Action.GIV][0]
+        gift_action = [a for a in actions if a.action_type == Action.GIVE][0]
 
         self.assertEqual(gift_action.cost_amount, 5)
 
@@ -1493,7 +1496,7 @@ class GenSocialActionsTests(TestCase):
         self.inventory = [create_item_token()]
         actions = self.ag.gen_social_actions(self.villager_states, self.inventory)
 
-        gift_action = [a for a in actions if a.action_type == Action.GIV][0]
+        gift_action = [a for a in actions if a.action_type == Action.GIVE][0]
 
         self.assertEqual(gift_action.cost_unit, Action.MIN)
 
@@ -1529,7 +1532,7 @@ class GenSleepActionTests(TestCase):
         """
         action = self.ag.gen_sleep_action(self.clock)
 
-        self.assertEqual(action.action_type, Action.SLP)
+        self.assertEqual(action.action_type, Action.SLEEP)
 
     def test_returns_sleep_action_with_correct_description(self):
         """

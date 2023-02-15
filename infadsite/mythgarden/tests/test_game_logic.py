@@ -41,7 +41,7 @@ class CanAffordActionTests(TestCase):
         can_afford_action returns True if action type is sell
         """
         self.action.cost_unit = Action.KOIN
-        self.action.action_type = Action.SEL
+        self.action.action_type = Action.SELL
 
         result = can_afford_action(self.wallet, self.action)
 

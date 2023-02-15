@@ -1,12 +1,14 @@
 import random
 
-from .models import Bridge, Action, Item, Place, Building, Session, VillagerState, ItemTypePreference, ItemToken, \
+from .models import Bridge, Action, Place, Building, Session, VillagerState, ItemTypePreference, ItemToken, \
     DialogueLine
 from .static_helpers import guard_type, guard_types
+from .models._constants import SEED, SPROUT, CROP, COMMON, UNCOMMON, RARE, EPIC, RARITIES, RARITY_WEIGHTS, FARM, SHOP, \
+    WILD_TYPES, FOREST, MOUNTAIN, BEACH, LOVE, LIKE, NEUTRAL, DISLIKE, HATE
 
 
 def can_afford_action(wallet, requested_action):
-    if requested_action.is_cost_in_money() and requested_action.action_type != Action.SEL:
+    if requested_action.is_cost_in_money() and requested_action.action_type != Action.SELL:
         return wallet.money >= requested_action.cost_amount
     else:
         return True
@@ -26,13 +28,13 @@ class ActionGenerator:
         buildings = list(place.buildings.all())
         bridges = list(Bridge.objects.filter(place_1=place) | Bridge.objects.filter(place_2=place))
 
-        if place.place_type == Place.FARM:
+        if place.place_type == FARM:
             available_actions += self.gen_farming_actions(contents, inventory)
 
-        if place.place_type == Place.SHOP:
+        if place.place_type == SHOP:
             available_actions += self.gen_shopping_actions(contents, inventory)
 
-        if place.place_type in Place.WILD_TYPES:
+        if place.place_type in WILD_TYPES:
             available_actions += self.gen_gather_actions(place)
 
         if len(buildings) > 0:
@@ -65,16 +67,16 @@ class ActionGenerator:
 
         actions = []
 
-        seeds = [i for i in inventory if i.item_type == Item.SEED]
+        seeds = [i for i in inventory if i.item_type == SEED]
         for seed in seeds:
             actions.append(self.gen_plant_action(seed))
 
-        growing_plants = [i for i in field_contents if i.item_type in [Item.SEED, Item.SPROUT]]
+        growing_plants = [i for i in field_contents if i.item_type in [SEED, SPROUT]]
         for plant in growing_plants:
             if not plant.has_been_watered:
                 actions.append(self.gen_water_action(plant))
 
-        crops = [i for i in field_contents if i.item_type == Item.CROP]
+        crops = [i for i in field_contents if i.item_type == CROP]
 
         for crop in crops:
             actions.append(self.gen_harvest_action(crop))
@@ -103,11 +105,11 @@ class ActionGenerator:
 
         actions = []
 
-        if place.place_type == Place.FOREST:
+        if place.place_type == FOREST:
             actions.append(self.gen_foraging_action())
-        elif place.place_type == Place.MOUNTAIN:
+        elif place.place_type == MOUNTAIN:
             actions.append(self.gen_digging_action())
-        elif place.place_type == Place.BEACH:
+        elif place.place_type == BEACH:
             actions.append(self.gen_fishing_action())
 
         return actions
@@ -167,7 +169,7 @@ class ActionGenerator:
         """Returns an action that gives passed item to passed villager"""
         return Action(
             description=f'Give {item_token.name} to {villager.name}',
-            action_type=Action.GIV,
+            action_type=Action.GIVE,
             target_object=villager,
             secondary_target_object=item_token,
             cost_amount=5,
@@ -180,7 +182,7 @@ class ActionGenerator:
 
         return Action(
             description=f'Talk to {villager.name}',
-            action_type=Action.TAL,
+            action_type=Action.TALK,
             target_object=villager,
             cost_amount=villager.talk_duration,
             cost_unit=Action.MIN,
@@ -191,7 +193,7 @@ class ActionGenerator:
         """Returns an action that sells given item"""
         return Action(
             description=f'Sell {item_token.name}',
-            action_type=Action.SEL,
+            action_type=Action.SELL,
             target_object=item_token,
             cost_amount=item_token.price,
             cost_unit=Action.KOIN,
@@ -213,7 +215,7 @@ class ActionGenerator:
         """Returns an action that enters given building"""
         return Action(
             description=f'Enter {building.name}',
-            action_type=Action.TRA,
+            action_type=Action.TRAVEL,
             target_object=building,
             cost_amount=5,
             cost_unit=Action.MIN,
@@ -224,7 +226,7 @@ class ActionGenerator:
         """Returns an action that exits the current place"""
         return Action(
             description=f'Exit {building.name}',
-            action_type=Action.TRA,
+            action_type=Action.TRAVEL,
             target_object=building.surround,
             cost_amount=5,
             cost_unit=Action.MIN,
@@ -235,7 +237,7 @@ class ActionGenerator:
         """Returns an action that plants given seed"""
         return Action(
             description=f'Plant {seed_token.name}',
-            action_type=Action.PLA,
+            action_type=Action.PLANT,
             target_object=seed_token,
             cost_amount=15,
             cost_unit=Action.MIN,
@@ -246,7 +248,7 @@ class ActionGenerator:
         """Returns an action that waters given seed/sprout"""
         return Action(
             description=f'Water {plant_token.name}',
-            action_type=Action.WAT,
+            action_type=Action.WATER,
             target_object=plant_token,
             cost_amount=30,
             cost_unit=Action.MIN,
@@ -257,7 +259,7 @@ class ActionGenerator:
         """Returns an action that harvests given crop"""
         return Action(
             description=f'Harvest {crop_token.name}',
-            action_type=Action.HAR,
+            action_type=Action.HARVEST,
             target_object=crop_token,
             cost_amount=15,
             cost_unit=Action.MIN,
@@ -268,7 +270,7 @@ class ActionGenerator:
         """Returns an action that travels to given destination in given direction"""
         return Action(
             description=f'Walk {display_direction}',
-            action_type=Action.TRA,
+            action_type=Action.TRAVEL,
             target_object=destination,
             direction=direction,
             cost_amount=60,
@@ -280,7 +282,7 @@ class ActionGenerator:
         """Returns an action that catches a fish"""
         return Action(
             description='Go fishing',
-            action_type=Action.GAT,
+            action_type=Action.GATHER,
             cost_amount=60,
             cost_unit=Action.MIN,
             log_statement='You caught a {result}!',
@@ -290,7 +292,7 @@ class ActionGenerator:
         """Returns an action that digs for minerals, gems, fossils, etc"""
         return Action(
             description='Dig for something interesting',
-            action_type=Action.GAT,
+            action_type=Action.GATHER,
             cost_amount=90,
             cost_unit=Action.MIN,
             log_statement='You dug up a {result}!',
@@ -300,7 +302,7 @@ class ActionGenerator:
         """Returns an action that forages for herbs, plants, etc"""
         return Action(
             description='Forage for plants',
-            action_type=Action.GAT,
+            action_type=Action.GATHER,
             cost_amount=30,
             cost_unit=Action.MIN,
             log_statement='You found {result}!',
@@ -310,7 +312,7 @@ class ActionGenerator:
         """Returns an action for the hero to go to sleep till the next day"""
         return Action(
             description='Go to sleep',
-            action_type=Action.SLP,
+            action_type=Action.SLEEP,
             cost_amount=clock.minutes_to_midnight,
             cost_unit=Action.MIN,
             log_statement='You got a good night\'s sleep.',
@@ -553,9 +555,9 @@ class ActionExecutor:
         # Pick a rarity, find an item of that rarity;
         # if none found, try again with another rarity;
         # if no items at all, error out
-        rarities = [r for r in Item.RARITIES]
+        rarities = [r for r in RARITIES]
         while len(rarities) > 0:
-            weights = [Item.RARITY_WEIGHTS[r] for r in rarities]
+            weights = [RARITY_WEIGHTS[r] for r in rarities]
             rarity = random.choices(rarities, weights=weights, k=1)[0]
             choices = location.item_pool.filter(rarity=rarity)
 
@@ -574,18 +576,18 @@ class ActionExecutor:
         item's rarity, villager's friendliness"""
 
         VALENCE_VALUE_MAP = {
-            ItemTypePreference.LOVE: 20,
-            ItemTypePreference.LIKE: 6,
-            ItemTypePreference.NEUTRAL: 2,
-            ItemTypePreference.DISLIKE: 0,
-            ItemTypePreference.HATE: -2,
+            LOVE: 20,
+            LIKE: 6,
+            NEUTRAL: 2,
+            DISLIKE: 0,
+            HATE: -2,
         }
 
         RARITY_MULTIPLIER_MAP = {
-            Item.COMMON: 0.5,
-            Item.UNCOMMON: 1,
-            Item.RARE: 2,
-            Item.EPIC: 4,
+            COMMON: 0.5,
+            UNCOMMON: 1,
+            RARE: 2,
+            EPIC: 4,
         }
 
         base_value = VALENCE_VALUE_MAP[valence]
@@ -620,15 +622,15 @@ class ActionExecutor:
             return ''
 
     def __get_valence_text(self, valence):
-        if valence == ItemTypePreference.LOVE:
+        if valence == LOVE:
             return 'love it!'
-        elif valence == ItemTypePreference.LIKE:
+        elif valence == LIKE:
             return 'like it!'
-        elif valence == ItemTypePreference.NEUTRAL:
+        elif valence == NEUTRAL:
             return 'feel okay about it.'
-        elif valence == ItemTypePreference.DISLIKE:
+        elif valence == DISLIKE:
             return 'aren\'t a fan of it.'
-        elif valence == ItemTypePreference.HATE:
+        elif valence == HATE:
             return 'wish you hadn\'t!'
         else:
             raise ValueError(f'Invalid valence {valence}')
@@ -644,11 +646,11 @@ class ActionExecutor:
         """Returns a trigger object for a gift action based on the valence of their reaction"""
 
         VALENCE_TO_DIALOGUE_TRIGGER_MAP = {
-            ItemTypePreference.LOVE: DialogueLine.LOVED_GIFT,
-            ItemTypePreference.LIKE: DialogueLine.LIKED_GIFT,
-            ItemTypePreference.NEUTRAL: DialogueLine.NEUTRAL_GIFT,
-            ItemTypePreference.DISLIKE: DialogueLine.DISLIKED_GIFT,
-            ItemTypePreference.HATE: DialogueLine.HATED_GIFT,
+            LOVE: DialogueLine.LOVED_GIFT,
+            LIKE: DialogueLine.LIKED_GIFT,
+            NEUTRAL: DialogueLine.NEUTRAL_GIFT,
+            DISLIKE: DialogueLine.DISLIKED_GIFT,
+            HATE: DialogueLine.HATED_GIFT,
         }
         return VALENCE_TO_DIALOGUE_TRIGGER_MAP[valence]
 

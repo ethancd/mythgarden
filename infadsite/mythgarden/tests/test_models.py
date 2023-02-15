@@ -4,6 +4,8 @@ from django.core.validators import ValidationError
 # noinspection PyUnresolvedReferences
 from mythgarden.models import Action, Clock, Session
 
+# noinspection PyUnresolvedReferences
+from mythgarden.models._constants import MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
 
 def create_session(skip_post_save_signal=True):
     return Session.objects.create(skip_post_save_signal=skip_post_save_signal)
@@ -14,7 +16,7 @@ class ActionModelTests(TestCase):
         """
         Computes the correct display cost for time actions
         """
-        action = Action(action_type=Action.WAT, cost_amount=1, cost_unit=Action.HOUR)
+        action = Action(action_type=Action.WATER, cost_amount=1, cost_unit=Action.HOUR)
 
         self.assertEqual(action.display_cost, '1hr')
 
@@ -30,7 +32,7 @@ class ActionModelTests(TestCase):
 class ClockModelTests(TestCase):
     def setUp(self):
         session = create_session()
-        self.clock = Clock(session=session, day=Clock.MONDAY, time=9*60)
+        self.clock = Clock(session=session, day=MONDAY, time=9*60)
 
     def test_advance_should_advance_the_time_by_the_amount_of_hours(self):
         """
@@ -63,31 +65,31 @@ class ClockModelTests(TestCase):
         """
         advance should roll day over when time exceeds 24*60
         """
-        self.clock.day = Clock.MONDAY
+        self.clock.day = MONDAY
         self.clock.time = 9*60
         self.clock.advance(18*60)
 
-        self.assertEqual(self.clock.day, Clock.TUESDAY)
+        self.assertEqual(self.clock.day, TUESDAY)
 
     def test_advance_should_roll_day_over_multiple_day_when_time_exceeds_48_plus(self):
         """
         advance should roll day over multiple days when time exceeds 48+ hours
         """
-        self.clock.day = Clock.MONDAY
+        self.clock.day = MONDAY
         self.clock.time = 9*60
         self.clock.advance(2*60*24)
 
-        self.assertEqual(self.clock.day, Clock.WEDNESDAY)
+        self.assertEqual(self.clock.day, WEDNESDAY)
 
     def test_advance_should_roll_back_to_start_of_week_when_day_goes_past_saturday(self):
         """
         advance should roll back to start of week when day goes past Saturday
         """
-        self.clock.day = Clock.SATURDAY
+        self.clock.day = SATURDAY
         self.clock.time = 9*60
         self.clock.advance(18*60)
 
-        self.assertEqual(self.clock.day, Clock.SUNDAY)
+        self.assertEqual(self.clock.day, SUNDAY)
 
 
     def test_get_time_display_should_show_pm_if_time_is_after_12(self):

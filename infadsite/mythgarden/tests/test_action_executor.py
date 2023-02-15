@@ -9,9 +9,12 @@ from mythgarden.game_logic import ActionExecutor
 # noinspection PyUnresolvedReferences
 from mythgarden.models import Item, Place, Session, Wallet, Action, Villager, Building, Bridge, Clock, ItemToken, \
     VillagerState, DialogueLine
+# noinspection PyUnresolvedReferences
+from mythgarden.models._constants import EAST, GIFT, COMMON, UNCOMMON, RARE, EPIC, TOWN, FARM, HOME, RARITIES, \
+    RARITY_WEIGHTS
 
 
-def create_item(name=None, item_type=Item.GIFT, price=1, rarity=Item.COMMON, counter=count()):
+def create_item(name=None, item_type=GIFT, price=1, rarity=COMMON, counter=count()):
     if name is None:
         name = f'Mock Item #{next(counter)}'
 
@@ -21,7 +24,7 @@ def create_item(name=None, item_type=Item.GIFT, price=1, rarity=Item.COMMON, cou
         print(f'Item with name {name} already exists. Oops!')
 
 
-def create_place(name='Nowheresville', place_type=Place.TOWN):
+def create_place(name='Nowheresville', place_type=TOWN):
     return Place.objects.get_or_create(name=name, place_type=place_type)[0]
 
 
@@ -98,7 +101,7 @@ class ExecuteActionsTests(TestCase):
         """
         Calls append_session_message if session has message
         """
-        action = Action(action_type=Action.TRA)
+        action = Action(action_type=Action.TRAVEL)
         self.session.message = 'message'
 
         with patch.object(self.ae, 'execute_travel_action', return_value=({}, 'log_statement')) as _:
@@ -110,7 +113,7 @@ class ExecuteActionsTests(TestCase):
         """
         Does not call append_session_message if session has no message
         """
-        action = Action(action_type=Action.TRA)
+        action = Action(action_type=Action.TRAVEL)
         self.session.message = ''
 
         with patch.object(self.ae, 'execute_travel_action', return_value=({}, 'log_statement')) as _:
@@ -122,10 +125,10 @@ class ExecuteActionsTests(TestCase):
 class ExecuteTravelActionTests(TestCase):
     def setUp(self) -> None:
         self.ae = ActionExecutor()
-        self.farm = create_place(name='The Farm', place_type=Place.FARM)
+        self.farm = create_place(name='The Farm', place_type=FARM)
         self.session = create_session(skip_post_save_signal=False, location=self.farm)
-        self.town = create_place(name='Town', place_type=Place.TOWN)
-        self.building = create_building(name='House', place_type=Place.HOME, place=self.town)
+        self.town = create_place(name='Town', place_type=TOWN)
+        self.building = create_building(name='House', place_type=HOME, place=self.town)
 
         # overwrite Session's property shorthands
         Session.local_item_tokens = MagicMock(spec=ItemToken.objects)
@@ -137,9 +140,9 @@ class ExecuteTravelActionTests(TestCase):
 
         self.action = Action(
             description=f'Walk East',
-            action_type=Action.TRA,
+            action_type=Action.TRAVEL,
             target_object=self.town,
-            direction=Bridge.EAST,
+            direction=EAST,
             cost_amount=60,
             cost_unit=Action.MIN,
             log_statement=f'You travelled East to Town.',
@@ -217,8 +220,8 @@ class ExecuteTravelActionTests(TestCase):
 class ExecuteTalkActionTests(TestCase):
     def setUp(self) -> None:
         self.ae = ActionExecutor()
-        self.town = create_place(name='The Town', place_type=Place.TOWN)
-        self.neighbor_house = create_building(name='Neighbor House', place_type=Place.HOME, place=self.town)
+        self.town = create_place(name='The Town', place_type=TOWN)
+        self.neighbor_house = create_building(name='Neighbor House', place_type=HOME, place=self.town)
         self.villager = create_villager(name='Sal', home=self.neighbor_house)
         self.session = create_session(skip_post_save_signal=False)
         self.villager_state = create_villager_state(self.villager, self.session, self.neighbor_house)
@@ -229,7 +232,7 @@ class ExecuteTalkActionTests(TestCase):
 
         self.action = Action(
             description=f'Talk to Sal',
-            action_type=Action.TAL,
+            action_type=Action.TALK,
             target_object=self.villager,
             cost_amount=45,
             cost_unit=Action.MIN,
@@ -370,7 +373,7 @@ class PullItemFromPoolTests(TestCase):
         pull_item_from_pool returns the right rarity of item when only that rarity of item is in the pool
         """
 
-        for rarity in Item.RARITIES:
+        for rarity in RARITIES:
             with self.subTest(rarity=rarity):
                 self.location.item_pool.set([
                     create_item(rarity=rarity),
@@ -387,15 +390,15 @@ class PullItemFromPoolTests(TestCase):
         we've mocked random.choices to return first item in list, so expect a common item
         """
         self.location.item_pool.set([
-            create_item(rarity=Item.COMMON),
-            create_item(rarity=Item.UNCOMMON),
-            create_item(rarity=Item.RARE),
-            create_item(rarity=Item.EPIC)
+            create_item(rarity=COMMON),
+            create_item(rarity=UNCOMMON),
+            create_item(rarity=RARE),
+            create_item(rarity=EPIC)
         ])
 
         item = self.pull_item_from_pool(self.location)
 
-        self.assertEqual(item.rarity, Item.COMMON)
+        self.assertEqual(item.rarity, COMMON)
 
     def test_pull_calls_random_choices_with_correct_weights(self, mock_random_choices):
         """
@@ -406,8 +409,8 @@ class PullItemFromPoolTests(TestCase):
         self.pull_item_from_pool(self.location)
 
         mock_random_choices.assert_called_with(
-            Item.RARITIES,
-            weights=[v for k, v in Item.RARITY_WEIGHTS.items()],
+            RARITIES,
+            weights=[v for k, v in RARITY_WEIGHTS.items()],
             k=1
         )
 
