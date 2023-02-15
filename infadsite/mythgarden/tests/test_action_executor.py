@@ -37,6 +37,10 @@ def create_villager(name='Lea', home=None):
     return Villager.objects.create(name=name, home=home)
 
 
+def create_villager_state(villager, session, location=None):
+    return VillagerState.objects.create(villager=villager, session=session, location=location)
+
+
 def create_dialogue(villager, full_text='Hello', trigger=DialogueLine.TALKED_TO, affinity_tier=None):
     return villager.dialogue_lines.create(full_text=full_text, trigger=trigger, affinity_tier=affinity_tier)
 
@@ -217,10 +221,11 @@ class ExecuteTalkActionTests(TestCase):
         self.neighbor_house = create_building(name='Neighbor House', place_type=Place.HOME, place=self.town)
         self.villager = create_villager(name='Sal', home=self.neighbor_house)
         self.session = create_session(skip_post_save_signal=False)
+        self.villager_state = create_villager_state(self.villager, self.session, self.neighbor_house)
         self.session.location = self.neighbor_house
         self.clock = self.session.clock
 
-        create_dialogue(self.villager, 'Hello stranger!', DialogueLine.FIRST_MEETING)
+        self.dialogue = create_dialogue(self.villager, 'Hello stranger!', DialogueLine.FIRST_MEETING)
 
         self.action = Action(
             description=f'Talk to Sal',
@@ -230,6 +235,47 @@ class ExecuteTalkActionTests(TestCase):
             cost_unit=Action.MIN,
             log_statement=f'You talked to Sal.',
         )
+
+    def test_updates_affinity_for_villager(self):
+        """
+        execute_talk_action updates the affinity for the villager
+        """
+        self.villager.friendliness = 5
+
+        self.ae.execute_talk_action(self.action, self.session)
+
+        self.villager_state.refresh_from_db()
+
+        self.assertEqual(self.villager_state.affinity, 5)
+
+    def test_marks_villager_as_talked_to(self):
+        """
+        execute_talk_action marks the villager as talked to
+        """
+        self.villager_state.has_been_talked_to = False
+        self.villager_state.has_ever_been_talked_to = False
+        self.villager_state.save()
+
+        self.ae.execute_talk_action(self.action, self.session)
+
+        self.villager_state.refresh_from_db()
+
+        self.assertTrue(self.villager_state.has_been_talked_to)
+        self.assertTrue(self.villager_state.has_ever_been_talked_to)
+
+    def test_hero_gains_hearts(self):
+        """
+        execute_talk_action gives the hero hearts when update_affinity returns more than 0
+        """
+        self.session.hero.hearts_earned = 0
+        self.session.hero.save()
+
+        with patch.object(self.ae, '_ActionExecutor__update_affinity', return_value=1) as mock:
+            self.ae.execute_talk_action(self.action, self.session)
+
+            self.session.hero.refresh_from_db()
+
+            self.assertEqual(self.session.hero.hearts_earned, 1)
 
     def test_calls_clock_advance_with_action_cost(self):
         """
@@ -265,18 +311,20 @@ class ExecuteTalkActionTests(TestCase):
         self.assertIsInstance(result[0], dict)
         self.assertIsInstance(result[1], str)
 
-    # def test_returns_correct_models(self):
-    #     """
-    #     execute_talk_action returns the correct updated models
-    #     """
-    #     result = self.ae.execute_talk_action(self.action, self.session)
-    #
-    #     expected = {
-    #         'place': self.action.target_object,
-    #         'clock': self.clock,
-    #     }
-    #
-    #     self.assertEqual(result[0], expected)
+    def test_returns_correct_models(self):
+        """
+        execute_talk_action returns the correct updated models
+        """
+        result = self.ae.execute_talk_action(self.action, self.session)
+
+        expected = {
+            'hero': self.session.hero,
+            'clock': self.clock,
+            'villager_states': [self.villager_state],
+            'dialogue': self.dialogue,
+        }
+
+        self.assertEqual(result[0], expected)
     #
     def test_returns_correct_log_statement(self):
         """
@@ -284,7 +332,16 @@ class ExecuteTalkActionTests(TestCase):
         """
         result = self.ae.execute_talk_action(self.action, self.session)
 
-        self.assertEqual(result[1], f'You talked to Sal.')
+        self.assertEqual(result[1], 'You talked to Sal.')
+
+    def test_returns_correct_log_statement_when_update_affinity_returns_hearts(self):
+        """
+        execute_talk_action returns the correct log statement
+        """
+        with patch.object(self.ae, '_ActionExecutor__update_affinity', return_value=1) as mock:
+            result = self.ae.execute_talk_action(self.action, self.session)
+
+            self.assertEqual(result[1], 'You talked to Sal. You and Sal have developed more of a bond! +❤️')
 
 
 # for random.choices, return the first item in the list
