@@ -1,6 +1,5 @@
-mythgarden/__pycache__/
 .env
 app-env
-__pycache__
 .DS_Store
 *.pyc
+node_modules/
