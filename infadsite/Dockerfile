@@ -1,4 +1,4 @@
-ARG PYTHON_VERSION=3.10-slim-buster
+ARG PYTHON_VERSION=3.10-buster
 
 FROM python:${PYTHON_VERSION}
 
@@ -18,10 +18,9 @@ RUN set -ex && \
 
 COPY . /code/
 
-RUN --mount=type=secret,id=secret_key
-
 RUN python manage.py collectstatic --noinput
 
 EXPOSE 8000
 
+# replace demo.wsgi with <project_name>.wsgi
 CMD ["gunicorn", "--bind", ":8000", "--workers", "2", "infadsite.wsgi"]

@@ -10,30 +10,32 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
+# some settings/formatting copied from https://django-environ.readthedocs.io/en/latest/quickstart.html
+
+import environ
 import os
 from pathlib import Path
+
+env = environ.Env(
+    DEBUG=(bool, False),
+    SECURE_SSL_REDIRECT=(bool, True)
+)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
+# Take environment variables from .env file
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
-# SECURITY WARNING: keep the secret key used in production secret!
-# secret_key = os.environ.get('SECRET_KEY')
-# if not secret_key:
-#     with open('/run/secrets/secret_key') as f:
-#         secret_key = f.read().strip()
-#
-# SECRET_KEY = secret_key
+# False if not in os.environ because of casting above
+DEBUG = env('DEBUG')
 
-SECRET_KEY = 'fortodayiamjustgoingtousethisplaintextasthesecretkeygodhavemercyonmysoulokaybye'
+# Raises Django's ImproperlyConfigured
+# exception if SECRET_KEY not in os.environ
+SECRET_KEY = env('SECRET_KEY')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
-
-ALLOWED_HOSTS = ["*"]
-
+ALLOWED_HOSTS = ['django-mythgarden-fly.fly.dev', 'mythgarden.ashkie.com']
+CSRF_TRUSTED_ORIGINS = ['https://django-mythgarden-fly.fly.dev', 'https://mythgarden.ashkie.com']
 STATIC_ROOT = BASE_DIR / 'static'
 
 # Application definition
@@ -81,23 +83,20 @@ TEMPLATES = [
     },
 ]
 
-SESSION_COOKIE_SECURE = True
 
 WSGI_APPLICATION = 'infadsite.wsgi.application'
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
+SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
-SECURE_SSL_REDIRECT = True
+SECURE_SSL_REDIRECT = env('SECURE_SSL_REDIRECT')
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': env.db('DATABASE_URL', default='sqlite:///db.sqlite3'),
 }
 
 # Password validation
