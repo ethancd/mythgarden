@@ -414,7 +414,7 @@ class GenFarmingActionsTests(TestCase):
 
         plant_action = [a for a in actions if a.action_type == Action.PLA][0]
 
-        self.assertEqual(plant_action.cost_amount, 30)
+        self.assertEqual(plant_action.cost_amount, 15)
 
     def test_returns_plant_actions_with_correct_cost_unit(self):
         """
@@ -482,7 +482,7 @@ class GenFarmingActionsTests(TestCase):
 
         water_action = [a for a in actions if a.action_type == Action.WAT][0]
 
-        self.assertEqual(water_action.cost_amount, 60)
+        self.assertEqual(water_action.cost_amount, 30)
 
     def test_returns_water_actions_with_correct_cost_unit(self):
         """
@@ -550,7 +550,7 @@ class GenFarmingActionsTests(TestCase):
 
         harvest_action = [a for a in actions if a.action_type == Action.HAR][0]
 
-        self.assertEqual(harvest_action.cost_amount, 60)
+        self.assertEqual(harvest_action.cost_amount, 15)
 
     def test_returns_harvest_actions_with_correct_cost_unit(self):
         """

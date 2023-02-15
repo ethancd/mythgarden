@@ -237,7 +237,7 @@ class ActionGenerator:
             description=f'Plant {seed_token.name}',
             action_type=Action.PLA,
             target_object=seed_token,
-            cost_amount=30,
+            cost_amount=15,
             cost_unit=Action.MIN,
             log_statement=f'You planted some {seed_token.name} in the field.',
         )
@@ -248,7 +248,7 @@ class ActionGenerator:
             description=f'Water {plant_token.name}',
             action_type=Action.WAT,
             target_object=plant_token,
-            cost_amount=60,
+            cost_amount=30,
             cost_unit=Action.MIN,
             log_statement=f'You watered the {plant_token.name}.',
         )
@@ -259,7 +259,7 @@ class ActionGenerator:
             description=f'Harvest {crop_token.name}',
             action_type=Action.HAR,
             target_object=crop_token,
-            cost_amount=60,
+            cost_amount=15,
             cost_unit=Action.MIN,
             log_statement=f'You harvested the {crop_token.name}.',
         )
