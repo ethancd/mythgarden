@@ -1,10 +1,10 @@
 import random
 
-from .models import Bridge, Action, Place, Building, Session, VillagerState, ItemTypePreference, ItemToken, \
-    DialogueLine
-from .static_helpers import guard_type, guard_types
+from .models import Bridge, Action, Place, Building, Session, VillagerState, ItemToken, \
+    DialogueLine, ScheduledEvent
 from .models._constants import SEED, SPROUT, CROP, COMMON, UNCOMMON, RARE, EPIC, RARITIES, RARITY_WEIGHTS, FARM, SHOP, \
-    WILD_TYPES, FOREST, MOUNTAIN, BEACH, LOVE, LIKE, NEUTRAL, DISLIKE, HATE
+    WILD_TYPES, FOREST, MOUNTAIN, BEACH, LOVE, LIKE, NEUTRAL, DISLIKE, HATE, SUNDAY, DAWN
+from .static_helpers import guard_type, guard_types
 
 
 def can_afford_action(wallet, requested_action):
@@ -315,7 +315,7 @@ class ActionGenerator:
             action_type=Action.SLEEP,
             cost_amount=clock.minutes_to_midnight,
             cost_unit=Action.MIN,
-            log_statement='You got a good night\'s sleep.',
+            log_statement='You tuck yourself into bed. Sweet dreams!',
         )
 
 
@@ -378,16 +378,6 @@ class ActionExecutor:
                     'dialogue': dialogue,
                 }, action.log_statement)
 
-    def __get_dialogue_for_talk_action(self, villager_state, villager):
-        if villager_state.has_ever_been_talked_to:
-            trigger = DialogueLine.TALKED_TO
-            affinity_tier = villager_state.affinity_tier
-        else:
-            trigger = DialogueLine.FIRST_MEETING
-            affinity_tier = None
-
-        return villager.get_dialogue(trigger, affinity_tier)
-
     def execute_give_action(self, action, session):
         """Executes a give action, which removes an item from the hero's inventory
         and adds to the villager's affinity"""
@@ -416,7 +406,7 @@ class ActionExecutor:
 
         valence_text = self.__get_valence_text(valence)
         log_statement = action.log_statement.format(item_name=gift.name, villager_name=villager.name,
-                                                     valence_text=valence_text)
+                                                    valence_text=valence_text)
 
         log_statement += self.__make_affinity_tag_if_any(hearts_gained, villager)
 
@@ -541,6 +531,16 @@ class ActionExecutor:
                 }, action.log_statement)
 
     # private methods
+    def __get_dialogue_for_talk_action(self, villager_state, villager):
+        if villager_state.has_ever_been_talked_to:
+            trigger = DialogueLine.TALKED_TO
+            affinity_tier = villager_state.affinity_tier
+        else:
+            trigger = DialogueLine.FIRST_MEETING
+            affinity_tier = None
+
+        return villager.get_dialogue(trigger, affinity_tier)
+
     def __append_session_message(self, log_statement, session):
         log_statement = log_statement + '\n' + session.message
 
@@ -611,12 +611,11 @@ class ActionExecutor:
         else:
             return ''
 
-
         return old_tier, new_tier
 
     def __make_affinity_tag_if_any(self, hearts_gained, villager):
         if hearts_gained > 0:
-            hearts = ''.join(['❤️'for _ in range(hearts_gained)])
+            hearts = ''.join(['❤️' for _ in range(hearts_gained)])
             return f" You and {villager.name} have developed more of a bond! +{hearts}"
         else:
             return ''
@@ -654,4 +653,110 @@ class ActionExecutor:
         }
         return VALENCE_TO_DIALOGUE_TRIGGER_MAP[valence]
 
-# class EventOperator
+
+class EventOperator:
+    def react_to_time_passing(self, clock, session):
+        # check for game over and short circuit if so
+        if self.__is_game_over(clock):
+            session.game_over = True
+            session.save()
+            return
+
+        # check for start of day and run hard-coded events
+        if clock.is_new_day:
+            self.reset_for_new_day(clock, session)
+
+            session.message = self.fall_asleep(clock, session.hero)
+            session.save()
+
+        # run scheduled events (from database)
+        self.trigger_scheduled_events(clock, list(session.event_states.all()), session)
+
+    def reset_for_new_day(self, clock, session):
+        clock.is_new_day = False
+        clock.save()
+
+        self.reset_villager_states(session.villager_states.all())
+
+        self.grow_crops(session.place_states.get(place__place_type=FARM))
+
+    def reset_villager_states(self, villager_states):
+        villager_states.update(has_been_talked_to=False, has_been_given_gift=False)
+
+    def grow_crops(self, farm_state):
+        """Find all seeds/sprouts in the farm and "grow" them if they've been watered --
+        ie replace them with a new item token at the next growth stage."""
+        item_tokens = farm_state.item_tokens.all()
+        new_contents = []
+
+        for token in item_tokens:
+            if token.item_type not in [SEED, SPROUT] or token.has_been_watered:
+                new_contents.append(token)
+                continue
+
+            new_item = token.item.get_next_growth_stage()
+            new_item_token = ItemToken.objects.create(session=farm_state.session, item=new_item)
+            new_contents.append(new_item_token)
+
+        farm_state.item_tokens.set(new_contents)
+
+    def fall_asleep(self, clock, hero):
+        """Advances the clock to dawn or midday, depending on whether the hero is in bed or not,
+        and returns a message"""
+        if clock.time > DAWN:
+            raise Exception(f'Time on the new day should be before dawn, not {clock.time}')
+
+        if hero.is_in_bed:
+            hero.is_in_bed = False
+            hero.save()
+            clock.advance(clock.minutes_to_dawn)
+            sleep_message = "You got a good night's sleep and wake up at dawn."
+        else:
+            clock.advance(clock.minutes_to_overslept_time)
+            sleep_message = "You passed out at midnight and overslept! You're just now waking up."
+
+        clock.save()
+        return sleep_message
+
+    def trigger_game_over(self, session):
+        hero = session.hero
+        end_of_game_message = f'You made it to the end of the week! You earned {hero.koin_earned} koin and ' \
+                              f'{hero.hearts_earned} hearts, for a total score of {hero.score}. ' \
+                              'Prepare to enter the time loop and start over again!'
+
+        session.reset_session_state(end_of_game_message)
+
+    def trigger_scheduled_events(self, clock, event_states, session):
+        """Triggers all scheduled events that are due to occur at the current time"""
+
+        for event_state in event_states:
+            if self.__should_trigger(event_state, clock):
+                self.trigger_event(event_state.event, session)
+                event_state.mark_as_occurred()
+
+    def trigger_event(self, event, session):
+        """Triggers the given event based on the event_type"""
+        if event.event_type == ScheduledEvent.ITEMS_APPEAR:
+            self.make_items_appear(event, session)
+
+    def make_items_appear(self, event, session):
+        """Make items appear in the place saved on the event"""
+        item_tokens = []
+        for item in event.items.all():
+            item_tokens.append(ItemToken(session=session, item=item))
+        ItemToken.objects.bulk_create(item_tokens)
+
+        place_state, created = session.place_states.get_or_create(place=event.place)
+
+        place_state.item_tokens.set(item_tokens)
+
+    # private methods
+    def __should_trigger(self, event_state, clock):
+        """Returns True if the event should be triggered, False otherwise"""
+        event = event_state.event
+        event_is_now_or_in_past = clock.is_now_or_in_past(event.day, event.time)
+
+        return event_is_now_or_in_past and not event_state.has_occurred
+
+    def __is_game_over(self, clock):
+        return clock.is_new_day and clock.day == SUNDAY

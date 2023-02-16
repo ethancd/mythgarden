@@ -30,6 +30,7 @@ function executeAction(element: HTMLElement) {
 
             if (response.game_over) {
                 window.location.href = '/';
+                return;
             }
 
             updatePage(response);

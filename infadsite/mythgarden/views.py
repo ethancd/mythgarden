@@ -7,7 +7,7 @@ from django.core.validators import ValidationError
 from django.db import transaction
 from sqlite3 import IntegrityError
 
-from .game_logic import ActionGenerator, ActionExecutor, can_afford_action
+from .game_logic import ActionGenerator, ActionExecutor, EventOperator, can_afford_action
 from .static_helpers import srs_serialize
 import json
 
@@ -105,7 +105,7 @@ def action(request):
             return JsonResponse({'error': e.message})
 
         if session.game_over:
-            session.trigger_game_over()
+            EventOperator().trigger_game_over(session)
             return JsonResponse({'game_over': True})
 
         updated_models['actions'] = get_current_actions(session)
