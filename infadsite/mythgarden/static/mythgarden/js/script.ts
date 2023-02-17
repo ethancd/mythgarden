@@ -14,6 +14,10 @@ import {
     post,
 } from './ajax';
 
+import Inventory from './inventory';
+import ReactDOM from "react-dom/client";
+import React from "react";
+
 
 // fn: execute a user's chosen action by sending a request to the server and updating the page with the results
 function executeAction(element: HTMLElement) {
@@ -129,16 +133,8 @@ function updateLocationLandscapeImage(url: string) {
     landscapeEl.src = url;
 }
 
-// fn: update the displayed inventory
-function updateInventory(inventory: any[]) {
-    console.log('updating inventory')
-    const inventoryEl = findElementByClassName('inventory');
-    clearList(inventoryEl);
-
-    inventory.forEach((item) => {
-        const itemEl = createItemElement(item);
-        inventoryEl.appendChild(itemEl);
-    });
+function updateInventory(items: any[]) {
+    window.inventoryRoot.render(React.createElement(Inventory, { items: items }));
 }
 
 // fn: create an item element
@@ -288,6 +284,13 @@ function createActionElement(action: any) {
 // fn: code to run when the page loads
 function setup() {
     console.log('setting up')
+
+    const rootNode = document.getElementById('inventory-root');
+    window.inventoryRoot = ReactDOM.createRoot(rootNode);
+    const itemsData = document.getElementById('inventory-data').textContent;
+    console.log(itemsData)
+    const items = JSON.parse(itemsData);
+    window.inventoryRoot.render(React.createElement(Inventory, { items: items }));
 
     listenOnElement('message', 'click', hide);
     listenOnElement('dialogue', 'click', hide);

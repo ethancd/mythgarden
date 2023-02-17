@@ -124,6 +124,7 @@ ul.stats {
 ul.inventory {
     position: absolute;
     top: 14vh;
+    left: 1vh;
     justify-content: space-between;
     flex-wrap: wrap;
     row-gap: 0;

@@ -59,6 +59,19 @@ HERB = 'HERB'
 FLOWER = 'FLOWER'
 BERRY = 'BERRY'
 
+ITEM_EMOJIS = {
+    SEED: '🌰',
+    SPROUT: '🌱',
+    CROP: '🌾',
+    GIFT: '🎁',
+    FISH: '🐟',
+    MINERAL: '💎',
+    ARTIFACT: '🗿',
+    HERB: '🌿',
+    FLOWER: '🌸',
+    BERRY: '🍓',
+}
+
 ITEM_TYPES = [
     (SEED, 'Seed'),
     (SPROUT, 'Sprout'),

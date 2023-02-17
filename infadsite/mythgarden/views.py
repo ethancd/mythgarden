@@ -35,7 +35,7 @@ def home(request):
         'wallet': session.wallet,
         'message': session.message,
         'place': session.location,
-        'inventory': session.inventory.item_tokens.all(),
+        'inventory': srs_serialize(session.inventory.item_tokens.all()),
         'actions': actions,
         'buildings': session.location.buildings.all(),
         'local_item_tokens': session.local_item_tokens.all(),

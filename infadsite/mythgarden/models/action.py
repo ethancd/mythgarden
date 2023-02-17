@@ -17,6 +17,27 @@ class Action(models.Model):
     GATHER = 'GATHER'
     SLEEP = 'SLEEP'
 
+    FISHING = 'FISHING'
+    DIGGING = 'DIGGING'
+    FORAGING = 'FORAGING'
+
+    ACTION_EMOJIS = {
+        TRAVEL: '🚶',
+        TALK: '💬',
+        GIVE: '🎁',
+        WATER: '💧',
+        PLANT: '🌱',
+        HARVEST: '🌾',
+        BUY: '🛒',
+        SELL: '💰',
+        GATHER: {
+            FISHING: '🎣',
+            DIGGING: '⛏',
+            FORAGING: '🌲',
+        },
+        SLEEP: '💤',
+    }
+
     ACTION_TYPES = [
         (TRAVEL, 'Travel'),
         (TALK, 'Talk'),

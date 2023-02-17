@@ -39,7 +39,7 @@ expected models:
     message: string
 -->
 <div class="page">
-    <section class="top-bar">
+    <ul class="top-bar">
         <ul class="horizontal game-info">
             <li class="player-info">
                 <div class="player-avatar">
@@ -62,14 +62,9 @@ expected models:
             </li>
         </ul>
         <p class="message">{{ message }}</p>
-        <ul class="horizontal inventory">
-            {% for item in inventory %}
-                <li class="item {{ item.rarity }}">
-                    <span class="item-name">{{ item.name }}</span>
-                </li>
-            {% endfor %}
-        </ul>
-    </section>
+        {{ inventory | json_script:"inventory-data" }}
+        <div id="inventory-root"></div>
+    </ul>
 
     <section class="main-area">
         <section class="sidebar">
