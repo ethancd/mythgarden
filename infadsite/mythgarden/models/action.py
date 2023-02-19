@@ -2,7 +2,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
-from ._constants import DIRECTIONS, KOIN_SIGN
+from ._constants import DIRECTIONS, KOIN_SIGN, FISHING_DESCRIPTION, DIGGING_DESCRIPTION, FORAGING_DESCRIPTION
 
 
 class Action(models.Model):
@@ -99,7 +99,23 @@ class Action(models.Model):
         return {
             'description': self.description,
             'display_cost': self.display_cost,
+            'emoji': self.emoji,
         }
+
+    @property
+    def emoji(self):
+        if self.action_type == self.GATHER:
+            GATHER_DESCRIPTION_MAP = {
+                FISHING_DESCRIPTION: self.FISHING,
+                DIGGING_DESCRIPTION: self.DIGGING,
+                FORAGING_DESCRIPTION: self.FORAGING,
+            }
+            gather_type = GATHER_DESCRIPTION_MAP[self.description]
+            return self.ACTION_EMOJIS[self.GATHER][gather_type]
+        else:
+            return self.ACTION_EMOJIS[self.action_type]
+
+
 
     @property
     def display_cost(self):

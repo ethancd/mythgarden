@@ -146,3 +146,6 @@ PLACE_TYPES = [
     (SHOP, 'Shop'),
     (HOME, 'Home'),
 ]
+FISHING_DESCRIPTION = 'Go fishing'
+DIGGING_DESCRIPTION = 'Dig for something interesting'
+FORAGING_DESCRIPTION = 'Forage for plants'

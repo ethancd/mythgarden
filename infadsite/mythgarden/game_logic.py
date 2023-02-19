@@ -3,7 +3,8 @@ import random
 from .models import Bridge, Action, Place, Building, Session, VillagerState, ItemToken, \
     DialogueLine, ScheduledEvent
 from .models._constants import SEED, SPROUT, CROP, COMMON, UNCOMMON, RARE, EPIC, RARITIES, RARITY_WEIGHTS, FARM, SHOP, \
-    WILD_TYPES, FOREST, MOUNTAIN, BEACH, LOVE, LIKE, NEUTRAL, DISLIKE, HATE, SUNDAY, DAWN
+    WILD_TYPES, FOREST, MOUNTAIN, BEACH, LOVE, LIKE, NEUTRAL, DISLIKE, HATE, SUNDAY, DAWN, FISHING_DESCRIPTION, \
+    DIGGING_DESCRIPTION, FORAGING_DESCRIPTION
 from .static_helpers import guard_type, guard_types
 
 
@@ -281,7 +282,7 @@ class ActionGenerator:
     def gen_fishing_action(self):
         """Returns an action that catches a fish"""
         return Action(
-            description='Go fishing',
+            description=FISHING_DESCRIPTION,
             action_type=Action.GATHER,
             cost_amount=60,
             cost_unit=Action.MIN,
@@ -291,7 +292,7 @@ class ActionGenerator:
     def gen_digging_action(self):
         """Returns an action that digs for minerals, gems, fossils, etc"""
         return Action(
-            description='Dig for something interesting',
+            description=DIGGING_DESCRIPTION,
             action_type=Action.GATHER,
             cost_amount=90,
             cost_unit=Action.MIN,
@@ -301,7 +302,7 @@ class ActionGenerator:
     def gen_foraging_action(self):
         """Returns an action that forages for herbs, plants, etc"""
         return Action(
-            description='Forage for plants',
+            description=FORAGING_DESCRIPTION,
             action_type=Action.GATHER,
             cost_amount=30,
             cost_unit=Action.MIN,

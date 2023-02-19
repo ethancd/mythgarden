@@ -69,14 +69,8 @@ expected models:
     <section class="main-area">
         <section class="sidebar">
             <div>Actions:</div>
-            <ul class="vertical actions">
-                {% for action in actions %}
-                    <li class="action">
-                        <span class="description">{{action.description}}</span>
-                        <span class="cost">{{action.display_cost}}</span>
-                    </li>
-                {% endfor %}
-            </ul>
+            {{ actions | json_script:"actions-data" }}
+            <div id="actions-root"></div>
         </section>
 
         <section class="canvas">

@@ -15,6 +15,7 @@ import {
 } from './ajax';
 
 import Inventory from './inventory';
+import { ActionsList } from './action';
 import ReactDOM from "react-dom/client";
 import React from "react";
 
@@ -73,8 +74,6 @@ function updatePage(response: any) {
 
     appendLogEntry(response.log_statement);
     updateActions(response.actions);
-
-    rebind();
 }
 
 // fn: put error message in user-facing message box
@@ -261,14 +260,7 @@ function appendLogEntry(text: string) {
 
 // fn: update the displayed actions
 function updateActions(actions: any[]) {
-    console.log('updating actions');
-    const actionsEl = findElementByClassName('actions');
-    clearList(actionsEl);
-
-    actions.forEach((action) => {
-        const actionEl = createActionElement(action);
-        actionsEl.appendChild(actionEl);
-    });
+    window.actionsRoot.render(React.createElement(ActionsList, { actions, updatePage, passErrorToUser }));
 }
 
 // fn: create an action element
@@ -281,27 +273,33 @@ function createActionElement(action: any) {
     return actionEl;
 }
 
-// fn: code to run when the page loads
-function setup() {
-    console.log('setting up')
-
+function renderInventory() {
     const rootNode = document.getElementById('inventory-root');
     window.inventoryRoot = ReactDOM.createRoot(rootNode);
     const itemsData = document.getElementById('inventory-data').textContent;
     console.log(itemsData)
     const items = JSON.parse(itemsData);
-    window.inventoryRoot.render(React.createElement(Inventory, { items: items }));
+    window.inventoryRoot.render(React.createElement(Inventory, {items: items}));
+}
+
+function renderActionsList() {
+    const rootNode = document.getElementById('actions-root');
+    window.actionsRoot = ReactDOM.createRoot(rootNode);
+    const actionsData = document.getElementById('actions-data').textContent;
+    console.log(actionsData)
+    const actions = JSON.parse(actionsData);
+    window.actionsRoot.render(React.createElement(ActionsList, {actions, updatePage, passErrorToUser}));
+}
+
+// fn: code to run when the page loads
+function setup() {
+    console.log('setting up')
+
+    renderInventory()
+    renderActionsList()
 
     listenOnElement('message', 'click', hide);
     listenOnElement('dialogue', 'click', hide);
-    listenOnElements('action', 'click', executeAction);
-}
-
-// fn: code to run after the page has been updated
-function rebind() {
-    console.log('rebinding');
-
-    listenOnElements('action', 'click', executeAction);
 }
 
 if (typeof window !== "undefined") {
