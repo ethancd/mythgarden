@@ -1,34 +1,15 @@
 'use strict';
 
 import React from "react";
-import { post } from './ajax';
+import { useContext } from 'react';
+import { PostAction } from './PostActionContext';
 
 function Action({ description, emoji, display_cost, updatePage, passErrorToUser }) {
-    function executeAction() {
-        post('action', {description})
-            .then((response: any) => {
-                console.log(response)
 
-                if (response.error) {
-                    throw response;
-                }
-
-                if (response.game_over) {
-                    window.location.href = '/';
-                    return;
-                }
-
-                updatePage(response);
-
-            }).catch((response: any) => {
-                console.log(response)
-                passErrorToUser(response);
-            });
-    }
 
     return (
         <li
-            onClick={executeAction}
+            onClick={useContext(PostAction).bind(this, description)}
             className='action'
         >
             <span className='type-emoji'>{emoji}</span>&nbsp;

@@ -89,6 +89,10 @@ function passErrorToUser(response: any) {
     show(message);
 }
 
+export {
+    updatePage,
+    passErrorToUser,
+}
 // fn: update the displayed score
 function setScoreValue(hero: any) {
     console.log('updating score')
