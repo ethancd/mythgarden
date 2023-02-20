@@ -5,8 +5,6 @@ import { useContext } from 'react';
 import { PostAction } from './PostActionContext';
 
 function Action({ description, emoji, display_cost, updatePage, passErrorToUser }) {
-
-
     return (
         <li
             onClick={useContext(PostAction).bind(this, description)}
@@ -19,7 +17,7 @@ function Action({ description, emoji, display_cost, updatePage, passErrorToUser 
     )
 }
 
-function ActionsList({ actions, updatePage, passErrorToUser }) {
+export default function ActionsList({ actions, updatePage, passErrorToUser }) {
     return (
         <ul className="vertical actions">
             {actions.map(action => {
@@ -27,9 +25,4 @@ function ActionsList({ actions, updatePage, passErrorToUser }) {
             })}
         </ul>
     )
-}
-
-export {
-    Action,
-    ActionsList,
 }

@@ -97,7 +97,9 @@ class VillagerState(models.Model):
     def serialize(self):
         return {
             'villager': self.villager.serialize(),
-            'display_affinity': self.display_affinity,
+            'affinity': self.display_affinity,
+            'name': self.villager.name,
+            'id': self.id,
             'location': self.location.serialize(),
         }
 

@@ -42,6 +42,7 @@ class Place(models.Model):
             'image': {
                 'url': self.image.url if self.image else None
             },
+            'id': self.id,
         }
 
     def save(self, *args, **kwargs):

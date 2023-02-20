@@ -29,19 +29,23 @@ def home(request):
 
     actions = get_current_actions(session)
 
+    fetched_models = {
+        'hero': session.hero,
+        'clock': session.clock,
+        'wallet': session.wallet,
+        'message': session.message,
+        'place': session.location,
+        'inventory': session.inventory.item_tokens.all(),
+        'actions': actions,
+        'buildings': session.location.buildings.all(),
+        'local_item_tokens': session.local_item_tokens.all(),
+        'villager_states': session.occupant_states.all(),
+    }
+
+    results = {k: srs_serialize(v) for k, v in fetched_models.items()}
+
     context = {
-        'ctx': {
-            'hero': session.hero,
-            'clock': session.clock,
-            'wallet': session.wallet,
-            'message': session.message,
-            'place': session.location,
-            'inventory': srs_serialize(session.inventory.item_tokens.all()),
-            'actions': srs_serialize(actions),
-            'buildings': session.location.buildings.all(),
-            'local_item_tokens': session.local_item_tokens.all(),
-            'villager_states': session.occupant_states.all(),
-        }
+        'ctx': results
     }
 
     template_name = 'mythgarden/home.html'

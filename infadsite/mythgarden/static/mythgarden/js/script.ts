@@ -2,78 +2,42 @@
 
 import {
     findElementByClassName,
-    findAllElementsByClassName,
     listenOnElement,
-    listenOnElements,
     hide,
     show,
-    clearList,
 } from './dom';
 
-import {
-    post,
-} from './ajax';
-
+import Hero from './hero';
 import Inventory from './inventory';
-import { ActionsList } from './action';
+import ActionsList from './action';
+import VillagersList from "./villager";
+import BuildingsList from "./building";
+import Clock from "./clock";
+import Wallet from "./wallet";
+import Dialogue from "./dialogue";
+
 import ReactDOM from "react-dom/client";
 import React from "react";
 
 
-// fn: execute a user's chosen action by sending a request to the server and updating the page with the results
-function executeAction(element: HTMLElement) {
-    element.classList.toggle('executing');
-
-    const description = getActionDescription(element);
-
-    post('action', {description})
-        .then((response: any) => {
-            console.log(response);
-            if (response.error) {
-                throw response;
-            }
-
-            if (response.game_over) {
-                window.location.href = '/';
-                return;
-            }
-
-            updatePage(response);
-
-            element.classList.toggle('executing');
-        }).catch((response: any) => {
-            console.log(response)
-            passErrorToUser(response);
-            element.classList.toggle('executing');
-        });
-}
-
-// fn: get the description of an action element
-function getActionDescription(element: HTMLElement) {
-    const descriptionEl = element.getElementsByClassName('description')[0] as HTMLElement;
-    const description = descriptionEl.innerText;
-
-    return description;
-}
-
 // fn: update the page with the results of an action
 function updatePage(response: any) {
-    if (response.hero) setScoreValue(response.hero);
-    if (response.clock) setClockValue(response.clock);
-    if (response.wallet) setWalletValue(response.wallet);
+    if (response.hero) renderHero(response.hero);
+    if (response.clock) renderClock(response.clock);
+    if (response.wallet) renderWallet(response.wallet);
     if (response.place) updateLocation(response.place);
-    if (response.inventory) updateInventory(response.inventory);
-    if (response.buildings) updateBuildings(response.buildings);
-    if (response.local_item_tokens) updateLocalItems(response.local_item_tokens);
-    if (response.villager_states) updateVillagers(response.villager_states);
+    if (response.inventory) renderInventory(response.inventory);
+    if (response.buildings) renderBuildingsList(response.buildings);
+    if (response.local_item_tokens) renderLocalItemsList(response.local_item_tokens);
+    if (response.villager_states) renderVillagersList(response.villager_states);
     if (response.dialogue) {
-        showDialogue(response.dialogue);
+        renderDialogue(response.dialogue);
     } else {
-        hideDialogue();
+        renderDialogue({}, false);
     }
 
     appendLogEntry(response.log_statement);
-    updateActions(response.actions);
+    renderActionsList(response.actions);
 }
 
 // fn: put error message in user-facing message box
@@ -92,26 +56,6 @@ function passErrorToUser(response: any) {
 export {
     updatePage,
     passErrorToUser,
-}
-// fn: update the displayed score
-function setScoreValue(hero: any) {
-    console.log('updating score')
-    const scoreEl = findElementByClassName('score');
-    scoreEl.innerText = `${hero.score} (⚜️${hero.koin_earned} x ${hero.hearts_earned}❤️)`
-}
-
-// fn: update the display value of the clock element
-function setClockValue(display: string) {
-    console.log('updating clock')
-    const clockEl = findElementByClassName('clock')
-    clockEl.innerText = display;
-}
-
-// fn: update the display value of the wallet element
-function setWalletValue(display: string) {
-    console.log('updating wallet')
-    const walletEl = findElementByClassName('wallet')
-    walletEl.innerText = display;
 }
 
 // fn: update displayed location name and landscape to the new location
@@ -136,120 +80,10 @@ function updateLocationLandscapeImage(url: string) {
     landscapeEl.src = url;
 }
 
-function updateInventory(items: any[]) {
-    window.inventoryRoot.render(React.createElement(Inventory, { items: items }));
-}
-
-// fn: create an item element
-function createItemElement(item_token: any) {
-    const itemEl = document.createElement('li');
-    itemEl.className = 'item';
-    itemEl.classList.toggle('watered', item_token.has_been_watered);
-    itemEl.classList.add(item_token.rarity);
-    itemEl.innerHTML = `<span class="item-name">${item_token.name}</span>`;
-
-    return itemEl;
-}
-
-// fn: update the displayed buildings
-function updateBuildings(buildings: any[]) {
-    console.log('updating buildings');
-    const buildingsEl = findElementByClassName('buildings');
-    clearList(buildingsEl);
-
-    buildings.forEach((building) => {
-        const buildingEl = createBuildingElement(building);
-        buildingsEl.appendChild(buildingEl);
-    });
-}
-
-// fn: create a building element
-function createBuildingElement(building: any) {
-    const buildingEl = document.createElement('li');
-    buildingEl.className = 'building';
-    buildingEl.innerHTML = `<span class="building-name">${building.name}</span>`;
-
-    return buildingEl;
-}
 
 // fn: clear the displayed local items
 function clearLocalItems() {
-    const contentsEl = findElementByClassName('contents');
-
-    if (contentsEl) {
-        clearList(contentsEl);
-    }
-}
-
-// fn: update the displayed local items
-function updateLocalItems(local_item_tokens: any[]) {
-    console.log('updating local items');
-    const contentsEl = findElementByClassName('contents');
-    if (!contentsEl) {
-        console.log('no contents element found');
-        return;
-    }
-    clearList(contentsEl);
-
-    local_item_tokens.forEach((item_token) => {
-        const itemEl = createItemElement(item_token);
-        contentsEl.appendChild(itemEl);
-    });
-}
-
-// fn: update the displayed villagers
-function updateVillagers(villager_states: any[]) {
-    console.log('updating villagers');
-    const villagersEl = findElementByClassName('villagers');
-    clearList(villagersEl);
-
-    villager_states.forEach((villager_state) => {
-        const villagerEl = createVillagerElement(villager_state);
-        villagersEl.appendChild(villagerEl);
-    });
-}
-
-// fn: create a villager element
-function createVillagerElement(villager_state: any) {
-    const villagerEl = document.createElement('li');
-    villagerEl.className = 'villager';
-    villagerEl.innerHTML = `<span class="villager-name">${villager_state.villager.name}</span>\
-                            <span class="villager-state">${villager_state.display_affinity}</span>`;
-
-    return villagerEl;
-}
-
-
-// fn: show the dialogue box with dialogue text and speaker info
-function showDialogue(dialogue: any) {
-    console.log('showing dialogue');
-    const dialogueEl = findElementByClassName('dialogue');
-    const dialogueTextEl = findElementByClassName('dialogue-text');
-    const dialogueSpeakerNameEl = findElementByClassName('speaker-name');
-    const dialogueSpeakerPortraitEl = findElementByClassName('speaker-portrait');
-
-    dialogueTextEl.innerText = dialogue.full_text;
-    dialogueSpeakerNameEl.innerText = dialogue.speaker.name;
-    //@ts-ignore
-    dialogueSpeakerPortraitEl.src = dialogue.speaker.portrait.url;
-
-    show(dialogueEl);
-}
-
-// fn: hide the dialogue box and empty its contents
-function hideDialogue() {
-    console.log('hiding dialogue');
-    const dialogueEl = findElementByClassName('dialogue');
-    hide(dialogueEl);
-
-    const dialogueTextEl = findElementByClassName('dialogue-text');
-    const dialogueSpeakerNameEl = findElementByClassName('speaker-name');
-    const dialogueSpeakerPortraitEl = findElementByClassName('speaker-portrait');
-
-    dialogueTextEl.innerText = '';
-    dialogueSpeakerNameEl.innerText = '';
-    //@ts-ignore
-    dialogueSpeakerPortraitEl.src = '';
+    renderLocalItemsList([])
 }
 
 // fn: append a log entry based on the passed text
@@ -262,48 +96,66 @@ function appendLogEntry(text: string) {
     log.appendChild(entry);
 }
 
-// fn: update the displayed actions
-function updateActions(actions: any[]) {
-    window.actionsRoot.render(React.createElement(ActionsList, { actions, updatePage, passErrorToUser }));
+function setUpRootNode(componentName) {
+    const rootNode = document.getElementById(`${componentName}-root`);
+    window[`${componentName}Root`] = ReactDOM.createRoot(rootNode);
 }
 
-// fn: create an action element
-function createActionElement(action: any) {
-    const actionEl = document.createElement('li');
-    actionEl.className = 'action';
-    actionEl.innerHTML = `<span class="description">${action.description}</span>\
-                          <span class="cost">${action.display_cost}</span>`;
-
-    return actionEl;
+function renderHero(heroData) {
+    window.heroRoot.render(React.createElement(Hero, heroData));
+}
+function renderClock(value) {
+    window.clockRoot.render(React.createElement(Clock, {value}));
 }
 
-function renderInventory() {
-    const rootNode = document.getElementById('inventory-root');
-    window.inventoryRoot = ReactDOM.createRoot(rootNode);
-    const itemsData = document.getElementById('inventory-data').textContent;
-    console.log(itemsData)
-    const items = JSON.parse(itemsData);
-    window.inventoryRoot.render(React.createElement(Inventory, {items: items}));
+function renderWallet(value) {
+    window.walletRoot.render(React.createElement(Wallet, {value}));
 }
 
-function renderActionsList() {
-    const rootNode = document.getElementById('actions-root');
-    window.actionsRoot = ReactDOM.createRoot(rootNode);
-    const actionsData = document.getElementById('actions-data').textContent;
-    console.log(actionsData)
-    const actions = JSON.parse(actionsData);
+function renderInventory(items) {
+    window.inventoryRoot.render(React.createElement(Inventory, {items, orientation: 'horizontal', id: 'inventory'}));
+}
+
+function renderActionsList(actions) {
     window.actionsRoot.render(React.createElement(ActionsList, {actions, updatePage, passErrorToUser}));
+}
+
+function renderLocalItemsList(items) {
+    window.localItemsRoot.render(React.createElement(Inventory, {items, orientation: 'horizontal', id: 'local-items'}));
+}
+
+function renderVillagersList(villagers) {
+    window.villagersRoot.render(React.createElement(VillagersList, {villagers}));
+}
+
+function renderBuildingsList(buildings) {
+    window.buildingsRoot.render(React.createElement(BuildingsList, {buildings}));
+}
+
+function renderDialogue(dialogue, shouldShow=true) {
+    console.log(dialogue)
+    console.log(shouldShow)
+    window.dialogueRoot.render(React.createElement(Dialogue, { ...dialogue, key: dialogue.id, shouldShow }));
 }
 
 // fn: code to run when the page loads
 function setup() {
     console.log('setting up')
 
-    renderInventory()
-    renderActionsList()
+    const appData = JSON.parse(document.getElementById('app-data').textContent);
+
+    [ 'hero', 'clock', 'wallet', 'inventory', 'actions', 'localItems', 'villagers', 'buildings', 'dialogue'].forEach(setUpRootNode);
+
+    renderHero(appData.hero)
+    renderClock(appData.clock)
+    renderWallet(appData.wallet)
+    renderInventory(appData.inventory)
+    renderActionsList(appData.actions)
+    renderLocalItemsList(appData.local_item_tokens)
+    renderVillagersList(appData.villager_states)
+    renderBuildingsList(appData.buildings)
 
     listenOnElement('message', 'click', hide);
-    listenOnElement('dialogue', 'click', hide);
 }
 
 if (typeof window !== "undefined") {

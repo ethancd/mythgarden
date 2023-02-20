@@ -121,7 +121,7 @@ ul.stats {
     right: 0;
 }
 
-ul.inventory {
+ul#inventory {
     position: absolute;
     top: 14vh;
     left: 1vh;
@@ -130,19 +130,19 @@ ul.inventory {
     row-gap: 0;
 }
 
-.inventory .common {
+#inventory .common {
     border: 2px solid sandybrown;
 }
 
-.inventory .uncommon {
+#inventory .uncommon {
     border: 2px solid limegreen;
 }
 
-.inventory .rare {
+#inventory .rare {
     border: 2px solid dodgerblue;
 }
 
-.inventory .epic {
+#inventory .epic {
     border: 2px solid rebeccapurple;
 }
 
@@ -198,7 +198,7 @@ li.building {
     overflow: hidden;
 }
 
-.contents {
+#local-items {
     position: absolute;
     bottom: 0;
     left: 20%;
@@ -208,7 +208,7 @@ li.building {
     overflow: hidden;
 }
 
-.contents .watered {
+#local-items .watered {
     border: 1px solid blue;
 }
 
