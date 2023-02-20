@@ -148,7 +148,7 @@ ul#inventory {
 
 /* sidebar elements */
 
-ul.actions {
+ul#actions {
     width: 100%;
 }
 
@@ -172,7 +172,7 @@ ul.actions {
     opacity: 50%;
 }
 
-.buildings {
+#buildings {
     position: absolute;
     bottom: 0;
     left: 0;
@@ -188,7 +188,7 @@ li.building {
     font-size: 2vh;
 }
 
-.villagers {
+#villagers {
     position: absolute;
     bottom: 0;
     right: 20%;

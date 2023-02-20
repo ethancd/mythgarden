@@ -149,3 +149,5 @@ PLACE_TYPES = [
 FISHING_DESCRIPTION = 'Go fishing'
 DIGGING_DESCRIPTION = 'Dig for something interesting'
 FORAGING_DESCRIPTION = 'Forage for plants'
+
+WELCOME_MESSAGE = 'Welcome to Mythgarden! You have one week to grow crops, make friends, and find treasures. Good luck and have fun!'

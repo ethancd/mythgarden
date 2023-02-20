@@ -39,9 +39,7 @@ class Place(models.Model):
     def serialize(self):
         return {
             'name': self.name,
-            'image': {
-                'url': self.image.url if self.image else None
-            },
+            'image_url': self.image.url if self.image else None,
             'id': self.id,
         }
 

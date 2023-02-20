@@ -2,19 +2,19 @@
 
 import {
     findElementByClassName,
-    listenOnElement,
-    hide,
-    show,
 } from './dom';
 
 import Hero from './hero';
-import Inventory from './inventory';
-import ActionsList from './action';
-import VillagersList from "./villager";
-import BuildingsList from "./building";
+import List from './list';
+import Item from './item';
+import Action from './action';
+import Villager from "./villager";
+import Building from "./building";
 import Clock from "./clock";
 import Wallet from "./wallet";
 import Dialogue from "./dialogue";
+import Message from "./message";
+import Location from "./location";
 
 import ReactDOM from "react-dom/client";
 import React from "react";
@@ -25,7 +25,7 @@ function updatePage(response: any) {
     if (response.hero) renderHero(response.hero);
     if (response.clock) renderClock(response.clock);
     if (response.wallet) renderWallet(response.wallet);
-    if (response.place) updateLocation(response.place);
+    if (response.place) renderLocation(response.place);
     if (response.inventory) renderInventory(response.inventory);
     if (response.buildings) renderBuildingsList(response.buildings);
     if (response.local_item_tokens) renderLocalItemsList(response.local_item_tokens);
@@ -36,54 +36,25 @@ function updatePage(response: any) {
         renderDialogue({}, false);
     }
 
+    if (response.error || response.message) {
+        const value = response.error || response.message;
+        renderMessage(value);
+    } else {
+        renderMessage('', false);
+    }
+
     appendLogEntry(response.log_statement);
     renderActionsList(response.actions);
 }
 
 // fn: put error message in user-facing message box
 function passErrorToUser(response: any) {
-    const message = findElementByClassName('message');
-
-    if (response.error) {
-        message.innerText = response.error;
-    } else {
-        message.innerText = "Unexpected server error 😳";
-    }
-
-    show(message);
+    renderMessage(response.error || 'Unknown error, oops :)', true);
 }
 
 export {
     updatePage,
     passErrorToUser,
-}
-
-// fn: update displayed location name and landscape to the new location
-function updateLocation(location: any) {
-    console.log('updating location');
-
-    setLocationNameValue(location.name);
-    updateLocationLandscapeImage(location.image.url);
-    clearLocalItems();
-}
-
-// fn: update the displayed location name
-function setLocationNameValue(name: string) {
-    const locationNameEl = findElementByClassName('location');
-    locationNameEl.innerText = name;
-}
-
-// fn: update the displayed location landscape image
-function updateLocationLandscapeImage(url: string) {
-    const landscapeEl = findElementByClassName('landscape');
-    //@ts-ignore
-    landscapeEl.src = url;
-}
-
-
-// fn: clear the displayed local items
-function clearLocalItems() {
-    renderLocalItemsList([])
 }
 
 // fn: append a log entry based on the passed text
@@ -112,30 +83,42 @@ function renderWallet(value) {
     window.walletRoot.render(React.createElement(Wallet, {value}));
 }
 
+function renderLocation(location) {
+    window.locationRoot.render(React.createElement(Location, location));
+    renderLocalItemsList([])
+}
+
 function renderInventory(items) {
-    window.inventoryRoot.render(React.createElement(Inventory, {items, orientation: 'horizontal', id: 'inventory'}));
+    const children = items.map(item => Item(item));
+    window.inventoryRoot.render(React.createElement(List, {children, orientation: 'horizontal', id: 'inventory'}));
 }
 
 function renderActionsList(actions) {
-    window.actionsRoot.render(React.createElement(ActionsList, {actions, updatePage, passErrorToUser}));
+    const children = actions.map(action => Action(action));
+    window.actionsRoot.render(React.createElement(List, {children, orientation: 'vertical', id: 'actions'}));
 }
 
 function renderLocalItemsList(items) {
-    window.localItemsRoot.render(React.createElement(Inventory, {items, orientation: 'horizontal', id: 'local-items'}));
+    const children = items.map(item => Item(item));
+    window.localItemsRoot.render(React.createElement(List, {children, orientation: 'horizontal', id: 'local-items'}));
 }
 
 function renderVillagersList(villagers) {
-    window.villagersRoot.render(React.createElement(VillagersList, {villagers}));
+    const children = villagers.map(villager => Villager(villager));
+    window.villagersRoot.render(React.createElement(List, {children, orientation: 'vertical', id: 'villagers'}));
 }
 
 function renderBuildingsList(buildings) {
-    window.buildingsRoot.render(React.createElement(BuildingsList, {buildings}));
+    const children = buildings.map(building => Building(building));
+    window.buildingsRoot.render(React.createElement(List, {children, orientation: 'horizontal', id: 'buildings'}));
 }
 
 function renderDialogue(dialogue, shouldShow=true) {
-    console.log(dialogue)
-    console.log(shouldShow)
     window.dialogueRoot.render(React.createElement(Dialogue, { ...dialogue, key: dialogue.id, shouldShow }));
+}
+
+function renderMessage(value, shouldShow=true) {
+    window.messageRoot.render(React.createElement(Message, { value, key: Math.random(), shouldShow }));
 }
 
 // fn: code to run when the page loads
@@ -144,18 +127,19 @@ function setup() {
 
     const appData = JSON.parse(document.getElementById('app-data').textContent);
 
-    [ 'hero', 'clock', 'wallet', 'inventory', 'actions', 'localItems', 'villagers', 'buildings', 'dialogue'].forEach(setUpRootNode);
+    [ 'hero', 'location', 'clock', 'wallet', 'message', 'inventory', 'actions', 'localItems', 'villagers', 'buildings', 'dialogue'].forEach(setUpRootNode);
 
     renderHero(appData.hero)
     renderClock(appData.clock)
     renderWallet(appData.wallet)
+    renderLocation(appData.place)
     renderInventory(appData.inventory)
     renderActionsList(appData.actions)
     renderLocalItemsList(appData.local_item_tokens)
     renderVillagersList(appData.villager_states)
     renderBuildingsList(appData.buildings)
-
-    listenOnElement('message', 'click', hide);
+    const isMessageEmpty = !appData.message || appData.message.length === 0;
+    renderMessage(appData.message, !isMessageEmpty)
 }
 
 if (typeof window !== "undefined") {

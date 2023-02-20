@@ -43,7 +43,6 @@ expected models:
     <ul class="top-bar">
         <ul class="horizontal game-info">
             <div id="hero-root"></div>
-            <li class="location">{{ctx.place.name }}</li>
             <li class="stats">
                 <ul class="vertical stats">
                     <div id="clock-root"></div>
@@ -51,7 +50,7 @@ expected models:
                 </ul>
             </li>
         </ul>
-        <p class="message">{{ ctx.message }}</p>
+        <div id="message-root"></div>
         <div id="inventory-root"></div>
     </ul>
 
@@ -62,7 +61,7 @@ expected models:
         </section>
 
         <section class="canvas">
-            <img class="landscape" src="{{ctx.place.image.url }}">
+            <div id="location-root"></div>
             <div id="buildings-root"></div>
             <div id="villagers-root"></div>
             <div id="localItems-root"></div>

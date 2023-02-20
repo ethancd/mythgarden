@@ -5,12 +5,14 @@ from .place import Place
 from .villager import VillagerState
 from ..static_helpers import generate_uuid
 
+from ._constants import WELCOME_MESSAGE
+
 
 class Session(models.Model):
     key = models.CharField(max_length=32, primary_key=True, default=generate_uuid)
     location = models.ForeignKey(Place, on_delete=models.CASCADE, null=True, default=Place.get_default_pk)
     skip_post_save_signal = models.BooleanField(default=False)
-    message = models.TextField(blank=True, null=True)
+    message = models.TextField(blank=True, null=True, default=WELCOME_MESSAGE)
     game_over = models.BooleanField(default=False)
 
     def save_data(self):
