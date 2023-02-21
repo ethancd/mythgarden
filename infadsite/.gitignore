@@ -4,4 +4,4 @@ app-env
 *.pyc
 node_modules/
 .coverage
-static/
+/static/
