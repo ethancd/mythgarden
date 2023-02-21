@@ -81,6 +81,9 @@ class ItemToken(models.Model):
             'has_been_watered': self.has_been_watered,
         }
 
+    def make_copy(self):
+        return ItemToken(session=self.session, item=self.item, has_been_watered=self.has_been_watered)
+
     @property
     def name(self):
         return self.item.name

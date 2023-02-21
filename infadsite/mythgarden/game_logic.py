@@ -436,13 +436,13 @@ class ActionExecutor:
                 }, action.log_statement)
 
     def execute_buy_action(self, action, session):
-        """Executes a buy action, which moves an item from the session contents into the hero's inventory
+        """Executes a buy action, which adds an item_token to the hero's inventory that's a copy of one in the shop,
         and deducts the price in koin from the hero's wallet"""
 
         item = action.target_object
-
-        session.inventory.item_tokens.add(item)
-        session.location_state.item_tokens.remove(item)
+        new_item = item.make_copy()
+        new_item.save()
+        session.inventory.item_tokens.add(new_item)
 
         session.wallet.money -= action.cost_amount
 
@@ -451,7 +451,6 @@ class ActionExecutor:
         return ({
                     'wallet': session.wallet,
                     'inventory': list(session.inventory.item_tokens.all()),
-                    'local_item_tokens': list(session.local_item_tokens.all()),
                 }, action.log_statement)
 
     def execute_plant_action(self, action, session):

@@ -1548,7 +1548,7 @@ class GenSleepActionTests(TestCase):
         """
         action = self.ag.gen_sleep_action(self.clock)
 
-        self.assertEqual(action.log_statement, 'You got a good night\'s sleep.')
+        self.assertEqual(action.log_statement, 'You tuck yourself into bed. Sweet dreams!')
 
     def test_returns_sleep_action_with_correct_cost_amount(self):
         """
