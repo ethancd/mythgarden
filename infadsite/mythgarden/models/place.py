@@ -1,7 +1,8 @@
 from django.db import models
+from django.templatetags.static import static
 
 from ._constants import PLACE_TYPES, FARM, TOWN, MOUNTAIN, FOREST, BEACH, HOME, MINERAL, ARTIFACT, FISH, HERB, FLOWER, \
-    BERRY
+    BERRY, IMAGE_PREFIX
 from .item import Item, ItemToken
 
 
@@ -12,7 +13,7 @@ class PlaceManager(models.Manager):
 
 class Place(models.Model):
     name = models.CharField(max_length=255, unique=True)
-    image = models.ImageField(upload_to='places/', default='places/idyllic-green-farm.png')
+    image_path = models.CharField(max_length=255, default='places/idyllic-green-farm.png')
 
     ITEM_POOL_TYPE_MAP = {
         MOUNTAIN: [MINERAL, ARTIFACT],
@@ -39,10 +40,15 @@ class Place(models.Model):
     def serialize(self):
         return {
             'name': self.name,
-            'image': {
-                'url': self.image.url if self.image else None
-            },
+            'image_url': self.image_url
         }
+
+    @property
+    def image_url(self):
+        if not self.image_path:
+            return None
+
+        return static(f'{IMAGE_PREFIX}{self.image_path}')
 
     def save(self, *args, **kwargs):
         if self._state.adding:

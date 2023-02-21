@@ -43,7 +43,7 @@ expected models:
         <ul class="horizontal game-info">
             <li class="player-info">
                 <div class="player-avatar">
-                    <img src="{{ hero.portrait.url }}">
+                    <img src="{{ hero.image_url }}">
                 </div>
                 <div>
                     <div class="player-name">{{ hero.name }}</div>
@@ -85,7 +85,7 @@ expected models:
         </section>
 
         <section class="canvas">
-            <img class="landscape" src="{{ place.image.url }}">
+            <img class="landscape" src="{{ place.image_url }}">
             <ul class="buildings vertical">
                 {% for building in buildings %}
                     <li class="building">

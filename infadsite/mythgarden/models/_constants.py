@@ -133,3 +133,5 @@ PLACE_TYPES = [
     (SHOP, 'Shop'),
     (HOME, 'Home'),
 ]
+
+IMAGE_PREFIX = 'mythgarden/images/'

@@ -112,7 +112,7 @@ function updateLocation(location: any) {
     console.log('updating location');
 
     setLocationNameValue(location.name);
-    updateLocationLandscapeImage(location.image.url);
+    updateLocationLandscapeImage(location.image_url);
     clearLocalItems();
 }
 
@@ -232,7 +232,7 @@ function showDialogue(dialogue: any) {
     dialogueTextEl.innerText = dialogue.full_text;
     dialogueSpeakerNameEl.innerText = dialogue.speaker.name;
     //@ts-ignore
-    dialogueSpeakerPortraitEl.src = dialogue.speaker.portrait.url;
+    dialogueSpeakerPortraitEl.src = dialogue.speaker.image_url;
 
     show(dialogueEl);
 }

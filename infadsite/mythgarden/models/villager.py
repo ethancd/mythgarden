@@ -1,11 +1,12 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.templatetags.static import static
 
 from .item_type_preference import ItemTypePreference
 from .place import Place, Building
 from .dialogue import DialogueLine
 
-from ._constants import NEUTRAL
+from ._constants import NEUTRAL, IMAGE_PREFIX
 
 class VillagerManager(models.Manager):
     def get_by_natural_key(self, name):
@@ -17,7 +18,7 @@ class Villager(models.Model):
     full_name = models.CharField(max_length=255, null=True, blank=True)
     description = models.CharField(max_length=255, null=True, blank=True)
     friendliness = models.IntegerField(default=4, validators=[MinValueValidator(1), MaxValueValidator(7)])
-    portrait = models.ImageField(upload_to='portraits/', null=True, blank=True, default='portraits/squall-farmer.png')
+    image_path = models.CharField(max_length=255, default='portraits/squall-farmer.png', null=True, blank=True)
     home = models.ForeignKey(Building, on_delete=models.SET_NULL, null=True, blank=True, related_name='residents')
 
     item_type_preferences = models.ManyToManyField('ItemTypePreference', blank=True, related_name='preferred_by')
@@ -36,10 +37,15 @@ class Villager(models.Model):
     def serialize(self):
         return {
             'name': self.name,
-            'portrait': {
-                'url': self.portrait.url if self.portrait else None
-            }
+            'image_url': self.image_url
         }
+
+    @property
+    def image_url(self):
+        if not self.image_path:
+            return None
+
+        return static(f'{IMAGE_PREFIX}{self.image_path}')
 
     def gift_valence(self, item):
         """return how villager feels about a gift"""
