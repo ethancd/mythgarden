@@ -100,6 +100,7 @@ class Action(models.Model):
             'description': self.description,
             'display_cost': self.display_cost,
             'emoji': self.emoji,
+            'unique_digest': self.unique_digest,
         }
 
     @property
@@ -115,8 +116,6 @@ class Action(models.Model):
         else:
             return self.ACTION_EMOJIS[self.action_type]
 
-
-
     @property
     def display_cost(self):
         if self.is_cost_in_money():
@@ -129,6 +128,10 @@ class Action(models.Model):
                        f'{self.cost_amount % 60}{self.MIN_ABBR}'
         else:
             return str(self.cost_amount) + self.get_cost_unit_display()
+
+    @property
+    def unique_digest(self):
+        return f'{self.description}-{self.object_id}'
 
     def is_cost_in_money(self):
         return self.cost_unit in self.MONEY_UNITS

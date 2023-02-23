@@ -1,41 +1,41 @@
-import React from "react";
-import List from "./list";
-import Hero from "./hero";
-import Clock from "./clock";
-import Wallet from "./wallet";
-import Item from "./item";
-import Action from "./action";
-import Location from "./location";
-import Building from "./building";
-import Villager from "./villager";
-import Dialogue from "./dialogue";
+import React from 'react'
+import List from './list'
+import Hero from './hero'
+import Clock from './clock'
+import Wallet from './wallet'
+import Item from './item'
+import Action from './action'
+import Location from './location'
+import Building from './building'
+import Villager from './villager'
+import Dialogue from './dialogue'
 // import Log from "./log";
 
 export default class App extends React.Component<any, any> {
-    constructor(props) {
-        super(props);
-    }
+  constructor (props) {
+    super(props)
+  }
 
-    shouldShowDialogue() {
-        return this.props.dialogue.id != null;
-    }
+  shouldShowDialogue () {
+    return this.props.dialogue && this.props.dialogue.id != null
+  }
 
-    render() {
-        const {
-            hero,
-            clock,
-            wallet,
-            items,
-            actions,
-            place,
-            buildings,
-            local_item_tokens,
-            villager_states,
-            dialogue
-        } = this.props;
+  render () {
+    const {
+      hero,
+      clock,
+      wallet,
+      inventory,
+      actions,
+      place,
+      buildings,
+      local_item_tokens,
+      villager_states,
+      dialogue
+    } = this.props
 
-        return (
-            <div class="page">
+    return (
+            <div className="page">
                 <section className="top-bar">
                 <div className="horizontal game-info">
                     <Hero {...hero}></Hero>
@@ -48,17 +48,17 @@ export default class App extends React.Component<any, any> {
                 </div>
                 </section>
 
-                <section class="main-area">
-                    <section class="sidebar left">
+                <section className="main-area">
+                    <section className="sidebar left">
                         <List orientation='vertical' id='inventory'>
-                            {items.map(item => Item(item))}
+                            {inventory.map(item => Item(item))}
                         </List>
                         <List orientation='vertical' id='actions'>
                             {actions.map(action => Action(action))}
                         </List>
                     </section>
 
-                    <section class="canvas">
+                    <section className="canvas">
                         <Location {...place}>
                             <List orientation='horizontal' id='buildings'>
                                 {buildings.map(building => Building(building))}
@@ -69,18 +69,19 @@ export default class App extends React.Component<any, any> {
                         </Location>
                     </section>
 
-                    <section class='sidebar right'>
+                    <section className='sidebar right'>
                         <List orientation='vertical' id='villagers'>
                             {villager_states.map(villager => Villager(villager))}
                         </List>
                     </section>
                 </section>
-                <section class='footer'>
-                    {/*<Log></Log>*/}
-                    <Dialogue {...dialogue} key={dialogue.id} shouldShow={this.shouldShowDialogue()}></Dialogue>
+                <section className='footer'>
+                    {/* <Log></Log> */}
+                    { this.shouldShowDialogue() &&
+                        <Dialogue {...dialogue} key={dialogue.id} shouldShow={this.shouldShowDialogue()}></Dialogue>
+                    }
                 </section>
             </div>
-        )
-    }
+    )
+  }
 }
-

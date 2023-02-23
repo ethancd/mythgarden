@@ -1,7 +1,9 @@
 const path = require('path');
+const ESLintPlugin = require('eslint-webpack-plugin');
 
 module.exports = {
-  entry: './mythgarden/static/mythgarden/js/script.ts',
+  entry: './mythgarden/static/mythgarden/js/react-script.tsx',
+  plugins: [new ESLintPlugin()],
   module: {
     rules: [
       {

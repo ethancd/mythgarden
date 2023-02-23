@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {% load static %}
+    <link href='https://fonts.googleapis.com/css?family=Roboto Mono' rel='stylesheet'>
+    <link rel="stylesheet" href="{% static 'mythgarden/style.css' %}">
+    <script type="module" src="{% static 'mythgarden/dist/bundle.js' %}"></script>
     <meta charset="UTF-8">
     <title>Title</title>
+    {{ ctx | json_script:"app-data" }}
 </head>
 <body>
-
-<div id="app-root"></div>
-{{ ctx | json_script:"app-data" }}
-
+    <div id="app-root"></div>
 </body>
 </html>

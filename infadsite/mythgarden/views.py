@@ -48,7 +48,7 @@ def home(request):
         'ctx': results
     }
 
-    template_name = 'mythgarden/home.html'
+    template_name = 'mythgarden/react.html'
     return render(request, template_name, context)
 
 
