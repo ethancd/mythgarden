@@ -1,8 +1,9 @@
 import React from 'react'
 import { postAction } from './ajax'
+
+import Dialogue from './dialogue'
 // eslint-disable-next-line @typescript-eslint/no-unused-expressions
 'use strict'
-
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export default function Action (this: any, { description, emoji, display_cost, unique_digest }: ActionProps): JSX.Element {
   const postThisAction = postAction.bind(this, description)

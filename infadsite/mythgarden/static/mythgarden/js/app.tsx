@@ -1,19 +1,19 @@
 import React from 'react'
-import List from './list'
-import Hero from './hero'
-import Clock from './clock'
-import Wallet from './wallet'
-import Item from './item'
 import { Action, type ActionProps } from './action'
-import Location from './location'
-import Building from './building'
-import Villager from './villager'
-import Dialogue from './dialogue'
+import { Building, type BuildingProps } from './building'
+import Clock from './clock'
+import { Dialogue, type DialogueProps } from './dialogue'
+import { Hero, type HeroProps } from './hero'
+import { Item, type ItemProps } from './item'
+import List from './list'
+import { Location, type LocationProps } from './location'
+import { Villager, type VillagerProps } from './villager'
+import Wallet from './wallet'
 // import Log from "./log";
 
 import { isDeepEqual } from './staticUtils'
 
-class App extends React.Component<AppProps, AppState> {
+class App extends React.Component<Partial<AppProps>, AppState> {
   constructor (props: AppProps) {
     super(props)
     this.state = {
@@ -21,7 +21,7 @@ class App extends React.Component<AppProps, AppState> {
     }
   }
 
-  componentDidUpdate (prevProps: Readonly<AppProps>, prevState: Readonly<AppState>): void {
+  componentDidUpdate (prevProps: Readonly<Partial<AppProps>>, prevState: Readonly<AppState>): void {
     const combinedProps = { ...this.state.combinedProps, ...this.props }
 
     if (!isDeepEqual(combinedProps, this.state.combinedProps)) {
@@ -46,7 +46,10 @@ class App extends React.Component<AppProps, AppState> {
     } = this.state.combinedProps
 
     console.log('rendering app')
-    console.log(clock)
+    if (hero === undefined) {
+      return <div className="page">Loading...</div>
+    }
+
     return (
             <div className="page">
                 <section className="top-bar">
@@ -100,16 +103,16 @@ class App extends React.Component<AppProps, AppState> {
 }
 
 interface AppProps {
-  actions?: ActionProps[]
-  buildings?: BuildingProps[]
-  clock?: ClockProps
-  dialogue?: DialogueProps
-  hero?: HeroProps
-  inventory?: ItemProps[]
-  local_item_tokens?: ItemProps[]
-  place?: LocationProps
-  villager_states?: VillagerProps[]
-  wallet?: WalletProps
+  actions: ActionProps[]
+  buildings: BuildingProps[]
+  clock: string
+  dialogue: DialogueProps & { id?: number }
+  hero: HeroProps
+  inventory: ItemProps[]
+  local_item_tokens: ItemProps[]
+  place: LocationProps
+  villager_states: VillagerProps[]
+  wallet: string
 }
 
 interface AppState {

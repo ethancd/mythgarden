@@ -29,7 +29,7 @@ async function post (url: string, data: object): Promise<Response> {
 async function postAction (description: string): Promise<void> {
   await post('action', { description })
     .then((response: any) => {
-      // console.log(response)
+      console.log(response)
 
       if (response.error != null) {
         throw response
@@ -42,7 +42,7 @@ async function postAction (description: string): Promise<void> {
 
       renderApp(response)
     }).catch((response: any) => {
-      // console.log(response)
+      console.log(response)
       // renderApp(response)
     })
 }

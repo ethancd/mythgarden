@@ -2,10 +2,11 @@
 
 import React from 'react'
 
-export default function Item ({ name, emoji, id, rarity, has_been_watered }) {
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export default function Item ({ name, emoji, id, rarity, has_been_watered }: ItemProps): JSX.Element {
   return (
         <li
-            className={`item ${rarity} ${has_been_watered && 'watered'}`}
+            className={`item ${rarity} ${has_been_watered ? 'watered' : ''}`}
             key={id}
         >
             <span className='type-emoji'>{emoji}</span>&nbsp;
@@ -13,3 +14,13 @@ export default function Item ({ name, emoji, id, rarity, has_been_watered }) {
         </li>
   )
 }
+
+interface ItemProps {
+  name: string
+  emoji: string
+  id: number
+  rarity: string
+  has_been_watered: boolean
+}
+
+export { Item, type ItemProps }

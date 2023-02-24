@@ -2,7 +2,8 @@
 
 import React from 'react'
 
-export default function Location ({ name, image_url, children }) {
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export default function Location ({ name, image_url, children }: React.PropsWithChildren<LocationProps>): JSX.Element {
   return (
         <>
             <div className="location">{ name }</div>
@@ -11,3 +12,10 @@ export default function Location ({ name, image_url, children }) {
         </>
   )
 }
+
+interface LocationProps {
+  name: string
+  image_url: string
+}
+
+export { Location, type LocationProps }

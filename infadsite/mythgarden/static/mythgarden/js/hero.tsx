@@ -2,7 +2,8 @@
 
 import React from 'react'
 
-export default function Hero ({ name, portrait_url, score, koin_earned, hearts_earned }) {
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export default function Hero ({ name, portrait_url, score, koin_earned, hearts_earned }: HeroProps): JSX.Element {
   return (
         <li className="player-info">
             <div className="player-avatar">
@@ -17,3 +18,13 @@ export default function Hero ({ name, portrait_url, score, koin_earned, hearts_e
         </li>
   )
 }
+
+interface HeroProps {
+  name: string
+  portrait_url: string
+  score: number
+  koin_earned: number
+  hearts_earned: number
+}
+
+export { Hero, type HeroProps }
