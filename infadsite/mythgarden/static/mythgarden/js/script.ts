@@ -21,6 +21,8 @@ import React from 'react'
 
 // fn: update the page with the results of an action
 function updatePage (response: any) {
+  console.log('updating page')
+  renderApp(response)
   if (response.hero) renderHero(response.hero)
   if (response.clock) renderClock(response.clock)
   if (response.wallet) renderWallet(response.wallet)
@@ -35,12 +37,12 @@ function updatePage (response: any) {
     renderDialogue({}, false)
   }
 
-  if (response.error || response.message) {
-    const value = response.error || response.message
-    renderMessage(value)
-  } else {
-    renderMessage('', false)
-  }
+  // if (response.error || response.message) {
+  //   const value = response.error || response.message
+  //   renderMessage(value)
+  // } else {
+  //   renderMessage('', false)
+  // }
 
   appendLogEntry(response.log_statement)
   renderActionsList(response.actions)
@@ -48,7 +50,7 @@ function updatePage (response: any) {
 
 // fn: put error message in user-facing message box
 function passErrorToUser (response: any) {
-  renderMessage(response.error || 'Unknown error, oops :)', true)
+  // renderMessage(response.error || 'Unknown error, oops :)', true)
 }
 
 export {
@@ -126,7 +128,7 @@ function setup () {
 
   const appData = JSON.parse(document.getElementById('app-data').textContent);
 
-  ['hero', 'location', 'clock', 'wallet', 'message', 'inventory', 'actions', 'localItems', 'villagers', 'buildings', 'dialogue'].forEach(setUpRootNode)
+  ['hero', 'location', 'clock', 'wallet', 'inventory', 'actions', 'localItems', 'villagers', 'buildings', 'dialogue'].forEach(setUpRootNode)
 
   renderHero(appData.hero)
   renderClock(appData.clock)
@@ -137,8 +139,8 @@ function setup () {
   renderLocalItemsList(appData.local_item_tokens)
   renderVillagersList(appData.villager_states)
   renderBuildingsList(appData.buildings)
-  const isMessageEmpty = !appData.message || appData.message.length === 0
-  renderMessage(appData.message, !isMessageEmpty)
+  // const isMessageEmpty = !appData.message || appData.message.length === 0
+  // renderMessage(appData.message, !isMessageEmpty)
 }
 
 if (typeof window !== 'undefined') {

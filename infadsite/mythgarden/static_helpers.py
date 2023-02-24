@@ -23,6 +23,8 @@ def guard_type(obj, cls):
 
 
 def srs_serialize(obj):
+    if isinstance(obj, str):
+        return obj
     if isinstance(obj, Iterable):
         return [srs_serialize(i) for i in obj]
     else:

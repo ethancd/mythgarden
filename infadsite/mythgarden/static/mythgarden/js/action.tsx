@@ -1,14 +1,15 @@
+import React from 'react'
+import { postAction } from './ajax'
+// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 'use strict'
 
-import React, { useContext } from 'react'
-import { PostAction } from './PostActionContext'
-
-export default function Action ({ description, emoji, display_cost, unique_digest }) {
-  const postAction = useContext(PostAction).bind(this, description)
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export default function Action (this: any, { description, emoji, display_cost, unique_digest }: ActionProps): JSX.Element {
+  const postThisAction = postAction.bind(this, description)
 
   return (
         <li
-            onClick={postAction}
+            onClick={() => { void postThisAction() }}
             className='action'
             key={unique_digest}
         >
@@ -18,3 +19,12 @@ export default function Action ({ description, emoji, display_cost, unique_diges
         </li>
   )
 }
+
+interface ActionProps {
+  description: string
+  emoji: string
+  display_cost: string
+  unique_digest: string
+}
+
+export { Action, type ActionProps }
