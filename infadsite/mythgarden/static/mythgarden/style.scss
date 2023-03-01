@@ -44,8 +44,7 @@ h1, h2, h3 {
 /* layout */
 
 #page {
-  height: 100%;
-  position: relative;
+  height: calc(100vh - 8px); //hack -- need to figure out how to make it full-page no scroll bar in cross-browser/responsive way
   background-color: $white-yellow;
 }
 
@@ -95,6 +94,7 @@ ul {
 
   .portrait {
     border: 2px solid #008f11;
+    height: 96px;
 
     img {
       height: 100%;
@@ -308,6 +308,11 @@ ul {
     flex-direction: column;
     width: 15%;
 
+    &.empty-slot {
+      border-color: beige;
+      opacity: 0.5;
+    }
+
     .type-emoji {
       font-size: $medium-text;
       text-align: center;
@@ -353,6 +358,7 @@ ul {
   @include column;
   background-color: $parchment;
   height: 100%;
+  width: 100%;
   position: absolute;
   top: 0;
   z-index: 10;

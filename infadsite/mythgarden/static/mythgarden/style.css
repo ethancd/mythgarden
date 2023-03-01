@@ -20,8 +20,7 @@ h1, h2, h3 {
 
 /* layout */
 #page {
-  height: 100%;
-  position: relative;
+  height: calc(100vh - 8px);
   background-color: #fff5e5; }
 
 /* general lists */
@@ -54,7 +53,8 @@ ul {
   display: flex;
   gap: 0.5rem; }
   #hero .portrait {
-    border: 2px solid #008f11; }
+    border: 2px solid #008f11;
+    height: 96px; }
     #hero .portrait img {
       height: 100%;
       width: auto; }
@@ -209,6 +209,9 @@ ul {
     display: flex;
     flex-direction: column;
     width: 15%; }
+    #local-items .item.empty-slot {
+      border-color: beige;
+      opacity: 0.5; }
     #local-items .item .type-emoji {
       font-size: 2rem;
       text-align: center; }
@@ -244,6 +247,7 @@ ul {
   flex-direction: column;
   background-color: #fcf5ef;
   height: 100%;
+  width: 100%;
   position: absolute;
   top: 0;
   z-index: 10;

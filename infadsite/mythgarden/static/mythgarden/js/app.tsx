@@ -3,6 +3,7 @@ import { Action, type ActionProps } from './action'
 import { Building, type BuildingProps } from './building'
 import Clock from './clock'
 import { Dialogue, type DialogueProps } from './dialogue'
+import EmptyItem from './emptyItem'
 import { Hero, type HeroProps } from './hero'
 import { Item, type ItemProps } from './item'
 import List from './list'
@@ -13,6 +14,8 @@ import Wallet from './wallet'
 // import Log from "./log";
 
 import { isDeepEqual } from './staticUtils'
+
+const MAX_ITEMS = 6
 
 class App extends React.Component<Partial<AppProps>, AppState> {
   constructor (props: AppProps) {
@@ -28,6 +31,29 @@ class App extends React.Component<Partial<AppProps>, AppState> {
     if (!isDeepEqual(combinedProps, this.state.combinedProps)) {
       this.setState({ combinedProps })
     }
+
+    if (this.state.combinedProps.messages != null) {
+      this.scrollToMessageBottom()
+    }
+  }
+
+  componentDidMount (): void {
+    this.scrollToMessageBottom()
+  }
+
+  padItems (items: ItemProps[], count: number): Array<ItemProps | null> {
+    return items.concat(Array(count - items.length).fill(null))
+  }
+
+  mapItemsWithEmptySlots (items: ItemProps[]): JSX.Element[] {
+    const paddedItems = this.padItems(items, MAX_ITEMS)
+
+    return paddedItems.map((item, n) => item != null ? Item(item) : EmptyItem({ slotNumber: n }))
+  }
+
+  scrollToMessageBottom (): void {
+    const messageContainer = document.getElementById('message-log') as HTMLElement
+    messageContainer.scrollTop = messageContainer.scrollHeight
   }
 
   render (): JSX.Element {
@@ -47,8 +73,6 @@ class App extends React.Component<Partial<AppProps>, AppState> {
       dialogue
     } = this.state.combinedProps
 
-    console.log('rendering app')
-
     return (
       <div id="page">
         <section id="top-bar">
@@ -60,7 +84,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
         <section id="main-area">
           <section id="sidebar">
             <List id='inventory'>
-              {inventory?.map(item => Item(item))}
+              {(inventory != null) ? this.mapItemsWithEmptySlots(inventory) : null}
             </List>
             <Wallet value={wallet}></Wallet>
           </section>
@@ -75,7 +99,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
               </List>
             </Location>
             <List id='local-items'>
-              {local_item_tokens?.map(item => Item(item))}
+              {(local_item_tokens?.length > 0) ? this.mapItemsWithEmptySlots(local_item_tokens) : null}
             </List>
             <section id='footer'>
               <List id='message-log'>
@@ -87,10 +111,10 @@ class App extends React.Component<Partial<AppProps>, AppState> {
             </section>
           </section>
 
+          <List id='villagers'>
+            {villager_states?.map(villager => Villager(villager))}
+          </List>
         </section>
-        <List id='villagers'>
-          {villager_states?.map(villager => Villager(villager))}
-        </List>
       </div>
     )
   }
