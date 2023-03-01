@@ -59,14 +59,22 @@ ul {
   padding: 0;
 }
 
-.row {
+@mixin row {
   display: flex;
   flex-direction: row;
 }
 
-.column {
+.row {
+  @include row;
+}
+
+@mixin column {
   display: flex;
   flex-direction: column;
+}
+
+.column {
+  @include column;
 }
 
 /* top-bar HUD elements */
@@ -79,23 +87,23 @@ ul {
   margin-bottom: $small-gutter;
   position: relative;
   width: 100%;
-
-  .column {
-    justify-content: space-between;
-  }
 }
 
-#player {
+#hero {
   display: flex;
   gap: $small-gutter;
 
-  .avatar {
+  .portrait {
     border: 2px solid #008f11;
 
     img {
       height: 100%;
       width: auto;
     }
+  }
+
+  .column {
+    justify-content: space-between;
   }
 
   .name {
@@ -152,11 +160,13 @@ ul {
 /* left-sidebar elements */
 
 #sidebar {
+  @include column;
   justify-content: space-between;
   width: 20%;
 }
 
 #inventory {
+  @include column;
   background-color: $yellow-leather;
   height: 50%;
   justify-content: space-between;
@@ -188,11 +198,12 @@ ul {
       border-color: rebeccapurple;
     }
 
-    .type-emoji {
+    .type {
       font-size: $medium-text;
+      margin-right: $small-gutter;
     }
 
-    .item-name {
+    .name {
       font-size: $med-small-text;
     }
   }
@@ -208,13 +219,14 @@ ul {
 // will be deleted after "action chip" feature is implemented
 
 #actions {
+  @include column;
   background-color: pink;
   gap: $small-gutter;
-  justify-content: flex-start;
   width: 20%;
 
   .action {
     border: 2px solid lightpink;
+    box-sizing: border-box;
     cursor: pointer;
     display: flex;
     font-size: $small-text;
@@ -222,46 +234,6 @@ ul {
     overflow: hidden;
     white-space: nowrap;
     width: 100%;
-
-    &.travel {
-      border-color: sandybrown;
-    }
-
-    &.buy {
-      border-color: green;
-    }
-
-    &.sell {
-      border-color: silver;
-    }
-
-    &.talk {
-      border-color: lightgoldenrodyellow;
-    }
-
-    &.give {
-      border-color: goldenrod;
-    }
-
-    &.gather {
-      border-color: darkorange;
-    }
-
-    &.plant {
-      border-color: darkgreen;
-    }
-
-    &.water {
-      border-color: dodgerblue;
-    }
-
-    &.harvest {
-      border-color: saddlebrown;
-    }
-
-    &.sleep {
-      border-color: darkslategray;
-    }
 
     &.executing {
       background-color: #8f0011;
@@ -272,6 +244,7 @@ ul {
 /* center-col elements */
 
 #center-col {
+  @include column;
   height: 100%;
   overflow: hidden;
   width: 60%;
@@ -306,6 +279,7 @@ ul {
     width: 100%;
 
     .building {
+      @include column;
       max-width: 20%;
 
       .icon {
@@ -322,6 +296,7 @@ ul {
 }
 
 #local-items {
+  @include row;
   background-color: $sandy-brown;
   height: 20%;
   justify-content: space-between;
@@ -375,6 +350,7 @@ ul {
 }
 
 #dialogue {
+  @include column;
   background-color: $parchment;
   height: 100%;
   position: absolute;
@@ -382,7 +358,12 @@ ul {
   z-index: 10;
   cursor: pointer;
 
-  .avatar {
+  .speaker {
+    @include row;
+    gap: $small-gutter;
+  }
+
+  .portrait {
     border: 2px solid #008f11;
     height: 2.5rem;
     width: 2.5rem;
@@ -396,14 +377,6 @@ ul {
   .name {
     color: #133;
     font-size: $medium-text
-  }
-
-  .row {
-    gap: $small-gutter;
-  }
-
-  .column {
-    justify-content: space-between;
   }
 
   .dialogue-text {
@@ -424,6 +397,7 @@ ul {
 /* right-sidebar elements, just villagers */
 
 #villagers {
+  @include column;
   background-color: $dusty-pink;
   gap: $small-gutter;
   height: 100%;
@@ -431,9 +405,9 @@ ul {
   width: 20%;
 
   .villager {
-    display: flex;
+    @include column;
 
-    .avatar {
+    .portrait {
       border: 2px solid #008f11;
       height: 2.5rem;
       width: 2.5rem;

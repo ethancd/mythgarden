@@ -5,17 +5,15 @@ import React from 'react'
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export default function Hero ({ name, portrait_url, score, koin_earned, hearts_earned }: HeroProps): JSX.Element {
   return (
-        <li className="player-info">
-            <div className="player-avatar">
-                <img src={ portrait_url }></img>
-            </div>
-            <div>
-                <div className="player-name">{name}</div>
-                <div className="score-cont">
-                    <span className="score">{score} (⚜️{koin_earned} x {hearts_earned}❤️)</span>
-                </div>
-            </div>
-        </li>
+    <div id="hero">
+      <div className="portrait">
+        <img src={portrait_url}></img>
+      </div>
+      <div className="column">
+        <div className="name">{name}</div>
+        <div id="score"><span>{score}</span> <span>(⚜️{koin_earned} x {hearts_earned}❤️)</span></div>
+      </div>
+    </div>
   )
 }
 

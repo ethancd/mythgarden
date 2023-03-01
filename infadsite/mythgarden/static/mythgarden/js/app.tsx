@@ -7,6 +7,7 @@ import { Hero, type HeroProps } from './hero'
 import { Item, type ItemProps } from './item'
 import List from './list'
 import { Location, type LocationProps } from './location'
+import { Message, type MessageProps } from './message'
 import { Villager, type VillagerProps } from './villager'
 import Wallet from './wallet'
 // import Log from "./log";
@@ -40,64 +41,57 @@ class App extends React.Component<Partial<AppProps>, AppState> {
       buildings,
       // eslint-disable-next-line @typescript-eslint/naming-convention
       local_item_tokens,
+      messages,
       // eslint-disable-next-line @typescript-eslint/naming-convention
       villager_states,
       dialogue
     } = this.state.combinedProps
 
     console.log('rendering app')
-    if (hero === undefined) {
-      return <div className="page">Loading...</div>
-    }
 
     return (
-            <div className="page">
-                <section className="top-bar">
-                <div className="horizontal game-info">
-                    <Hero {...hero}></Hero>
-                    <li className="stats">
-                        <ul className="vertical stats">
-                            <Clock value={clock}></Clock>
-                            <Wallet value={wallet}></Wallet>
-                        </ul>
-                    </li>
-                </div>
-                </section>
+      <div id="page">
+        <section id="top-bar">
+          <Hero {...hero}></Hero>
+          <h1 id="logo">Mythgarden</h1>
+          <Clock value={clock}></Clock>
+        </section>
 
-                <section className="main-area">
-                    <section className="sidebar left">
-                        <List orientation='vertical' id='inventory'>
-                            {inventory?.map(item => Item(item))}
-                        </List>
-                        <List orientation='vertical' id='actions'>
-                            {actions?.map(action => Action(action))}
-                        </List>
-                    </section>
+        <section id="main-area">
+          <section id="sidebar">
+            <List id='inventory'>
+              {inventory?.map(item => Item(item))}
+            </List>
+            <Wallet value={wallet}></Wallet>
+          </section>
+          <List id='actions'>
+            {actions?.map(action => Action(action))}
+          </List>
 
-                    <section className="canvas">
-                        <Location {...place}>
-                            <List orientation='horizontal' id='buildings'>
-                                {buildings?.map(building => Building(building))}
-                            </List>
-                            <List orientation='horizontal' id='local-items'>
-                                {local_item_tokens?.map(item => Item(item))}
-                            </List>
-                        </Location>
-                    </section>
+          <section id="center-col">
+            <Location {...place}>
+              <List id='buildings'>
+                {buildings?.map(building => Building(building))}
+              </List>
+            </Location>
+            <List id='local-items'>
+              {local_item_tokens?.map(item => Item(item))}
+            </List>
+            <section id='footer'>
+              <List id='message-log'>
+                {messages?.map(message => Message(message))}
+              </List>
+              {dialogue?.id != null &&
+                <Dialogue {...dialogue} key={dialogue.id} shouldShow={true}></Dialogue>
+              }
+            </section>
+          </section>
 
-                    <section className='sidebar right'>
-                        <List orientation='vertical' id='villagers'>
-                            {villager_states?.map(villager => Villager(villager))}
-                        </List>
-                    </section>
-                </section>
-                <section className='footer'>
-                    {/* <Log></Log> */}
-                    { dialogue?.id != null &&
-                        <Dialogue {...dialogue} key={dialogue.id} shouldShow={true}></Dialogue>
-                    }
-                </section>
-            </div>
+        </section>
+        <List id='villagers'>
+          {villager_states?.map(villager => Villager(villager))}
+        </List>
+      </div>
     )
   }
 }
@@ -110,6 +104,7 @@ interface AppProps {
   hero: HeroProps
   inventory: ItemProps[]
   local_item_tokens: ItemProps[]
+  messages: MessageProps[]
   place: LocationProps
   villager_states: VillagerProps[]
   wallet: string

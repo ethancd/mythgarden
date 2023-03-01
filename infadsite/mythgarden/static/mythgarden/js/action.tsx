@@ -14,7 +14,7 @@ export default function Action (this: any, { description, emoji, display_cost, u
             className='action'
             key={unique_digest}
         >
-            <span className='type-emoji'>{emoji}</span>&nbsp;
+            <span className='type'>{emoji}</span>&nbsp;
             <span className="description">{description}</span>
             <span className="cost">{display_cost}</span>
         </li>

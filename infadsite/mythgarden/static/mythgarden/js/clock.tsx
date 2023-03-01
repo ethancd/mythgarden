@@ -4,7 +4,7 @@ import React from 'react'
 
 export default function Clock ({ value }: ClockProps): JSX.Element {
   return (
-        <li className="clock">{value}</li>
+        <div id="clock">{value}</div>
   )
 }
 

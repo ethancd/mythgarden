@@ -49,18 +49,18 @@ ul {
   margin-bottom: 0.5rem;
   position: relative;
   width: 100%; }
-  #top-bar .column {
-    justify-content: space-between; }
 
-#player {
+#hero {
   display: flex;
   gap: 0.5rem; }
-  #player .avatar {
+  #hero .portrait {
     border: 2px solid #008f11; }
-    #player .avatar img {
+    #hero .portrait img {
       height: 100%;
       width: auto; }
-  #player .name {
+  #hero .column {
+    justify-content: space-between; }
+  #hero .name {
     margin-top: 0.5rem;
     font-size: 2rem; }
 
@@ -99,10 +99,14 @@ ul {
 
 /* left-sidebar elements */
 #sidebar {
+  display: flex;
+  flex-direction: column;
   justify-content: space-between;
   width: 20%; }
 
 #inventory {
+  display: flex;
+  flex-direction: column;
   background-color: #e1a836;
   height: 50%;
   justify-content: space-between;
@@ -122,9 +126,10 @@ ul {
       border-color: dodgerblue; }
     #inventory .item.epic {
       border-color: rebeccapurple; }
-    #inventory .item .type-emoji {
-      font-size: 2rem; }
-    #inventory .item .item-name {
+    #inventory .item .type {
+      font-size: 2rem;
+      margin-right: 0.5rem; }
+    #inventory .item .name {
       font-size: 1.5rem; }
 
 #wallet {
@@ -134,12 +139,14 @@ ul {
 
 /* column between left-sidebar and center-col */
 #actions {
+  display: flex;
+  flex-direction: column;
   background-color: pink;
   gap: 0.5rem;
-  justify-content: flex-start;
   width: 20%; }
   #actions .action {
     border: 2px solid lightpink;
+    box-sizing: border-box;
     cursor: pointer;
     display: flex;
     font-size: 1rem;
@@ -147,31 +154,13 @@ ul {
     overflow: hidden;
     white-space: nowrap;
     width: 100%; }
-    #actions .action.travel {
-      border-color: sandybrown; }
-    #actions .action.buy {
-      border-color: green; }
-    #actions .action.sell {
-      border-color: silver; }
-    #actions .action.talk {
-      border-color: lightgoldenrodyellow; }
-    #actions .action.give {
-      border-color: goldenrod; }
-    #actions .action.gather {
-      border-color: darkorange; }
-    #actions .action.plant {
-      border-color: darkgreen; }
-    #actions .action.water {
-      border-color: dodgerblue; }
-    #actions .action.harvest {
-      border-color: saddlebrown; }
-    #actions .action.sleep {
-      border-color: darkslategray; }
     #actions .action.executing {
       background-color: #8f0011; }
 
 /* center-col elements */
 #center-col {
+  display: flex;
+  flex-direction: column;
   height: 100%;
   overflow: hidden;
   width: 60%; }
@@ -199,6 +188,8 @@ ul {
     transform: translate(-50%, 0);
     width: 100%; }
     #location #buildings .building {
+      display: flex;
+      flex-direction: column;
       max-width: 20%; }
       #location #buildings .building .icon {
         font-size: 2rem;
@@ -207,6 +198,8 @@ ul {
         font-size: 1.5rem; }
 
 #local-items {
+  display: flex;
+  flex-direction: row;
   background-color: #f9cca4;
   height: 20%;
   justify-content: space-between;
@@ -247,26 +240,28 @@ ul {
     color: darkgreen; }
 
 #dialogue {
+  display: flex;
+  flex-direction: column;
   background-color: #fcf5ef;
   height: 100%;
   position: absolute;
   top: 0;
   z-index: 10;
   cursor: pointer; }
-  #dialogue .avatar {
+  #dialogue .speaker {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem; }
+  #dialogue .portrait {
     border: 2px solid #008f11;
     height: 2.5rem;
     width: 2.5rem; }
-    #dialogue .avatar img {
+    #dialogue .portrait img {
       height: 100%;
       width: auto; }
   #dialogue .name {
     color: #133;
     font-size: 2rem; }
-  #dialogue .row {
-    gap: 0.5rem; }
-  #dialogue .column {
-    justify-content: space-between; }
   #dialogue .dialogue-text {
     color: #133;
     font-size: 1.5rem; }
@@ -280,18 +275,21 @@ ul {
 
 /* right-sidebar elements, just villagers */
 #villagers {
+  display: flex;
+  flex-direction: column;
   background-color: #ffd1d8;
   gap: 0.5rem;
   height: 100%;
   overflow: hidden;
   width: 20%; }
   #villagers .villager {
-    display: flex; }
-    #villagers .villager .avatar {
+    display: flex;
+    flex-direction: column; }
+    #villagers .villager .portrait {
       border: 2px solid #008f11;
       height: 2.5rem;
       width: 2.5rem; }
-      #villagers .villager .avatar img {
+      #villagers .villager .portrait img {
         height: 100%;
         width: auto; }
     #villagers .villager .row {

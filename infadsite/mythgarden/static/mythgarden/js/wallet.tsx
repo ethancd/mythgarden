@@ -4,7 +4,7 @@ import React from 'react'
 
 export default function Wallet ({ value }: WalletProps): JSX.Element {
   return (
-        <li className="wallet">{value}</li>
+        <div className="wallet">{value}</div>
   )
 }
 
