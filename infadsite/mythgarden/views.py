@@ -1,17 +1,22 @@
+import json
+from sqlite3 import IntegrityError
+
+from django.core.validators import ValidationError
+from django.db import transaction
 from django.http import HttpResponseRedirect
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
-from django.views.decorators.csrf import ensure_csrf_cookie
 from django.urls import reverse
-from django.core.validators import ValidationError
-from django.db import transaction
-from sqlite3 import IntegrityError
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 from .game_logic import ActionGenerator, ActionExecutor, EventOperator, can_afford_action
-from .static_helpers import srs_serialize
-import json
-
 from .models import Session
+from .static_helpers import srs_serialize
+
+
+def layout(request):
+    template_name = 'mythgarden/layout.html'
+    return render(request, template_name)
 
 
 @ensure_csrf_cookie
@@ -134,4 +139,3 @@ def get_current_actions(session):
     actions = ActionGenerator().gen_available_actions(place, inventory, contents, villager_states, clock)
 
     return actions
-

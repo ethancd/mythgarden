@@ -1,0 +1,171 @@
+{% load static %}
+<link href='https://fonts.googleapis.com/css?family=Roboto Mono|Lobster Two' rel='stylesheet'>
+<script type="module" src="{% static 'mythgarden/dist/bundle.js' %}"></script>
+<link rel="stylesheet" href="{% static 'mythgarden/style.css' %}">
+
+<body>
+<div id="page">
+
+  <section id="top-bar">
+    <div id="player">
+      <div class="avatar">
+        <img src="/media/portraits/squall-farmer.png">
+      </div>
+      <div class="column">
+        <div class="name">Farmer Squall</div>
+        <div id="score"><span>70</span> <span>(⚜️7 x 1❤️)</span></div>
+      </div>
+    </div>
+    <h1 id="logo">Mythgarden</h1>
+    <div id="clock">Tue 7:20am</div>
+  </section>
+
+  <section id="main-area">
+    <section id="sidebar" class="column">
+      <ul class="column" id="inventory">
+        <li class="item common ">
+          <span class="type-emoji">🌰</span>&nbsp;<span class="item-name">Potato Seed</span>
+        </li>
+        <li class="item uncommon ">
+          <span class="type-emoji">🌰</span>&nbsp;<span class="item-name">Melon Seed</span>
+        </li>
+        <li class="item rare ">
+          <span class="type-emoji">🌰</span>&nbsp;<span class="item-name">Pumpkin Seed</span>
+        </li>
+        <li class="item epic ">
+          <span class="type-emoji">🌰</span>&nbsp;<span class="item-name">Mythfruit Seed</span>
+        </li>
+        <li class="item empty-slot "><span class="type-emoji">⬜️</span>&nbsp;<span class="item-name">Empty</span></li>
+        <li class="item empty-slot "><span class="type-emoji">⬜️️️</span>&nbsp;<span class="item-name">Empty</span></li>
+      </ul>
+      <div id="wallet">⚜️30</div>
+    </section>
+
+    <ul class="column" id="actions">
+      <li class="action buy">
+        <span class="type-emoji">🛒</span>
+        <span class="description">Buy Rhubarb Seed</span>
+        <span class="cost">⚜️3</span>
+      </li>
+      <li class="action travel">
+        <span class="type-emoji">🚶</span>
+        <span class="description">Exit mom and pop shop</span>
+        <span class="cost">5min</span>
+      </li>
+      <li class="action talk">
+        <span class="type-emoji">💬</span>
+        <span class="description">Talk to Angie</span>
+        <span class="cost">45min</span>
+      </li>
+      <li class="action give">
+        <span class="type-emoji">🎁</span>
+        <span class="description">Give Potato Seed to Angie</span>
+        <span class="cost">5min</span>
+      </li>
+    </ul>
+
+
+    <section id="center-col" class="column">
+      <div id="location">
+        <h2 class="name">The Farm</h2>
+        <img class="landscape" src="/media/places/idyllic-green-farm.png">
+        <ul class="row" id="buildings">
+          <li class="building column">
+            <div class="icon">🏠</div>
+            <span class="name">lil farmhouse</span>
+          </li>
+          <li class="building column">
+            <div class="icon">🏠</div>
+            <span class="name">charming victorian</span>
+          </li>
+          <li class="building column">
+            <div class="icon">🏠</div>
+            <span class="name">spoopy cave complex</span>
+          </li>
+          <li class="building column">
+            <div class="icon">🏠</div>
+            <span class="name">quite big log cabin</span>
+          </li>
+        </ul>
+      </div>
+      <ul class="row" id="local-items">
+        <li class="item uncommon ">
+          <span class="type-emoji">🌰</span>
+          <span class="item-name">Rhubarb Seed</span>
+        </li>
+        <li class="item uncommon watered ">
+          <span class="type-emoji">🌰</span>
+          <span class="item-name">Rhubarb Seed</span>
+        </li>
+        <li class="item empty-slot "><span class="type-emoji">⬜️️️</span><span class="item-name">Empty</span></li>
+        <li class="item empty-slot "><span class="type-emoji">⬜️️️</span><span class="item-name">Empty</span></li>
+        <li class="item empty-slot "><span class="type-emoji">⬜️️️</span><span class="item-name">Empty</span></li>
+        <li class="item empty-slot "><span class="type-emoji">⬜️️️</span><span class="item-name">Empty</span></li>
+      </ul>
+
+      <section id="footer">
+        <ul id="message-log">
+          <li class="message">Welcome to Mythgarden! You have one week to grow crops, make friends, and find treasures. Good luck and have fun!</li>
+          <li class="message">You bought a Rhubarb Seed.</li>
+          <li class="message">You bought a Rhubarb Seed.</li>
+          <li class="message">You bought a Rhubarb Seed.</li>
+          <li class="message">You bought a Rhubarb Seed.</li>
+          <li class="message">You bought a Rhubarb Seed.</li>
+          <li class="message">You bought a Rhubarb Seed.</li>
+          <li class="message">You bought a Rhubarb Seed.</li>
+          <li class="message">You bought a Rhubarb Seed.</li>
+          <li class="message">You bought a Rhubarb Seed.</li>
+          <li class="message">You bought a Rhubarb Seed.</li>
+          <li class="message">You bought a Rhubarb Seed.</li>
+          <li class="message">You bought a Rhubarb Seed.</li>
+          <li class="message">You passed out on the ground like an animal!</li>
+        </ul>
+
+        <div id="dialogue" class="column" style="display: none;">
+          <div class="speaker row">
+            <div class="avatar">
+              <img src="/media/portraits/squall-farmer.png">
+              </div>
+            <span class="name">Wren</span>
+          </div>
+          <span class="dialogue-text">Excellence rating: 80%. I'm moderately overjoyed. I encourage you to employ a mixed strategy of exploiting analogous gifts and exploring gift space for further improvements.</span>
+        </div>
+        </section>
+
+    </section>
+
+    <ul class="column" id="villagers">
+      <li class="villager column">
+        <div class="row">
+          <div class="avatar">
+            <img src="/media/portraits/squall-farmer.png">
+          </div>
+          <div class="column">
+            <span class="villager-name">Angie</span>
+            <span class="affinity">🖤🖤🖤🖤🖤</span>
+          </div>
+        </div>
+        <span class="description">Retired angel with a cowboy spirit who goes on adventures and helps animals armed with a halo and six shooter</span>
+      </li>
+      <li class="villager column">
+        <div class="row">
+          <div class="avatar">
+            <img src="/media/portraits/squall-farmer.png">
+          </div>
+          <div class="column">
+            <span class="villager-name">Dev</span>
+            <span class="affinity">🖤🖤🖤🖤🖤</span>
+          </div>
+        </div>
+        <span class="description">Retired devil running the general store, meticulous but always exasperated, with a buttoned up suit and a faint smell of brimstone</span>
+      </li>
+    </ul>
+
+  </section>
+
+
+
+
+</div>
+
+</body>
