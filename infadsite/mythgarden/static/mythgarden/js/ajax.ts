@@ -1,13 +1,10 @@
 import Cookies from 'js-cookie'
 
-import {
-  getStrOrError
-} from './staticUtils'
 import renderApp from './react-script'
 
 // fn: given a post url and a data object, make an xhr call to the server and return the response
 async function post (url: string, data: object): Promise<Response> {
-  const csrfToken = getStrOrError(Cookies.get('csrftoken'))
+  const csrfToken = Cookies.get('csrftoken') as string
 
   return await new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest()
