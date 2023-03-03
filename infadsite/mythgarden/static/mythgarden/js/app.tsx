@@ -11,7 +11,6 @@ import { Location, type LocationProps } from './location'
 import { Message, type MessageProps } from './message'
 import { Villager, type VillagerProps } from './villager'
 import Wallet from './wallet'
-// import Log from "./log";
 
 import { isDeepEqual } from './staticUtils'
 
@@ -26,34 +25,33 @@ class App extends React.Component<Partial<AppProps>, AppState> {
   }
 
   componentDidUpdate (prevProps: Readonly<Partial<AppProps>>, prevState: Readonly<AppState>): void {
-    const combinedProps = { ...this.state.combinedProps, ...this.props }
+    /*
+     * Expect the server to only return models that have been updated on the most recent request.
+     * Therefore, combine the previous props with new props for the next render, so existing data keeps being displayed.
+     * Do set dialogue: null if dialogue isn't in the new props, so that the dialogue box disappears after one action.
+     */
+    const combinedProps = { ...this.state.combinedProps, dialogue: null, ...this.props }
 
     if (!isDeepEqual(combinedProps, this.state.combinedProps)) {
       this.setState({ combinedProps })
     }
 
-    if (this.state.combinedProps.messages != null) {
-      this.scrollToMessageBottom()
-    }
+    this.scrollToMessageBottom()
   }
 
   componentDidMount (): void {
     this.scrollToMessageBottom()
   }
 
-  padItems (items: ItemProps[], count: number): Array<ItemProps | null> {
-    return items.concat(Array(count - items.length).fill(null))
-  }
-
-  mapItemsWithEmptySlots (items: ItemProps[]): JSX.Element[] {
-    const paddedItems = this.padItems(items, MAX_ITEMS)
-
-    return paddedItems.map((item, n) => item != null ? Item(item) : EmptyItem({ slotNumber: n }))
-  }
-
   scrollToMessageBottom (): void {
     const messageContainer = document.getElementById('message-log') as HTMLElement
     messageContainer.scrollTop = messageContainer.scrollHeight
+  }
+
+  mapItemsWithEmptySlots (items: ItemProps[]): JSX.Element[] {
+    const paddedItems = items.concat(Array(MAX_ITEMS - items.length).fill(null))
+
+    return paddedItems.map((item, n) => item != null ? Item(item) : EmptyItem({ slotNumber: n }))
   }
 
   render (): JSX.Element {
@@ -105,9 +103,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
               <List id='message-log'>
                 {messages?.map(message => Message(message))}
               </List>
-              {dialogue?.id != null &&
-                <Dialogue {...dialogue} key={dialogue.id} shouldShow={true}></Dialogue>
-              }
+              {(dialogue != null ? <Dialogue {...dialogue}></Dialogue> : null)}
             </section>
           </section>
 
@@ -124,7 +120,7 @@ interface AppProps {
   actions: ActionProps[]
   buildings: BuildingProps[]
   clock: string
-  dialogue: DialogueProps & { id?: number }
+  dialogue: DialogueProps | null
   hero: HeroProps
   inventory: ItemProps[]
   local_item_tokens: ItemProps[]

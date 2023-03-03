@@ -12,7 +12,7 @@ class Session(models.Model):
     key = models.CharField(max_length=32, primary_key=True, default=generate_uuid)
     location = models.ForeignKey(Place, on_delete=models.CASCADE, null=True, default=Place.get_default_pk)
     skip_post_save_signal = models.BooleanField(default=False)
-    message = models.TextField(blank=True, null=True, default=WELCOME_MESSAGE)
+    initial_message_text = models.CharField(max_length=255, default=WELCOME_MESSAGE)
     game_over = models.BooleanField(default=False)
 
     def save_data(self):
@@ -68,12 +68,12 @@ class Session(models.Model):
 
         return event_states
 
-    def reset_session_state(self, end_of_game_message=None):
+    def reset_session_state(self, end_of_game_message):
         key = self.key
 
         self.delete()
 
-        return Session.objects.create(key=key, message=end_of_game_message)
+        return Session.objects.create(key=key, initial_message_text=end_of_game_message)
 
     def abbr_key_tag(self):
         return f'({self.key[:8]}...)'

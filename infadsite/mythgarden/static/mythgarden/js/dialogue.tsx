@@ -3,8 +3,8 @@
 import React, { useState } from 'react'
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-export default function Dialogue ({ name, portrait_url, full_text, shouldShow }: DialogueProps): JSX.Element {
-  const [show, setShow] = useState(shouldShow)
+export default function Dialogue ({ name, portrait_url, full_text }: DialogueProps): JSX.Element {
+  const [show, setShow] = useState(true)
 
   if (show) {
     return (
@@ -27,7 +27,6 @@ interface DialogueProps {
   name: string
   portrait_url: string
   full_text: string
-  shouldShow: boolean
 }
 
 export { Dialogue, type DialogueProps }

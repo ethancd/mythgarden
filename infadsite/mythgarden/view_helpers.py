@@ -1,0 +1,62 @@
+import json
+from typing import Iterable
+
+from .game_logic import ActionGenerator, can_afford_action
+from .models import Session
+
+
+def load_session(request):
+    """Loads a session from the database or creates a new one if one does not exist.
+    Also saves the session key to the request session."""
+
+    session_key = request.session.get('session_key', None)
+
+    if session_key is None:
+        session = Session.objects.create()
+        request.session['session_key'] = session.pk
+    else:
+        session = Session.objects.get_or_create(pk=session_key)[0]
+
+    return session
+
+
+def get_home_models(session):
+    """Returns a dictionary of models that are needed to render the home page."""
+    actions = ActionGenerator().get_actions_for_session(session)
+
+    return {
+        'actions': actions,
+        'hero': session.hero,
+        'clock': session.clock,
+        'wallet': session.wallet,
+        'messages': session.messages.all(),
+        'place': session.location,
+        'inventory': session.inventory.item_tokens.all(),
+        'buildings': session.location.buildings.all(),
+        'local_item_tokens': session.local_item_tokens.all(),
+        'villager_states': session.occupant_states.all(),
+    }
+
+
+def get_requested_action(request, session):
+    action_digest = json.loads(request.body)['uniqueDigest']
+    available_actions = ActionGenerator().get_actions_for_session(session)
+
+    try:
+        return [a for a in available_actions if a.unique_digest == action_digest][0]
+    except IndexError:
+        raise IndexError('requested action not available')
+
+
+def validate_action(session, requested_action):
+    if not can_afford_action(session.wallet, requested_action):
+        raise ValueError('hero cannot afford requested action')
+
+
+def custom_serialize(obj):
+    if isinstance(obj, str):
+        return obj
+    if isinstance(obj, Iterable):
+        return [custom_serialize(i) for i in obj]
+    else:
+        return obj.serialize()

@@ -26,8 +26,8 @@ async function post (url: string, data: object): Promise<Response> {
   })
 }
 
-async function postAction (description: string): Promise<void> {
-  await post('action', { description })
+async function postAction (uniqueDigest: string): Promise<void> {
+  await post('action', { uniqueDigest })
     .then((response: any) => {
       console.log(response)
 

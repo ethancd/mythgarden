@@ -2,14 +2,14 @@
 
 import React from 'react'
 
-export default function Message ({ value, id }: MessageProps): JSX.Element {
+export default function Message ({ text, id }: MessageProps): JSX.Element {
   return (
-    <div className="message" key={id}>{value}</div>
+    <div className="message" key={id}>{text}</div>
   )
 }
 
 interface MessageProps {
-  value: string
+  text: string
   id: number
 }
 
