@@ -12,7 +12,7 @@ root.render(
   </React.StrictMode>
 )
 
-export default function renderApp (appData: AppProps): void {
+export default function renderApp (appData: Partial<AppProps>): void {
   root.render(
         <React.StrictMode>
             <App {...appData} />

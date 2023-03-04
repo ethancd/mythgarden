@@ -8,7 +8,8 @@ from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.views.decorators.csrf import ensure_csrf_cookie
 
-from .view_helpers import load_session, get_home_models, get_requested_action, validate_action, custom_serialize
+from .view_helpers import load_session, get_home_models, get_requested_action, get_serialized_messages, \
+    validate_action, custom_serialize
 from .game_logic import ActionGenerator, ActionExecutor, EventOperator
 from .models import Session
 
@@ -39,8 +40,9 @@ def action(request):
             updated_models = ActionExecutor().execute(requested_action, session)
             updated_models['actions'] = ActionGenerator().get_actions_for_session(session)
             updated_models['messages'] = list(session.messages.all())
-    except (IndexError, ValueError, ValidationError, IntegrityError) as e:
-        return JsonResponse({'error': e.message})
+    except (ValidationError, IntegrityError) as e:
+        session.messages.create(text=e.message, is_error=True)
+        return JsonResponse({'error': e.message, 'messages': get_serialized_messages()})
 
     if session.game_over:
         EventOperator().trigger_game_over(session)

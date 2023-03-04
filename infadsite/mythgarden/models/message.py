@@ -4,6 +4,7 @@ from django.db import models
 class Message(models.Model):
     session = models.ForeignKey('Session', on_delete=models.CASCADE, related_name='messages')
     text = models.CharField(max_length=255)
+    is_error = models.BooleanField(default=False)
 
     def __str__(self):
         return self.abbr_text + ' ' + self.session.abbr_key_tag()
@@ -12,6 +13,7 @@ class Message(models.Model):
         return {
             'text': self.text,
             'id': self.id,
+            'is_error': self.is_error
         }
 
     @property

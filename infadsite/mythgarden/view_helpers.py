@@ -1,5 +1,6 @@
 import json
 from typing import Iterable
+from django.core.validators import ValidationError
 
 from .game_logic import ActionGenerator, can_afford_action
 from .models import Session
@@ -45,12 +46,16 @@ def get_requested_action(request, session):
     try:
         return [a for a in available_actions if a.unique_digest == action_digest][0]
     except IndexError:
-        raise IndexError('requested action not available')
+        raise ValidationError('requested action not available')
+
+
+def get_serialized_messages(session):
+    return custom_serialize(list(session.messages.all()))
 
 
 def validate_action(session, requested_action):
     if not can_afford_action(session.wallet, requested_action):
-        raise ValueError('hero cannot afford requested action')
+        raise ValidationError('hero cannot afford requested action')
 
 
 def custom_serialize(obj):

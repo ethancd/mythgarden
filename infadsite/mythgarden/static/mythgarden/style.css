@@ -241,6 +241,8 @@ ul {
     margin-top: 0.5rem;
     border-bottom: 1px solid darkgreen;
     color: darkgreen; }
+    #message-log .message.error {
+      color: darkred; }
 
 #dialogue {
   display: flex;

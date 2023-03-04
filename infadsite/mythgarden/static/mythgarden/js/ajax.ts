@@ -1,6 +1,7 @@
 import Cookies from 'js-cookie'
 
 import renderApp from './react-script'
+import type MessageProps from './message'
 
 // fn: given a post url and a data object, make an xhr call to the server and return the response
 async function post (url: string, data: object): Promise<Response> {
@@ -40,7 +41,7 @@ async function postAction (uniqueDigest: string): Promise<void> {
       renderApp(response)
     }).catch((response: any) => {
       console.log(response)
-      // renderApp(response)
+      renderApp({ messages: response.messages as MessageProps[] })
     })
 }
 

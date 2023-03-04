@@ -351,6 +351,10 @@ ul {
     margin-top: $small-gutter;
     border-bottom: 1px solid darkgreen;
     color: darkgreen;
+
+    &.error {
+      color: darkred;
+    }
   }
 }
 

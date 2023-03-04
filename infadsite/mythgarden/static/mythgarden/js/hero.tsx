@@ -3,11 +3,11 @@
 import React from 'react'
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-export default function Hero ({ name, portrait_url, score, koin_earned, hearts_earned }: HeroProps): JSX.Element {
+export default function Hero ({ name, image_url, score, koin_earned, hearts_earned }: HeroProps): JSX.Element {
   return (
     <div id="hero">
       <div className="portrait">
-        <img src={portrait_url}></img>
+        <img src={image_url}></img>
       </div>
       <div className="column">
         <div className="name">{name}</div>
@@ -19,7 +19,7 @@ export default function Hero ({ name, portrait_url, score, koin_earned, hearts_e
 
 interface HeroProps {
   name: string
-  portrait_url: string
+  image_url: string
   score: number
   koin_earned: number
   hearts_earned: number

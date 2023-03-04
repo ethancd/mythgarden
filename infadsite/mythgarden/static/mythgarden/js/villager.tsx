@@ -3,12 +3,12 @@
 import React from 'react'
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-export default function Villager ({ name, portrait_url, affinity, description, id }: VillagerProps): JSX.Element {
+export default function Villager ({ name, image_url, affinity, description, id }: VillagerProps): JSX.Element {
   return (
     <li className="villager" key={id}>
       <div className="row">
         <div className="portrait">
-          <img src={portrait_url}></img>
+          <img src={image_url}></img>
         </div>
         <div className="column">
           <span className="name">{name}</span>
@@ -22,7 +22,7 @@ export default function Villager ({ name, portrait_url, affinity, description, i
 
 interface VillagerProps {
   name: string
-  portrait_url: string
+  image_url: string
   affinity: string
   description: string
   id: number

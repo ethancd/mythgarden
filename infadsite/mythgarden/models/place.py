@@ -40,12 +40,8 @@ class Place(models.Model):
     def serialize(self):
         return {
             'name': self.name,
-<<<<<<< HEAD
-            'image_url': self.image_url
-=======
-            'image_url': self.image.url if self.image else None,
+            'image_url': self.image_url,
             'id': self.id,
->>>>>>> frontend-react
         }
 
     @property
