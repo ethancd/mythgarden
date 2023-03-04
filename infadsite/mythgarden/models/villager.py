@@ -103,9 +103,17 @@ class VillagerState(models.Model):
     def serialize(self):
         return {
             'villager': self.villager.serialize(),
-            'display_affinity': self.display_affinity,
+            'affinity': self.display_affinity,
+            'name': self.villager.name,
+            'portrait_url': self.portrait_url,
+            'description': self.villager.description,
+            'id': self.id,
             'location': self.location.serialize(),
         }
+
+    @property
+    def portrait_url(self):
+        return self.villager.portrait.url if self.villager.portrait else None
 
     @property
     def display_affinity(self):

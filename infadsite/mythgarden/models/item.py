@@ -1,6 +1,6 @@
 from django.db import models
 
-from ._constants import COMMON, GIFT, ITEM_TYPES, RARITY_CHOICES, SEED, SPROUT, CROP, CROP_PROFIT_MULTIPLIER
+from ._constants import ITEM_EMOJIS, COMMON, GIFT, ITEM_TYPES, RARITY_CHOICES, SEED, SPROUT, CROP, CROP_PROFIT_MULTIPLIER
 
 
 class ItemManager(models.Manager):
@@ -28,6 +28,10 @@ class Item(models.Model):
             },
             'rarity': self.get_rarity_display(),
         }
+
+    @property
+    def emoji(self):
+        return ITEM_EMOJIS[self.item_type]
 
     def get_next_growth_stage(self):
         next_type = self.get_next_type()
@@ -78,7 +82,9 @@ class ItemToken(models.Model):
         return {
             'name': self.name,
             'rarity': self.item.get_rarity_display(),
+            'emoji': self.emoji,
             'has_been_watered': self.has_been_watered,
+            'id': self.id,
         }
 
     def make_copy(self):
@@ -99,5 +105,9 @@ class ItemToken(models.Model):
     @property
     def price(self):
         return self.item.price
+
+    @property
+    def emoji(self):
+        return self.item.emoji
 
 

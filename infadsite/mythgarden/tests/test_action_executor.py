@@ -11,7 +11,7 @@ from mythgarden.models import Item, Place, Session, Wallet, Action, Villager, Bu
     VillagerState, DialogueLine
 # noinspection PyUnresolvedReferences
 from mythgarden.models._constants import EAST, GIFT, COMMON, UNCOMMON, RARE, EPIC, TOWN, FARM, HOME, RARITIES, \
-    RARITY_WEIGHTS
+    RARITY_WEIGHTS, WELCOME_MESSAGE
 
 
 def create_item(name=None, item_type=GIFT, price=1, rarity=COMMON, counter=count()):
@@ -97,30 +97,6 @@ class ExecuteActionsTests(TestCase):
         with self.assertRaises(TypeError):
             self.ae.execute(action, 'not a session')
 
-    def test_calls_append_session_message_if_session_has_message(self):
-        """
-        Calls append_session_message if session has message
-        """
-        action = Action(action_type=Action.TRAVEL)
-        self.session.message = 'message'
-
-        with patch.object(self.ae, 'execute_travel_action', return_value=({}, 'log_statement')) as _:
-            with patch.object(self.ae, '_ActionExecutor__append_session_message') as mock:
-                self.ae.execute(action, self.session)
-                mock.assert_called_with('log_statement', self.session)
-
-    def test_does_not_call_append_session_message_if_session_has_no_message(self):
-        """
-        Does not call append_session_message if session has no message
-        """
-        action = Action(action_type=Action.TRAVEL)
-        self.session.message = ''
-
-        with patch.object(self.ae, 'execute_travel_action', return_value=({}, 'log_statement')) as _:
-            with patch.object(self.ae, '_ActionExecutor__append_session_message') as mock:
-                self.ae.execute(action, self.session)
-                mock.assert_not_called()
-
 
 class ExecuteTravelActionTests(TestCase):
     def setUp(self) -> None:
@@ -181,16 +157,13 @@ class ExecuteTravelActionTests(TestCase):
 
         self.assertEqual(self.clock.time, 240)
 
-    def test_returns_updated_models_and_log_statement(self):
+    def test_returns_updated_models(self):
         """
         execute_travel_action returns the updated models and a log statement
         """
         result = self.ae.execute_travel_action(self.action, self.session)
 
-        self.assertIsInstance(result, tuple)
-        self.assertEqual(len(result), 2)
-        self.assertIsInstance(result[0], dict)
-        self.assertIsInstance(result[1], str)
+        self.assertIsInstance(result, dict)
 
     def test_returns_correct_models(self):
         """
@@ -206,15 +179,7 @@ class ExecuteTravelActionTests(TestCase):
             'villager_states': ['villager_state_1', 'villager_state_2'],
         }
 
-        self.assertEqual(result[0], expected)
-
-    def test_returns_correct_log_statement(self):
-        """
-        execute_travel_action returns the correct log statement
-        """
-        result = self.ae.execute_travel_action(self.action, self.session)
-
-        self.assertEqual(result[1], f'You travelled East to Town.')
+        self.assertEqual(result, expected)
 
 
 class ExecuteTalkActionTests(TestCase):
@@ -303,16 +268,13 @@ class ExecuteTalkActionTests(TestCase):
 
         self.assertEqual(self.clock.time, 240)
 
-    def test_returns_updated_models_and_log_statement(self):
+    def test_returns_updated_models(self):
         """
-        execute_talk_action returns the updated models and a log statement
+        execute_talk_action returns the updated models
         """
         result = self.ae.execute_talk_action(self.action, self.session)
 
-        self.assertIsInstance(result, tuple)
-        self.assertEqual(len(result), 2)
-        self.assertIsInstance(result[0], dict)
-        self.assertIsInstance(result[1], str)
+        self.assertIsInstance(result, dict)
 
     def test_returns_correct_models(self):
         """
@@ -327,24 +289,20 @@ class ExecuteTalkActionTests(TestCase):
             'dialogue': self.dialogue,
         }
 
-        self.assertEqual(result[0], expected)
-    #
-    def test_returns_correct_log_statement(self):
-        """
-        execute_talk_action returns the correct log statement
-        """
-        result = self.ae.execute_talk_action(self.action, self.session)
+        self.assertEqual(result, expected)
 
-        self.assertEqual(result[1], 'You talked to Sal.')
-
-    def test_returns_correct_log_statement_when_update_affinity_returns_hearts(self):
+    def test_creates_correct_messages_when_update_affinity_returns_hearts(self):
         """
-        execute_talk_action returns the correct log statement
+        execute_talk_action creates correct messages when update_affinity returns hearts
         """
         with patch.object(self.ae, '_ActionExecutor__update_affinity', return_value=1) as mock:
-            result = self.ae.execute_talk_action(self.action, self.session)
+            self.ae.execute_talk_action(self.action, self.session)
 
-            self.assertEqual(result[1], 'You talked to Sal. You and Sal have developed more of a bond! +❤️')
+            messages = list(self.session.messages.all())
+
+            self.assertEqual(messages[0].text, WELCOME_MESSAGE)
+            self.assertEqual(messages[1].text, 'You talked to Sal.')
+            self.assertEqual(messages[2].text, 'You and Sal have developed more of a bond! +❤️')
 
 
 # for random.choices, return the first item in the list

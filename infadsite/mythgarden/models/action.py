@@ -2,7 +2,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
-from ._constants import DIRECTIONS, KOIN_SIGN
+from ._constants import DIRECTIONS, KOIN_SIGN, FISHING_DESCRIPTION, DIGGING_DESCRIPTION, FORAGING_DESCRIPTION
 
 
 class Action(models.Model):
@@ -16,6 +16,27 @@ class Action(models.Model):
     SELL = 'SELL'
     GATHER = 'GATHER'
     SLEEP = 'SLEEP'
+
+    FISHING = 'FISHING'
+    DIGGING = 'DIGGING'
+    FORAGING = 'FORAGING'
+
+    ACTION_EMOJIS = {
+        TRAVEL: '🚶',
+        TALK: '💬',
+        GIVE: '🎁',
+        WATER: '💧',
+        PLANT: '🌱',
+        HARVEST: '🌾',
+        BUY: '🛒',
+        SELL: '💰',
+        GATHER: {
+            FISHING: '🎣',
+            DIGGING: '⛏',
+            FORAGING: '🌲',
+        },
+        SLEEP: '💤',
+    }
 
     ACTION_TYPES = [
         (TRAVEL, 'Travel'),
@@ -78,7 +99,22 @@ class Action(models.Model):
         return {
             'description': self.description,
             'display_cost': self.display_cost,
+            'emoji': self.emoji,
+            'unique_digest': self.unique_digest,
         }
+
+    @property
+    def emoji(self):
+        if self.action_type == self.GATHER:
+            GATHER_DESCRIPTION_MAP = {
+                FISHING_DESCRIPTION: self.FISHING,
+                DIGGING_DESCRIPTION: self.DIGGING,
+                FORAGING_DESCRIPTION: self.FORAGING,
+            }
+            gather_type = GATHER_DESCRIPTION_MAP[self.description]
+            return self.ACTION_EMOJIS[self.GATHER][gather_type]
+        else:
+            return self.ACTION_EMOJIS[self.action_type]
 
     @property
     def display_cost(self):
@@ -92,6 +128,10 @@ class Action(models.Model):
                        f'{self.cost_amount % 60}{self.MIN_ABBR}'
         else:
             return str(self.cost_amount) + self.get_cost_unit_display()
+
+    @property
+    def unique_digest(self):
+        return f'{self.description}-{self.object_id}'
 
     def is_cost_in_money(self):
         return self.cost_unit in self.MONEY_UNITS

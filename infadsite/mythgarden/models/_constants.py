@@ -59,6 +59,19 @@ HERB = 'HERB'
 FLOWER = 'FLOWER'
 BERRY = 'BERRY'
 
+ITEM_EMOJIS = {
+    SEED: '🌰',
+    SPROUT: '🌱',
+    CROP: '🌾',
+    GIFT: '🎁',
+    FISH: '🐟',
+    MINERAL: '💎',
+    ARTIFACT: '🗿',
+    HERB: '🌿',
+    FLOWER: '🌸',
+    BERRY: '🍓',
+}
+
 ITEM_TYPES = [
     (SEED, 'Seed'),
     (SPROUT, 'Sprout'),
@@ -135,3 +148,9 @@ PLACE_TYPES = [
 ]
 
 IMAGE_PREFIX = 'mythgarden/images/'
+
+FISHING_DESCRIPTION = 'Go fishing'
+DIGGING_DESCRIPTION = 'Dig for something interesting'
+FORAGING_DESCRIPTION = 'Forage for plants'
+
+WELCOME_MESSAGE = 'Welcome to Mythgarden! You have one week to grow crops, make friends, and find treasures. Good luck and have fun!'

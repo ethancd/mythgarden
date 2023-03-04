@@ -1,4 +1,3 @@
-from collections.abc import Iterable
 import uuid
 
 
@@ -20,13 +19,6 @@ def guard_type(obj, cls):
         return True
     else:
         raise TypeError(f"{obj} is not a valid {cls} object")
-
-
-def srs_serialize(obj):
-    if isinstance(obj, Iterable):
-        return [srs_serialize(i) for i in obj]
-    else:
-        return obj.serialize()
 
 
 def generate_uuid():

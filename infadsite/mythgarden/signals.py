@@ -8,11 +8,17 @@ from .game_logic import EventOperator
 from .models.clock import Clock
 from .models.hero import Hero
 from .models.inventory import Inventory
+from .models.message import Message
 from .models.session import Session
 from .models.wallet import Wallet
+<<<<<<< HEAD
 from .models.place import PlaceState
 from .models._constants import MAX_ITEMS
 
+=======
+
+from .models._constants import MAX_ITEMS, WELCOME_MESSAGE
+>>>>>>> frontend-react
 
 @receiver(m2m_changed, sender=Inventory.item_tokens.through)
 def inventory_items_changed(sender, instance, action, **kwargs):
@@ -38,6 +44,8 @@ def create_belongings(sender, instance, created, **kwargs):
         Inventory.objects.create(session=instance)
         Clock.objects.create(session=instance)
         Wallet.objects.create(session=instance)
+        Message.objects.create(session=instance, text=instance.initial_message_text)
+
 
 
 

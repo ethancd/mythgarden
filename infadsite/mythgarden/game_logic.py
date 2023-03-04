@@ -3,7 +3,8 @@ import random
 from .models import Bridge, Action, Place, Building, Session, VillagerState, ItemToken, \
     DialogueLine, ScheduledEvent
 from .models._constants import SEED, SPROUT, CROP, COMMON, UNCOMMON, RARE, EPIC, RARITIES, RARITY_WEIGHTS, FARM, SHOP, \
-    WILD_TYPES, FOREST, MOUNTAIN, BEACH, LOVE, LIKE, NEUTRAL, DISLIKE, HATE, SUNDAY, DAWN
+    WILD_TYPES, FOREST, MOUNTAIN, BEACH, LOVE, LIKE, NEUTRAL, DISLIKE, HATE, SUNDAY, DAWN, FISHING_DESCRIPTION, \
+    DIGGING_DESCRIPTION, FORAGING_DESCRIPTION
 from .static_helpers import guard_type, guard_types
 
 
@@ -15,14 +16,23 @@ def can_afford_action(wallet, requested_action):
 
 
 class ActionGenerator:
+    def get_actions_for_session(self, session):
+        place = session.location
+        inventory = list(session.inventory.item_tokens.all())
+        contents = list(session.local_item_tokens.all())
+        villager_states = list(session.occupant_states.all())
+        clock = session.clock
+
+        actions = self.gen_available_actions(place, inventory, contents, villager_states, clock)
+
+        return actions
+
     def gen_available_actions(self, place, inventory, contents, villager_states, clock):
         """Returns a list of available actions for the hero in the current session, taking into account:
         - the current inventory
         - the location's current present items/occupants (contents and villagers)
         - the place's static features (buildings and bridges)"""
 
-        print(
-            f'gen_available_actions: place={place}, inventory={inventory}, contents={contents}, villager_states={villager_states}, clock={clock}')
         available_actions = []
 
         buildings = list(place.buildings.all())
@@ -281,7 +291,7 @@ class ActionGenerator:
     def gen_fishing_action(self):
         """Returns an action that catches a fish"""
         return Action(
-            description='Go fishing',
+            description=FISHING_DESCRIPTION,
             action_type=Action.GATHER,
             cost_amount=60,
             cost_unit=Action.MIN,
@@ -291,7 +301,7 @@ class ActionGenerator:
     def gen_digging_action(self):
         """Returns an action that digs for minerals, gems, fossils, etc"""
         return Action(
-            description='Dig for something interesting',
+            description=DIGGING_DESCRIPTION,
             action_type=Action.GATHER,
             cost_amount=90,
             cost_unit=Action.MIN,
@@ -301,7 +311,7 @@ class ActionGenerator:
     def gen_foraging_action(self):
         """Returns an action that forages for herbs, plants, etc"""
         return Action(
-            description='Forage for plants',
+            description=FORAGING_DESCRIPTION,
             action_type=Action.GATHER,
             cost_amount=30,
             cost_unit=Action.MIN,
@@ -329,14 +339,11 @@ class ActionExecutor:
         ex = f'execute_{action.get_action_type_display().lower()}_action'
 
         if hasattr(self, ex) and callable(getattr(self, ex)):
-            updated_models, log_statement = getattr(self, ex)(action, session)
+            updated_models = getattr(self, ex)(action, session)
         else:
             raise ValueError(f'Unknown action type: {action.get_action_type_display().lower()}')
 
-        if session.message:
-            log_statement = self.__append_session_message(log_statement, session)
-
-        return updated_models, log_statement
+        return updated_models
 
     def execute_travel_action(self, action, session):
         """Executes a travel action, which updates the current location and ticks the clock"""
@@ -345,14 +352,15 @@ class ActionExecutor:
         session.clock.advance(action.cost_amount)
 
         session.save_data()
+        session.messages.create(text=action.log_statement)
 
-        return ({
-                    'place': session.location,
-                    'clock': session.clock,
-                    'buildings': list(session.location.buildings.all()),
-                    'local_item_tokens': list(session.local_item_tokens.all()),
-                    'villager_states': list(session.occupant_states.all())
-                }, action.log_statement)
+        return {
+            'place': session.location,
+            'clock': session.clock,
+            'buildings': list(session.location.buildings.all()),
+            'local_item_tokens': list(session.local_item_tokens.all()),
+            'villager_states': list(session.occupant_states.all()),
+        }
 
     def execute_talk_action(self, action, session):
         """Executes a talk action, which displays some dialogue, adds to the villager's affinity, and ticks the clock"""
@@ -366,17 +374,21 @@ class ActionExecutor:
         session.hero.hearts_earned += hearts_gained
         session.clock.advance(action.cost_amount)
         villager_state.mark_as_talked_to()
-        action.log_statement += self.__make_affinity_tag_if_any(hearts_gained, villager)
+        affinity_message = self.__make_affinity_message_if_any(hearts_gained, villager)
 
         villager_state.save()
         session.save_data()
 
-        return ({
-                    'hero': session.hero,
-                    'clock': session.clock,
-                    'villager_states': list(session.occupant_states.all()),
-                    'dialogue': dialogue,
-                }, action.log_statement)
+        session.messages.create(text=action.log_statement)
+        if affinity_message:
+            session.messages.create(text=affinity_message)
+
+        return {
+            'hero': session.hero,
+            'clock': session.clock,
+            'villager_states': list(session.occupant_states.all()),
+            'dialogue': dialogue,
+        }
 
     def execute_give_action(self, action, session):
         """Executes a give action, which removes an item from the hero's inventory
@@ -408,16 +420,20 @@ class ActionExecutor:
         log_statement = action.log_statement.format(item_name=gift.name, villager_name=villager.name,
                                                     valence_text=valence_text)
 
-        log_statement += self.__make_affinity_tag_if_any(hearts_gained, villager)
+        affinity_message = self.__make_affinity_message_if_any(hearts_gained, villager)
 
         session.save_data()
 
-        return ({
-                    'hero': session.hero,
-                    'inventory': list(session.inventory.item_tokens.all()),
-                    'villager_states': list(session.occupant_states.all()),
-                    'dialogue': dialogue,
-                }, log_statement)
+        session.messages.create(text=log_statement)
+        if affinity_message:
+            session.messages.create(text=affinity_message)
+
+        return {
+            'hero': session.hero,
+            'inventory': list(session.inventory.item_tokens.all()),
+            'villager_states': list(session.occupant_states.all()),
+            'dialogue': dialogue,
+        }
 
     def execute_sell_action(self, action, session):
         """Executes a sell action, which removes an item from the hero's inventory
@@ -428,12 +444,13 @@ class ActionExecutor:
         session.hero.koin_earned += action.cost_amount
 
         session.save_data()
+        session.messages.create(text=action.log_statement)
 
-        return ({
-                    'hero': session.hero,
-                    'wallet': session.wallet,
-                    'inventory': list(session.inventory.item_tokens.all()),
-                }, action.log_statement)
+        return {
+            'hero': session.hero,
+            'wallet': session.wallet,
+            'inventory': list(session.inventory.item_tokens.all()),
+        }
 
     def execute_buy_action(self, action, session):
         """Executes a buy action, which adds an item_token to the hero's inventory that's a copy of one in the shop,
@@ -447,11 +464,14 @@ class ActionExecutor:
         session.wallet.money -= action.cost_amount
 
         session.save_data()
+        session.messages.create(text=action.log_statement)
 
-        return ({
-                    'wallet': session.wallet,
-                    'inventory': list(session.inventory.item_tokens.all()),
-                }, action.log_statement)
+
+        return {
+            'wallet': session.wallet,
+            'inventory': list(session.inventory.item_tokens.all()),
+            'local_item_tokens': list(session.local_item_tokens.all()),
+        }
 
     def execute_plant_action(self, action, session):
         """Executes a plant action, which moves a seed from the hero's inventory into the session contents"""
@@ -461,12 +481,13 @@ class ActionExecutor:
 
         session.clock.advance(action.cost_amount)
         session.save_data()
+        session.messages.create(text=action.log_statement)
 
-        return ({
-                    'clock': session.clock,
-                    'inventory': list(session.inventory.item_tokens.all()),
-                    'local_item_tokens': list(session.local_item_tokens.all()),
-                }, action.log_statement)
+        return {
+            'clock': session.clock,
+            'inventory': list(session.inventory.item_tokens.all()),
+            'local_item_tokens': list(session.local_item_tokens.all()),
+        }
 
     def execute_water_action(self, action, session):
         """Executes a water action, which sets the item_token's has_been_watered attribute to True"""
@@ -478,11 +499,12 @@ class ActionExecutor:
         session.clock.advance(action.cost_amount)
 
         session.save_data()
+        session.messages.create(text=action.log_statement)
 
-        return ({
-                    'clock': session.clock,
-                    'local_item_tokens': list(session.local_item_tokens.all()),
-                }, action.log_statement)
+        return {
+            'clock': session.clock,
+            'local_item_tokens': list(session.local_item_tokens.all()),
+        }
 
     def execute_harvest_action(self, action, session):
         """Executes a harvest action, which moves a crop from the session contents into the hero's inventory"""
@@ -493,12 +515,13 @@ class ActionExecutor:
         session.clock.advance(action.cost_amount)
 
         session.save_data()
+        session.messages.create(text=action.log_statement)
 
-        return ({
-                    'clock': session.clock,
-                    'inventory': list(session.inventory.item_tokens.all()),
-                    'local_item_tokens': list(session.local_item_tokens.all()),
-                }, action.log_statement)
+        return {
+            'clock': session.clock,
+            'inventory': list(session.inventory.item_tokens.all()),
+            'local_item_tokens': list(session.local_item_tokens.all()),
+        }
 
     def execute_gather_action(self, action, session):
         """Executes a gather action, which finds a random item in the current location's item pool
@@ -511,11 +534,12 @@ class ActionExecutor:
         session.save_data()
 
         log_statement = action.log_statement.format(result=item.name)
+        session.messages.create(text=log_statement)
 
-        return ({
-                    'inventory': list(session.inventory.item_tokens.all()),
-                    'clock': session.clock,
-                }, log_statement)
+        return {
+            'inventory': list(session.inventory.item_tokens.all()),
+            'clock': session.clock,
+        }
 
     def execute_sleep_action(self, action, session):
         """Executes a sleep action, which advances the clock to midnight"""
@@ -524,10 +548,11 @@ class ActionExecutor:
         session.clock.advance(action.cost_amount)
 
         session.save_data()
+        session.messages.create(text=action.log_statement)
 
-        return ({
-                    'clock': session.clock,
-                }, action.log_statement)
+        return {
+            'clock': session.clock,
+        }
 
     # private methods
     def __get_dialogue_for_talk_action(self, villager_state, villager):
@@ -539,14 +564,6 @@ class ActionExecutor:
             affinity_tier = None
 
         return villager.get_dialogue(trigger, affinity_tier)
-
-    def __append_session_message(self, log_statement, session):
-        log_statement = log_statement + '\n' + session.message
-
-        session.message = ''
-        session.save()
-
-        return log_statement
 
     def __pull_item_from_pool(self, location):
         """Returns a random item from the given location's item pool, weighted by rarity"""
@@ -564,7 +581,7 @@ class ActionExecutor:
                 item = choices.order_by('?').first()
                 return item
             else:
-                print(f'No items found in {location.name} of rarity {rarity}, trying other rarities...')
+                # 'No items found in location with that rarity, so we try other rarities.
                 rarities.remove(rarity)
                 continue
 
@@ -603,21 +620,12 @@ class ActionExecutor:
 
         return new_tier - old_tier
 
-        hero.hearts_earned += diff
-
-        if diff > 0:
-            return f' You and {villager.name} have developed more of a bond! +❤️'
-        else:
-            return ''
-
-        return old_tier, new_tier
-
-    def __make_affinity_tag_if_any(self, hearts_gained, villager):
+    def __make_affinity_message_if_any(self, hearts_gained, villager):
         if hearts_gained > 0:
             hearts = ''.join(['❤️' for _ in range(hearts_gained)])
-            return f" You and {villager.name} have developed more of a bond! +{hearts}"
+            return f"You and {villager.name} have developed more of a bond! +{hearts}"
         else:
-            return ''
+            return None
 
     def __get_valence_text(self, valence):
         if valence == LOVE:
@@ -665,8 +673,8 @@ class EventOperator:
         if clock.is_new_day:
             self.reset_for_new_day(clock, session)
 
-            session.message = self.fall_asleep(clock, session.hero)
-            session.save()
+            sleep_message = self.fall_asleep(clock, session.hero)
+            session.messages.create(text=sleep_message)
 
         # run scheduled events (from database)
         self.trigger_scheduled_events(clock, list(session.event_states.all()), session)

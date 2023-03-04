@@ -34,7 +34,7 @@ DEBUG = env('DEBUG')
 # exception if SECRET_KEY not in os.environ
 SECRET_KEY = env('SECRET_KEY')
 
-ALLOWED_HOSTS = ['127.0.0.1', 'django-mythgarden-fly.fly.dev', 'mythgarden.ashkie.com']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'django-mythgarden-fly.fly.dev', 'mythgarden.ashkie.com']
 CSRF_TRUSTED_ORIGINS = ['https://django-mythgarden-fly.fly.dev', 'https://mythgarden.ashkie.com']
 STATIC_ROOT = BASE_DIR / 'static'
 
@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_browser_reload',
     'mythgarden.apps.MythgardenConfig',
 ]
 
@@ -58,6 +59,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    "django_browser_reload.middleware.BrowserReloadMiddleware",
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 

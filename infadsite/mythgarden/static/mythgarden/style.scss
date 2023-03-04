@@ -1,0 +1,439 @@
+/* variables */
+
+/* colors */
+$sky-blue: #87ceeb;
+$yellow-leather: #e1a836;
+$dollar-bill-green: #85bb65;
+$sandy-brown: #f9cca4;
+$lavender-purple: #b09cc9;
+$dark-text: #333;
+$parchment: #fcf5ef;
+$dusty-pink: #ffd1d8;
+$white-yellow: #fff5e5;
+
+/* sizes */
+$fine-text: 0.75rem;
+$small-text: 1rem;
+$med-small-text: 1.5rem;
+$medium-text: 2rem;
+$med-large-text: 3rem;
+$large-text: 4rem;
+
+$small-gutter: 0.5rem;
+$medium-gutter: 1rem;
+
+/* site-wide */
+
+body {
+  color: $dark-text;
+  font-family: "Roboto Mono", Roboto, sans-serif;
+  font-size: $small-text;
+  margin: 0;
+}
+
+/* reset */
+h1, h2, h3 {
+  border: 0;
+  font: inherit;
+  font-size: 100%;
+  margin: 0;
+  padding: 0;
+  vertical-align: baseline;
+}
+
+/* layout */
+
+#page {
+  height: calc(100vh - 8px); //hack -- need to figure out how to make it full-page no scroll bar in cross-browser/responsive way
+  background-color: $white-yellow;
+}
+
+/* general lists */
+
+ul {
+  display: flex;
+  justify-content: flex-start;
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+@mixin row {
+  display: flex;
+  flex-direction: row;
+}
+
+.row {
+  @include row;
+}
+
+@mixin column {
+  display: flex;
+  flex-direction: column;
+}
+
+.column {
+  @include column;
+}
+
+/* top-bar HUD elements */
+
+#top-bar {
+  background-color: $sky-blue;
+  display: flex;
+  height: 20%;
+  justify-content: space-between;
+  margin-bottom: $small-gutter;
+  position: relative;
+  width: 100%;
+}
+
+#hero {
+  display: flex;
+  gap: $small-gutter;
+
+  .portrait {
+    border: 2px solid #008f11;
+    height: 96px;
+
+    img {
+      height: 100%;
+      width: auto;
+    }
+  }
+
+  .column {
+    justify-content: space-between;
+  }
+
+  .name {
+    margin-top: $small-gutter;
+    font-size: $medium-text;
+  }
+}
+
+#logo {
+  animation: sinewave 30s linear infinite;
+  font-family: "Lobster Two", "Times New Roman", serif;
+  font-size: $large-text;
+  left: 50%;
+  opacity: 75%;
+  position: absolute;
+  text-transform: uppercase;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+@keyframes sinewave {
+  0% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 0.05;
+  }
+  100% {
+    opacity: 0.75;
+  }
+}
+
+#score {
+  *:first-child {
+    font-size: $medium-text;
+  }
+}
+
+#clock {
+  font-size: $medium-text;
+    margin: $small-gutter;
+}
+
+/* main-area */
+
+#main-area {
+  display: flex;
+  gap: $small-gutter;
+  height: 80%;
+  position: relative;
+  width: 100%;
+}
+
+/* left-sidebar elements */
+
+#sidebar {
+  @include column;
+  justify-content: space-between;
+  width: 20%;
+}
+
+#inventory {
+  @include column;
+  background-color: $yellow-leather;
+  height: 50%;
+  justify-content: space-between;
+  width: 100%;
+
+  .item {
+    border: 2px solid;
+    overflow: hidden;
+    white-space: nowrap;
+
+    &.empty-slot {
+      border-color: beige;
+      opacity: 0.5;
+    }
+
+    &.common {
+      border-color: sandybrown;
+    }
+
+    &.uncommon {
+      border-color: limegreen;
+    }
+
+    &.rare {
+      border-color: dodgerblue;
+    }
+
+    &.epic {
+      border-color: rebeccapurple;
+    }
+
+    .type {
+      font-size: $medium-text;
+      margin-right: $small-gutter;
+    }
+
+    .name {
+      font-size: $med-small-text;
+    }
+  }
+}
+
+#wallet {
+  background-color: $dollar-bill-green;
+  font-size: $large-text;
+  text-align: center;
+}
+
+/* column between left-sidebar and center-col */
+// will be deleted after "action chip" feature is implemented
+
+#actions {
+  @include column;
+  background-color: pink;
+  gap: $small-gutter;
+  width: 20%;
+
+  .action {
+    border: 2px solid lightpink;
+    box-sizing: border-box;
+    cursor: pointer;
+    display: flex;
+    font-size: $small-text;
+    justify-content: space-between;
+    overflow: hidden;
+    white-space: nowrap;
+    width: 100%;
+
+    &.executing {
+      background-color: #8f0011;
+    }
+  }
+}
+
+/* center-col elements */
+
+#center-col {
+  @include column;
+  height: 100%;
+  overflow: hidden;
+  width: 60%;
+}
+
+#location {
+  height: 50%;
+  position: relative;
+  width: 100%;
+
+  .name {
+    font-size: $medium-text;
+    font-weight: bold;
+    text-align: center;
+    position: relative;
+    z-index: 10;
+  }
+
+  .landscape {
+    bottom: 0;
+    position: absolute;
+    width: 100%;
+  }
+
+  #buildings {
+    background-color: rgba($lavender-purple, 0.5);
+    bottom: 0;
+    justify-content: space-between;
+    left: 50%;
+    position: absolute;
+    transform: translate(-50%, 0);
+    width: 100%;
+
+    .building {
+      @include column;
+      max-width: 20%;
+
+      .icon {
+        font-size: $medium-text;
+        text-align: center;
+      }
+
+      .name {
+        font-size: $med-small-text;
+      }
+    }
+  }
+
+}
+
+#local-items {
+  @include row;
+  background-color: $sandy-brown;
+  height: 20%;
+  justify-content: space-between;
+  overflow: hidden;
+  width: 100%;
+
+  .item {
+    display: flex;
+    flex-direction: column;
+    width: 15%;
+
+    &.empty-slot {
+      border-color: beige;
+      opacity: 0.5;
+    }
+
+    .type-emoji {
+      font-size: $medium-text;
+      text-align: center;
+    }
+
+    .item-name {
+      font-size: $small-text;
+      text-align: center;
+    }
+
+    &.watered {
+      border: 1px solid blue;
+    }
+  }
+}
+
+#footer {
+  height: 30%;
+  width: 100%;
+  position: relative;
+}
+
+#message-log {
+  background-color: $parchment;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow-y: scroll;
+
+  .message {
+    background-color: $parchment;
+    font-size: $medium-text;
+    overflow: hidden;
+    width: 100%;
+    padding-bottom: $small-gutter;
+    margin-top: $small-gutter;
+    border-bottom: 1px solid darkgreen;
+    color: darkgreen;
+  }
+}
+
+#dialogue {
+  @include column;
+  background-color: $parchment;
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  z-index: 10;
+  cursor: pointer;
+
+  .speaker {
+    @include row;
+    gap: $small-gutter;
+  }
+
+  .portrait {
+    border: 2px solid #008f11;
+    height: 2.5rem;
+    width: 2.5rem;
+
+    img {
+      height: 100%;
+      width: auto;
+    }
+  }
+
+  .name {
+    color: #133;
+    font-size: $medium-text
+  }
+
+  .dialogue-text {
+    color: #133;
+    font-size: $med-small-text;
+  }
+
+  &:hover::after {
+    color: #8f0011;
+    content: '×';
+    font-size: $med-large-text;
+    position: absolute;
+    right: 0;
+    top: -$medium-gutter;
+  }
+}
+
+/* right-sidebar elements, just villagers */
+
+#villagers {
+  @include column;
+  background-color: $dusty-pink;
+  gap: $small-gutter;
+  height: 100%;
+  overflow: hidden;
+  width: 20%;
+
+  .villager {
+    @include column;
+
+    .portrait {
+      border: 2px solid #008f11;
+      height: 2.5rem;
+      width: 2.5rem;
+
+      img {
+        height: 100%;
+        width: auto;
+      }
+    }
+
+    .row {
+      gap: $small-gutter;
+    }
+
+    .column {
+      justify-content: space-between;
+    }
+
+    .description {
+      font-size: $fine-text;
+    }
+  }
+}

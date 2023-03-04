@@ -30,8 +30,10 @@ class DialogueLine(models.Model):
 
     def serialize(self):
         return {
-            'speaker': self.speaker.serialize(),
+            'name': self.speaker.name,
+            'portrait_url': self.speaker.portrait.url,
             'full_text': self.full_text,
+            'id': self.id,
         }
 
     @property

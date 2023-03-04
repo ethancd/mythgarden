@@ -38,86 +38,37 @@ expected models:
         rarity
     message: string
 -->
+{{ ctx | json_script:"app-data" }}
 <div class="page">
-    <section class="top-bar">
+    <ul class="top-bar">
         <ul class="horizontal game-info">
-            <li class="player-info">
-                <div class="player-avatar">
-                    <img src="{{ hero.image_url }}">
-                </div>
-                <div>
-                    <div class="player-name">{{ hero.name }}</div>
-                    <div class="score-cont">
-                        <span class="score">{{ hero.score }} (⚜️{{hero.koin_earned}} x {{hero.hearts_earned}}❤️)</span>
-                    </div>
-                </div>
-
-            </li>
-            <li class="location">{{ place.name }}</li>
+            <div id="hero-root"></div>
             <li class="stats">
                 <ul class="vertical stats">
-                    <li class="clock">{{ clock.display }}</li>
-                    <li class="wallet">{{ wallet.display }}</li>
+                    <div id="clock-root"></div>
+                    <div id="wallet-root"></div>
                 </ul>
             </li>
         </ul>
-        <p class="message">{{ message }}</p>
-        <ul class="horizontal inventory">
-            {% for item in inventory %}
-                <li class="item {{ item.rarity }}">
-                    <span class="item-name">{{ item.name }}</span>
-                </li>
-            {% endfor %}
-        </ul>
-    </section>
+        <div id="message-root"></div>
+        <div id="inventory-root"></div>
+    </ul>
 
     <section class="main-area">
         <section class="sidebar">
             <div>Actions:</div>
-            <ul class="vertical actions">
-                {% for action in actions %}
-                    <li class="action">
-                        <span class="description">{{action.description}}</span>
-                        <span class="cost">{{action.display_cost}}</span>
-                    </li>
-                {% endfor %}
-            </ul>
+            <div id="actions-root"></div>
         </section>
 
         <section class="canvas">
-            <img class="landscape" src="{{ place.image_url }}">
-            <ul class="buildings vertical">
-                {% for building in buildings %}
-                    <li class="building">
-                        <span class="building-name">{{ building.name }}</span>
-                    </li>
-                {% endfor %}
-            </ul>
-            <ul class="villagers vertical">
-                {% for villager_state in villager_states %}
-                    <li class="villager">
-                        <span class="villager-name">{{ villager_state.villager.name }}</span>
-                        <span class="affinity">{{ villager_state.display_affinity }}</span>
-                    </li>
-                {% endfor %}
-            </ul>
-            <ul class="contents horizontal">
-                {% for item_token in local_item_tokens %}
-                    <li class="item {{item.rarity}} {{ item_token.has_been_watered|yesno:"watered," }}">
-                        <span class="item-name">{{ item_token.name }}</span>
-                    </li>
-                {% endfor %}
-            </ul>
+            <div id="location-root"></div>
+            <div id="buildings-root"></div>
+            <div id="villagers-root"></div>
+            <div id="localItems-root"></div>
             <ul class="log vertical">
                 <li class="log-entry cursor">&nbsp;</li>
             </ul>
-            <div class="dialogue" style="display:none;">
-                <div class="speaker">
-                    <img class="speaker-portrait" src="">
-                    <span class="speaker-name"></span>
-                </div>
-                <span class="dialogue-text"></span>
-            </div>
+            <div id="dialogue-root"></div>
         </section>
     </section>
 </div>

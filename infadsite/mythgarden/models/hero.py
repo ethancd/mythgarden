@@ -22,6 +22,8 @@ class Hero(models.Model):
             'score': self.score,
             'koin_earned': self.koin_earned,
             'hearts_earned': self.hearts_earned,
+            'name': self.name,
+            'portrait_url': self.portrait.url,
         }
 
     @property
