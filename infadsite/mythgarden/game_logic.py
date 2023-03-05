@@ -105,6 +105,9 @@ class ActionGenerator:
             actions.append(self.gen_buy_action(item_token))
 
         for item_token in inventory:
+            if item_token.item_type == SEED:
+                continue
+
             actions.append(self.gen_sell_action(item_token))
 
         return actions
@@ -350,9 +353,9 @@ class ActionExecutor:
 
         session.location = action.target_object
         session.clock.advance(action.cost_amount)
+        session.messages.create(text=action.log_statement)
 
         session.save_data()
-        session.messages.create(text=action.log_statement)
 
         return {
             'place': session.location,
@@ -376,12 +379,12 @@ class ActionExecutor:
         villager_state.mark_as_talked_to()
         affinity_message = self.__make_affinity_message_if_any(hearts_gained, villager)
 
-        villager_state.save()
-        session.save_data()
-
         session.messages.create(text=action.log_statement)
         if affinity_message:
             session.messages.create(text=affinity_message)
+
+        villager_state.save()
+        session.save_data()
 
         return {
             'hero': session.hero,
@@ -414,19 +417,17 @@ class ActionExecutor:
         session.clock.advance(action.cost_amount)
         session.inventory.item_tokens.remove(gift)
 
-        session.save_data()
-
         valence_text = self.__get_valence_text(valence)
         log_statement = action.log_statement.format(item_name=gift.name, villager_name=villager.name,
                                                     valence_text=valence_text)
 
         affinity_message = self.__make_affinity_message_if_any(hearts_gained, villager)
 
-        session.save_data()
-
         session.messages.create(text=log_statement)
         if affinity_message:
             session.messages.create(text=affinity_message)
+
+        session.save_data()
 
         return {
             'hero': session.hero,
@@ -443,8 +444,8 @@ class ActionExecutor:
         session.wallet.money += action.cost_amount
         session.hero.koin_earned += action.cost_amount
 
-        session.save_data()
         session.messages.create(text=action.log_statement)
+        session.save_data()
 
         return {
             'hero': session.hero,
@@ -463,9 +464,8 @@ class ActionExecutor:
 
         session.wallet.money -= action.cost_amount
 
-        session.save_data()
         session.messages.create(text=action.log_statement)
-
+        session.save_data()
 
         return {
             'wallet': session.wallet,
@@ -480,8 +480,8 @@ class ActionExecutor:
         session.location_state.item_tokens.add(action.target_object)
 
         session.clock.advance(action.cost_amount)
-        session.save_data()
         session.messages.create(text=action.log_statement)
+        session.save_data()
 
         return {
             'clock': session.clock,
@@ -498,8 +498,8 @@ class ActionExecutor:
 
         session.clock.advance(action.cost_amount)
 
-        session.save_data()
         session.messages.create(text=action.log_statement)
+        session.save_data()
 
         return {
             'clock': session.clock,
@@ -514,8 +514,8 @@ class ActionExecutor:
 
         session.clock.advance(action.cost_amount)
 
-        session.save_data()
         session.messages.create(text=action.log_statement)
+        session.save_data()
 
         return {
             'clock': session.clock,
@@ -531,10 +531,10 @@ class ActionExecutor:
         session.inventory.item_tokens.add(ItemToken.objects.create(session=session, item=item))
         session.clock.advance(action.cost_amount)
 
-        session.save_data()
-
         log_statement = action.log_statement.format(result=item.name)
         session.messages.create(text=log_statement)
+
+        session.save_data()
 
         return {
             'inventory': list(session.inventory.item_tokens.all()),
@@ -547,8 +547,9 @@ class ActionExecutor:
         session.hero.is_in_bed = True
         session.clock.advance(action.cost_amount)
 
-        session.save_data()
         session.messages.create(text=action.log_statement)
+
+        session.save_data()
 
         return {
             'clock': session.clock,
@@ -673,8 +674,8 @@ class EventOperator:
         if clock.is_new_day:
             self.reset_for_new_day(clock, session)
 
-            sleep_message = self.fall_asleep(clock, session.hero)
-            session.messages.create(text=sleep_message)
+            sleep_message, is_error = self.fall_asleep(clock, session.hero)
+            session.messages.create(text=sleep_message, is_error=is_error)
 
         # run scheduled events (from database)
         self.trigger_scheduled_events(clock, list(session.event_states.all()), session)
@@ -697,7 +698,7 @@ class EventOperator:
         new_contents = []
 
         for token in item_tokens:
-            if token.item_type not in [SEED, SPROUT] or token.has_been_watered:
+            if token.item_type not in [SEED, SPROUT] or not token.has_been_watered:
                 new_contents.append(token)
                 continue
 
@@ -718,12 +719,14 @@ class EventOperator:
             hero.save()
             clock.advance(clock.minutes_to_dawn)
             sleep_message = "You got a good night's sleep and wake up at dawn."
+            is_error = False
         else:
             clock.advance(clock.minutes_to_overslept_time)
             sleep_message = "You passed out at midnight and overslept! You're just now waking up."
+            is_error = True
 
         clock.save()
-        return sleep_message
+        return sleep_message, is_error
 
     def trigger_game_over(self, session):
         hero = session.hero

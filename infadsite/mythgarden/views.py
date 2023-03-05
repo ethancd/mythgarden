@@ -42,7 +42,7 @@ def action(request):
             updated_models['messages'] = list(session.messages.all())
     except (ValidationError, IntegrityError) as e:
         session.messages.create(text=e.message, is_error=True)
-        return JsonResponse({'error': e.message, 'messages': get_serialized_messages()})
+        return JsonResponse({'error': e.message, 'messages': get_serialized_messages(session)})
 
     if session.game_over:
         EventOperator().trigger_game_over(session)

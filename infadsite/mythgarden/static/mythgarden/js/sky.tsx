@@ -20,6 +20,7 @@ const INITIAL_PHASE_WIDTH = PHASE_WIDTH_STEP * 6 // this way, the final day will
 // solving for the parabola with points at (0,0), (.5, 1), and (1, 0)
 // (aka sunrise, noon, and sunset)
 const parabola = (x: number): number => (4 * x) - (4 * x * x)
+
 const getPercent = (n: number): string => `${n * 100}%`
 
 function Sun ({ time }: Pick<ClockProps, 'time'>): JSX.Element | null {

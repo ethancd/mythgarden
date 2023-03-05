@@ -248,7 +248,8 @@ ul {
   #local-items .item {
     display: flex;
     flex-direction: column;
-    width: 15%; }
+    width: 15%;
+    box-sizing: border-box; }
     #local-items .item.empty-slot {
       border-color: beige;
       opacity: 0.5; }

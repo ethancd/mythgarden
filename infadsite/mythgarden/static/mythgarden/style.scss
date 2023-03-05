@@ -361,6 +361,7 @@ ul {
     display: flex;
     flex-direction: column;
     width: 15%;
+    box-sizing: border-box;
 
     &.empty-slot {
       border-color: beige;

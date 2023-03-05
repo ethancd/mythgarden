@@ -9,7 +9,6 @@ export default function Action (this: any, { description, emoji, display_cost, u
         <li
             onClick={() => { void postThisAction() }}
             className='action'
-            key={unique_digest}
         >
             <span className='type'>{emoji}</span>&nbsp;
             <span className="description">{description}</span>
