@@ -90,8 +90,6 @@ function Moon ({ time, day_number }: Pick<ClockProps, 'time' | 'day_number'>): J
   const y = getY(x)
   const phaseWidth = getPhaseWidth(day_number)
 
-  console.log(day_number)
-
   if (isMoonVisible) {
     return (
       <div id="moon" style={{ left: getPercent(x), bottom: getPercent(y) }}>
