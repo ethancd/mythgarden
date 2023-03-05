@@ -2,14 +2,16 @@
 
 import React from 'react'
 
-export default function Clock ({ value }: ClockProps): JSX.Element {
+export default function Clock ({ display }: Pick<ClockProps, 'display'>): JSX.Element {
   return (
-        <div id="clock">{value}</div>
+        <div id="clock">{display}</div>
   )
 }
 
 interface ClockProps {
-  value: string
+  display: string
+  time: number
+  day_number: number
 }
 
 export { Clock, type ClockProps }

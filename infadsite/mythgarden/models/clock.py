@@ -15,11 +15,19 @@ class Clock(models.Model):
         return 'Clock ' + self.session.abbr_key_tag()
 
     def serialize(self):
-        return self.display
+        return {
+            'display': self.display,
+            'time': self.time,
+            'day_number': self.day_index
+        }
 
     @property
     def display(self):
         return self.get_day_display() + ' ' + self.get_time_display()
+
+    @property
+    def day_index(self):
+        return DAY_TO_INDEX[self.day]
 
     def get_time_display(self):
         """ Returns the time as a string in the format 'hh:mmam' or 'hh:mmpm' """
@@ -44,8 +52,7 @@ class Clock(models.Model):
 
     def advance_day(self, days_to_add):
         """ Advances the day by the given number of days, rolling over at the end of the week. """
-        current_day_index = DAYS_OF_WEEK.index((self.day, self.get_day_display()))
-        new_day_index = (current_day_index + days_to_add) % 7
+        new_day_index = (self.day_index + days_to_add) % 7
         self.day = DAYS_OF_WEEK[new_day_index][0]
         self.is_new_day = True
 

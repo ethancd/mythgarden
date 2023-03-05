@@ -10,6 +10,7 @@ $dark-text: #333;
 $parchment: #fcf5ef;
 $dusty-pink: #ffd1d8;
 $white-yellow: #fff5e5;
+$blue-moon-gray: #90c0df;
 
 /* sizes */
 $fine-text: 0.75rem;
@@ -76,6 +77,9 @@ ul {
   @include column;
 }
 
+@mixin game-element {
+  z-index: 2;
+}
 /* top-bar HUD elements */
 
 #top-bar {
@@ -89,8 +93,10 @@ ul {
 }
 
 #hero {
+  @include game-element;
   display: flex;
   gap: $small-gutter;
+  z-index: 2;
 
   .portrait {
     border: 2px solid #008f11;
@@ -113,6 +119,7 @@ ul {
 }
 
 #logo {
+  @include game-element;
   animation: sinewave 30s linear infinite;
   font-family: "Lobster Two", "Times New Roman", serif;
   font-size: $large-text;
@@ -137,15 +144,62 @@ ul {
 }
 
 #score {
+  @include game-element;
   *:first-child {
     font-size: $medium-text;
   }
 }
 
 #clock {
+  @include game-element;
   font-size: $medium-text;
-    margin: $small-gutter;
+  margin: $small-gutter;
 }
+
+#heavenly-body-container {
+  width: calc(100% - 4rem);
+  height: calc(100% + 4rem);
+  position: absolute;
+  left: 0;
+
+  @mixin heavenly-body {
+    position: absolute;
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+  }
+
+  #sun {
+    @include heavenly-body;
+    background-color: yellow;
+    box-shadow: 0 0 4rem 1rem yellow;
+  }
+
+  #moon {
+    @include heavenly-body;
+    background-color: $white-yellow;
+    box-shadow: 0 0 1rem .25rem $white-yellow;
+    border: 1px solid white;
+    overflow: hidden;
+
+    #darkside {
+      position: absolute;
+      height: 100%;
+      width: 50%;
+      background-color: black;
+    }
+
+    #ellipse {
+      position: absolute;
+      border-radius: 50%;
+      height: 100%;
+      left: 50%;
+      transform: translate(-50%, 0);
+      background-color: black;
+    }
+  }
+}
+
 
 /* main-area */
 

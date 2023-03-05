@@ -1,7 +1,7 @@
 import React from 'react'
 import { Action, type ActionProps } from './action'
 import { Building, type BuildingProps } from './building'
-import Clock from './clock'
+import { Clock, type ClockProps } from './clock'
 import { Dialogue, type DialogueProps } from './dialogue'
 import EmptyItem from './emptyItem'
 import { Hero, type HeroProps } from './hero'
@@ -9,6 +9,7 @@ import { Item, type ItemProps } from './item'
 import List from './list'
 import { Location, type LocationProps } from './location'
 import { Message, type MessageProps } from './message'
+import { Sun, Moon } from './heavens'
 import { Villager, type VillagerProps } from './villager'
 import Wallet from './wallet'
 
@@ -76,7 +77,11 @@ class App extends React.Component<Partial<AppProps>, AppState> {
         <section id="top-bar">
           <Hero {...hero}></Hero>
           <h1 id="logo">Mythgarden</h1>
-          <Clock value={clock}></Clock>
+          <Clock display={clock.display}></Clock>
+          <div id='heavenly-body-container'>
+              <Sun time={clock.time}></Sun>
+              <Moon time={clock.time} day_number={clock.day_number}></Moon>
+          </div>
         </section>
 
         <section id="main-area">
@@ -119,7 +124,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
 interface AppProps {
   actions: ActionProps[]
   buildings: BuildingProps[]
-  clock: string
+  clock: ClockProps
   dialogue: DialogueProps | null
   hero: HeroProps
   inventory: ItemProps[]

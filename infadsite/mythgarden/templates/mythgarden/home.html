@@ -1,75 +1,15 @@
-{% load static %}
-<link href='https://fonts.googleapis.com/css?family=Roboto Mono' rel='stylesheet'>
-<link rel="stylesheet" href="{% static 'mythgarden/style.css' %}">
-<script type="module" src="{% static 'mythgarden/dist/bundle.js' %}"></script>
-
-<!--
-expected models:
-    hero:
-        name
-        portrait:
-            url
-        score
-        koin_earned
-        hearts_earned
-    clock:
-        display
-    wallet
-        display
-    place:
-        name
-        image:
-            url
-    inventory[]:
-        name
-        rarity
-    actions[]:
-        description
-        display_cost
-    buildings[]:
-        name
-    villager_states[]:
-        affinity
-        villager
-            name
-    local_item_tokens[]:
-        name
-        has_been_watered
-        rarity
-    message: string
--->
-{{ ctx | json_script:"app-data" }}
-<div class="page">
-    <ul class="top-bar">
-        <ul class="horizontal game-info">
-            <div id="hero-root"></div>
-            <li class="stats">
-                <ul class="vertical stats">
-                    <div id="clock-root"></div>
-                    <div id="wallet-root"></div>
-                </ul>
-            </li>
-        </ul>
-        <div id="message-root"></div>
-        <div id="inventory-root"></div>
-    </ul>
-
-    <section class="main-area">
-        <section class="sidebar">
-            <div>Actions:</div>
-            <div id="actions-root"></div>
-        </section>
-
-        <section class="canvas">
-            <div id="location-root"></div>
-            <div id="buildings-root"></div>
-            <div id="villagers-root"></div>
-            <div id="localItems-root"></div>
-            <ul class="log vertical">
-                <li class="log-entry cursor">&nbsp;</li>
-            </ul>
-            <div id="dialogue-root"></div>
-        </section>
-    </section>
-</div>
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <link href='https://fonts.googleapis.com/css?family=Roboto Mono|Lobster Two' rel='stylesheet'>
+    <link rel="stylesheet" href="{% static 'mythgarden/style.css' %}">
+    <script type="module" src="{% static 'mythgarden/dist/bundle.js' %}"></script>
+    <meta charset="UTF-8">
+    <title>Mythgarden</title>
+    {{ ctx | json_script:"app-data" }}
+</head>
+<body>
+    <div id="app-root"></div>
+</body>
+</html>

@@ -21,7 +21,7 @@ def home(request):
 
     context = {'ctx': {model_name: custom_serialize(data) for model_name, data in home_models.items()}}
 
-    template_name = 'mythgarden/react.html'
+    template_name = 'mythgarden/home.html'
     return render(request, template_name, context)
 
 
