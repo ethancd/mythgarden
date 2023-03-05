@@ -95,19 +95,19 @@ ul {
   font-size: 2rem;
   margin: 0.5rem; }
 
-#heavenly-body-container {
+#sky-container {
   width: calc(100% - 4rem);
   height: calc(100% + 4rem);
   position: absolute;
   left: 0; }
-  #heavenly-body-container #sun {
+  #sky-container #sun {
     position: absolute;
     width: 4rem;
     height: 4rem;
     border-radius: 50%;
     background-color: yellow;
     box-shadow: 0 0 4rem 1rem yellow; }
-  #heavenly-body-container #moon {
+  #sky-container #moon {
     position: absolute;
     width: 4rem;
     height: 4rem;
@@ -116,12 +116,12 @@ ul {
     box-shadow: 0 0 1rem 0.25rem #fff5e5;
     border: 1px solid white;
     overflow: hidden; }
-    #heavenly-body-container #moon #darkside {
+    #sky-container #moon #darkside {
       position: absolute;
       height: 100%;
       width: 50%;
       background-color: black; }
-    #heavenly-body-container #moon #ellipse {
+    #sky-container #moon #ellipse {
       position: absolute;
       border-radius: 50%;
       height: 100%;

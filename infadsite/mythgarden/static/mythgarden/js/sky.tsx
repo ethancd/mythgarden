@@ -13,8 +13,8 @@ const TRUE_NIGHT = SUNSET + 90
 const MOON_HI = SUNSET - 30
 const MOON_BYE = SUNRISE
 
-const INITIAL_PHASE_WIDTH = 0.66
 const PHASE_WIDTH_STEP = 0.08 // ~ 1 / 14 -- aka how big of steps to take to move from 1 to 0 in 14 days
+const INITIAL_PHASE_WIDTH = PHASE_WIDTH_STEP * 6 // this way, the final day will have phase-width = 0 aka half moon
 
 // this equation brought to you by wolfram alpha:
 // solving for the parabola with points at (0,0), (.5, 1), and (1, 0)

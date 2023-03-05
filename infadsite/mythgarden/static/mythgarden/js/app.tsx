@@ -9,7 +9,7 @@ import { Item, type ItemProps } from './item'
 import List from './list'
 import { Location, type LocationProps } from './location'
 import { Message, type MessageProps } from './message'
-import { Sun, Moon } from './heavens'
+import { Sun, Moon } from './sky'
 import { Villager, type VillagerProps } from './villager'
 import Wallet from './wallet'
 
@@ -78,7 +78,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
           <Hero {...hero}></Hero>
           <h1 id="logo">Mythgarden</h1>
           <Clock display={clock.display}></Clock>
-          <div id='heavenly-body-container'>
+          <div id='sky-container'>
               <Sun time={clock.time}></Sun>
               <Moon time={clock.time} day_number={clock.day_number}></Moon>
           </div>
