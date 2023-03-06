@@ -4,7 +4,7 @@ from .models import Bridge, Action, Place, Building, Session, VillagerState, Ite
     DialogueLine, ScheduledEvent
 from .models._constants import SEED, SPROUT, CROP, COMMON, UNCOMMON, RARE, EPIC, RARITIES, RARITY_WEIGHTS, FARM, SHOP, \
     WILD_TYPES, FOREST, MOUNTAIN, BEACH, LOVE, LIKE, NEUTRAL, DISLIKE, HATE, SUNDAY, DAWN, FISHING_DESCRIPTION, \
-    DIGGING_DESCRIPTION, FORAGING_DESCRIPTION
+    DIGGING_DESCRIPTION, FORAGING_DESCRIPTION, SUNSET
 from .static_helpers import guard_type, guard_types
 
 
@@ -63,7 +63,7 @@ class ActionGenerator:
         if len(villager_states) > 0:
             available_actions += self.gen_social_actions(villager_states, inventory)
 
-        if place.is_farmhouse:
+        if place.is_farmhouse and clock.time >= SUNSET:
             available_actions += [self.gen_sleep_action(clock)]
 
         return available_actions

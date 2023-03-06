@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { createContext } from 'react'
 import { Action, type ActionProps } from './action'
 import { Building, type BuildingProps } from './building'
 import { Clock, type ClockProps } from './clock'
@@ -9,13 +9,22 @@ import { Item, type ItemProps } from './item'
 import List from './list'
 import { Location, type LocationProps } from './location'
 import { Message, type MessageProps } from './message'
+import Section from './section'
 import { Sun, Moon } from './sky'
 import { Villager, type VillagerProps } from './villager'
 import Wallet from './wallet'
 
 import { isDeepEqual } from './staticUtils'
+import colors from './_colors'
 
 const MAX_ITEMS = 6
+
+const ColorModContext = createContext({
+  darkenBy: 0,
+  desaturateBy: 0
+})
+
+export { ColorModContext }
 
 class App extends React.Component<Partial<AppProps>, AppState> {
   constructor (props: AppProps) {
@@ -72,51 +81,58 @@ class App extends React.Component<Partial<AppProps>, AppState> {
       dialogue
     } = this.state.combinedProps
 
+    const colorModObject = {
+      darkenBy: 0.3,
+      desaturateBy: 0.3
+    }
+
     return (
-      <div id="page">
-        <section id="top-bar">
-          <Hero {...hero}></Hero>
-          <h1 id="logo">Mythgarden</h1>
-          <Clock display={clock.display}></Clock>
-          <div id='sky-container'>
-              <Sun time={clock.time}></Sun>
-              <Moon time={clock.time} day_number={clock.day_number}></Moon>
-          </div>
-        </section>
+      <ColorModContext.Provider value={ colorModObject }>
+        <Section id="page" baseColor={colors.whiteYellow}>
+          <Section id="top-bar" baseColor={colors.skyBlue}>
+            <Hero {...hero}></Hero>
+            <h1 id="logo">Mythgarden</h1>
+            <Clock display={clock.display}></Clock>
+            <div id='sky-container'>
+                <Sun time={clock.time}></Sun>
+                <Moon time={clock.time} day_number={clock.day_number}></Moon>
+            </div>
+          </Section>
 
-        <section id="main-area">
-          <section id="sidebar">
-            <List id='inventory'>
-              {(inventory != null) ? this.mapItemsWithEmptySlots(inventory) : null}
-            </List>
-            <Wallet value={wallet}></Wallet>
-          </section>
-          <List id='actions'>
-            {actions?.map(action => Action(action))}
-          </List>
-
-          <section id="center-col">
-            <Location {...place}>
-              <List id='buildings'>
-                {buildings?.map(building => Building(building))}
+          <div id="main-area">
+            <section id="sidebar">
+              <List id='inventory' baseColor={colors.yellowLeather}>
+                {(inventory != null) ? this.mapItemsWithEmptySlots(inventory) : null}
               </List>
-            </Location>
-            <List id='local-items'>
-              {(local_item_tokens?.length > 0) ? this.mapItemsWithEmptySlots(local_item_tokens) : null}
-            </List>
-            <section id='footer'>
-              <List id='message-log'>
-                {messages?.map(message => Message(message))}
-              </List>
-              {(dialogue != null ? <Dialogue {...dialogue}></Dialogue> : null)}
+              <Wallet value={wallet}></Wallet>
             </section>
-          </section>
+            <List id='actions' baseColor={colors.blueMoonGray}>
+              {actions?.map(action => Action(action))}
+            </List>
 
-          <List id='villagers'>
-            {villager_states?.map(villager => Villager(villager))}
-          </List>
-        </section>
-      </div>
+            <section id="center-col">
+              <Location {...place}>
+                <List id='buildings' baseColor={colors.lavenderPurple}>
+                  {buildings?.map(building => Building(building))}
+                </List>
+              </Location>
+              <List id='local-items' baseColor={colors.sandyBrown}>
+                {(local_item_tokens?.length > 0) ? this.mapItemsWithEmptySlots(local_item_tokens) : null}
+              </List>
+              <section id='footer'>
+                <List id='message-log' baseColor={colors.parchment}>
+                  {messages?.map(message => Message({ ...message }))}
+                </List>
+                {(dialogue != null ? <Dialogue {...dialogue}></Dialogue> : null)}
+              </section>
+            </section>
+
+            <List id='villagers' baseColor={colors.dustyPink}>
+              {villager_states?.map(villager => Villager(villager))}
+            </List>
+          </div>
+        </Section>
+      </ColorModContext.Provider>
     )
   }
 }

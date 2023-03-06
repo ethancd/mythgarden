@@ -22,6 +22,8 @@ h1, h2, h3 {
 #page {
   height: calc(100vh - 8px);
   background-color: #fff5e5; }
+  #page.dark-mode {
+    color: #eee; }
 
 /* general lists */
 ul {
@@ -274,7 +276,6 @@ ul {
   height: 100%;
   overflow-y: scroll; }
   #message-log .message {
-    background-color: #fcf5ef;
     font-size: 2rem;
     overflow: hidden;
     width: 100%;

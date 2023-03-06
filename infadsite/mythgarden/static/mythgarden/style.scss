@@ -6,11 +6,13 @@ $yellow-leather: #e1a836;
 $dollar-bill-green: #85bb65;
 $sandy-brown: #f9cca4;
 $lavender-purple: #b09cc9;
-$dark-text: #333;
 $parchment: #fcf5ef;
 $dusty-pink: #ffd1d8;
 $white-yellow: #fff5e5;
 $blue-moon-gray: #90c0df;
+
+$dark-text: #333;
+$light-text: #eee;
 
 /* sizes */
 $fine-text: 0.75rem;
@@ -47,6 +49,10 @@ h1, h2, h3 {
 #page {
   height: calc(100vh - 8px); //hack -- need to figure out how to make it full-page no scroll bar in cross-browser/responsive way
   background-color: $white-yellow;
+
+  &.dark-mode {
+    color: $light-text;
+  }
 }
 
 /* general lists */
@@ -80,6 +86,7 @@ ul {
 @mixin game-element {
   z-index: 2;
 }
+
 /* top-bar HUD elements */
 
 #top-bar {
@@ -398,7 +405,6 @@ ul {
   overflow-y: scroll;
 
   .message {
-    background-color: $parchment;
     font-size: $medium-text;
     overflow: hidden;
     width: 100%;

@@ -1,14 +1,21 @@
 'use strict'
 
-import React, { useState } from 'react'
+import React, { useState, useContext } from 'react'
+import Color from 'color'
+import colors from './_colors'
+import { ColorModContext } from './app'
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export default function Dialogue ({ name, image_url, full_text }: DialogueProps): JSX.Element {
   const [show, setShow] = useState(true)
+  const { darkenBy, desaturateBy } = useContext(ColorModContext)
+
+  const baseColor = Color(colors.parchment)
+  const backgroundColor = baseColor.darken(darkenBy).desaturate(desaturateBy).hex()
 
   if (show) {
     return (
-            <div id="dialogue" style={{ display: 'flex' }} onClick={() => { setShow(false) }}>
+            <div id="dialogue" style={{ display: 'flex', backgroundColor }} onClick={() => { setShow(false) }}>
                 <div className="speaker">
                   <div className="portrait">
                     <img src={image_url}></img>

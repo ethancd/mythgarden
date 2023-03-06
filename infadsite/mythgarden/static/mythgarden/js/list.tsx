@@ -1,10 +1,17 @@
 'use strict'
 
-import React from 'react'
+import React, { useContext } from 'react'
+import Color from 'color'
+import { ColorModContext } from './app'
 
-export default function List ({ id, children }: React.PropsWithChildren<ListProps>): JSX.Element {
+export default function List ({ id, baseColor, children }: React.PropsWithChildren<ListProps>): JSX.Element {
+  const { darkenBy, desaturateBy } = useContext(ColorModContext)
+
+  const color = Color(baseColor)
+  const backgroundColor = color.darken(darkenBy).desaturate(desaturateBy).hex()
+
   return (
-        <ul id={id}>
+        <ul id={id} style={{ backgroundColor }}>
             {children}
         </ul>
   )
@@ -12,4 +19,5 @@ export default function List ({ id, children }: React.PropsWithChildren<ListProp
 
 interface ListProps {
   id: string
+  baseColor: string
 }
