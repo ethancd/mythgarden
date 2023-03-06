@@ -1,4 +1,4 @@
-import React, { createContext } from 'react'
+import React from 'react'
 import { Action, type ActionProps } from './action'
 import { Building, type BuildingProps } from './building'
 import { Clock, type ClockProps } from './clock'
@@ -15,16 +15,10 @@ import { Villager, type VillagerProps } from './villager'
 import Wallet from './wallet'
 
 import { isDeepEqual } from './staticUtils'
+import { FilterizeColorContext, filterFuncFactory, getColorFilterByTime } from './lightColorLogic'
 import colors from './_colors'
 
 const MAX_ITEMS = 6
-
-const ColorModContext = createContext({
-  darkenBy: 0,
-  desaturateBy: 0
-})
-
-export { ColorModContext }
 
 class App extends React.Component<Partial<AppProps>, AppState> {
   constructor (props: AppProps) {
@@ -81,13 +75,11 @@ class App extends React.Component<Partial<AppProps>, AppState> {
       dialogue
     } = this.state.combinedProps
 
-    const colorModObject = {
-      darkenBy: 0.3,
-      desaturateBy: 0.3
-    }
+    const colorFilter = getColorFilterByTime(clock.time);
+    const filterFn = filterFuncFactory(colorFilter);
 
     return (
-      <ColorModContext.Provider value={ colorModObject }>
+      <FilterizeColorContext.Provider value={ filterFn }>
         <Section id="page" baseColor={colors.whiteYellow}>
           <Section id="top-bar" baseColor={colors.skyBlue}>
             <Hero {...hero}></Hero>
@@ -132,7 +124,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
             </List>
           </div>
         </Section>
-      </ColorModContext.Provider>
+      </FilterizeColorContext.Provider>
     )
   }
 }

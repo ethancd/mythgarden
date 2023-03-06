@@ -1,15 +1,12 @@
 'use strict'
 
 import React, { useContext } from 'react'
-import { ColorModContext } from './app'
 import colors from './_colors'
-import Color from 'color'
+import {FilterizeColorContext} from "./lightColorLogic";
 
 export default function Wallet ({ value }: WalletProps): JSX.Element {
-  const { darkenBy, desaturateBy } = useContext(ColorModContext)
-
-  const baseColor = Color(colors.dollarBillGreen)
-  const backgroundColor = baseColor.darken(darkenBy).desaturate(desaturateBy).hex()
+  const filterizeColor = useContext(FilterizeColorContext)
+  const backgroundColor = filterizeColor(colors.dollarBillGreen)
 
   return (
         <div id="wallet" style={{ backgroundColor }}>{value}</div>

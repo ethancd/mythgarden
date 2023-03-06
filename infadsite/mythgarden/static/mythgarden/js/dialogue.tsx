@@ -1,17 +1,14 @@
 'use strict'
 
 import React, { useState, useContext } from 'react'
-import Color from 'color'
 import colors from './_colors'
-import { ColorModContext } from './app'
+import {FilterizeColorContext} from "./lightColorLogic";
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export default function Dialogue ({ name, image_url, full_text }: DialogueProps): JSX.Element {
   const [show, setShow] = useState(true)
-  const { darkenBy, desaturateBy } = useContext(ColorModContext)
-
-  const baseColor = Color(colors.parchment)
-  const backgroundColor = baseColor.darken(darkenBy).desaturate(desaturateBy).hex()
+  const filterizeColor = useContext(FilterizeColorContext)
+  const backgroundColor = filterizeColor(colors.parchment)
 
   if (show) {
     return (

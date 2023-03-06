@@ -2,17 +2,14 @@
 
 import React, { useContext } from 'react'
 import Color from 'color'
-import { ColorModContext } from './app'
+import {FilterizeColorContext} from "./lightColorLogic";
 
 export default function Section ({ id, baseColor, children }: React.PropsWithChildren<SectionProps>): JSX.Element {
-  const { darkenBy, desaturateBy } = useContext(ColorModContext)
-
-  const color = Color(baseColor)
-  const backgroundColorObj = color.darken(darkenBy).desaturate(desaturateBy)
-  const backgroundColor = backgroundColorObj.hex()
+  const filterizeColor = useContext(FilterizeColorContext)
+  const backgroundColor = filterizeColor(baseColor)
 
   return (
-        <section id={id} className={ backgroundColorObj.isDark() ? 'dark-mode' : ''} style={{ backgroundColor }}>
+        <section id={id} className={ Color(backgroundColor).isDark() ? 'dark-mode' : ''} style={{ backgroundColor }}>
             {children}
         </section>
   )

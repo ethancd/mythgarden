@@ -1,14 +1,11 @@
 'use strict'
 
 import React, { useContext } from 'react'
-import Color from 'color'
-import { ColorModContext } from './app'
+import { FilterizeColorContext } from './lightColorLogic'
 
 export default function List ({ id, baseColor, children }: React.PropsWithChildren<ListProps>): JSX.Element {
-  const { darkenBy, desaturateBy } = useContext(ColorModContext)
-
-  const color = Color(baseColor)
-  const backgroundColor = color.darken(darkenBy).desaturate(desaturateBy).hex()
+  const filterizeColor = useContext(FilterizeColorContext)
+  const backgroundColor = filterizeColor(baseColor)
 
   return (
         <ul id={id} style={{ backgroundColor }}>
