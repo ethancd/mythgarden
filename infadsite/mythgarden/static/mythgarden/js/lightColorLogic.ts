@@ -1,5 +1,5 @@
 import Color from 'color'
-import { createContext } from "react";
+import { createContext } from 'react'
 
 const SUNRISE = 6 * 60
 const SUNSET = 18 * 60
@@ -30,21 +30,24 @@ enum DaySegment {
   Night = 'night'
 }
 
-type ColorFilter = {
+interface ColorFilter {
   shadeBy: number
   rgbTemperature: number[]
   mixRatio: number
 }
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 const filterFuncFactory = function (colorFilter: ColorFilter): Function {
   return function (baseColor: string): string {
     const { shadeBy, rgbTemperature, mixRatio } = colorFilter
 
     const color = Color(baseColor)
 
-    const baseLightness = color.lightness();
-    const lightColor = Color.rgb(rgbTemperature).lightness(baseLightness)
-    return color.mix(lightColor, mixRatio).darken(shadeBy).hex()
+    const baseAlpha = color.alpha()
+    const baseLightness = color.lightness()
+    const lightColor = Color.rgb(rgbTemperature)
+
+    return color.mix(lightColor, mixRatio).lightness(baseLightness).darken(shadeBy).alpha(baseAlpha).hexa()
   }
 }
 
@@ -54,7 +57,7 @@ const defaultFilter = {
   mixRatio: 0.5
 }
 
-const defaultFilterFn = filterFuncFactory(defaultFilter);
+const defaultFilterFn = filterFuncFactory(defaultFilter)
 
 const FilterizeColorContext = createContext(defaultFilterFn)
 
@@ -69,7 +72,7 @@ function getColorFilterByTime (time: number): ColorFilter {
 }
 
 function getKelvinByTime (time: number): number {
-  const daySegment = getDaySegment(time);
+  const daySegment = getDaySegment(time)
 
   if (daySegment === DaySegment.Morning) {
     return pointInRange(DAYLIGHT_KELVIN, HORIZON_KELVIN, (time - SUNRISE) / GOLDEN_HOUR_LENGTH)
@@ -91,7 +94,7 @@ function getKelvinByTime (time: number): number {
 }
 
 function getLuxByTime (time: number): number {
-  const daySegment = getDaySegment(time);
+  const daySegment = getDaySegment(time)
 
   if (daySegment === DaySegment.Morning) {
     return pointInRange(DAYLIGHT_LUX, HORIZON_LUX, (time - SUNRISE) / GOLDEN_HOUR_LENGTH)
@@ -122,7 +125,7 @@ function getDaySegment (time: number): DaySegment {
   throw new Error('time not caught by getDaySegment conditionals')
 }
 
-function pointInRange(max: number, min: number, fraction: number): number {
+function pointInRange (max: number, min: number, fraction: number): number {
   return ((max - min) * fraction) + min
 }
 
@@ -170,7 +173,7 @@ function getBlueFromKelvin (kelvin: number): number {
   return Math.round(blue)
 }
 
-function convertLuxToShadeBy(lux: number): number {
+function convertLuxToShadeBy (lux: number): number {
   // use log scale for light to reflect how perception works
   const logMax = Math.log2(DAYLIGHT_LUX)
   const logMin = Math.log2(MOONLIGHT_LUX)
@@ -187,4 +190,9 @@ function convertLuxToShadeBy(lux: number): number {
   return MAX_SHADING - (brightness * MAX_SHADING)
 }
 
-export { FilterizeColorContext, filterFuncFactory, getColorFilterByTime }
+export {
+  FilterizeColorContext,
+  filterFuncFactory,
+  getColorFilterByTime,
+  type ColorFilter
+}

@@ -2,7 +2,7 @@
 
 import React, { useState, useContext } from 'react'
 import colors from './_colors'
-import {FilterizeColorContext} from "./lightColorLogic";
+import { FilterizeColorContext } from "./lightColorLogic";
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export default function Dialogue ({ name, image_url, full_text }: DialogueProps): JSX.Element {

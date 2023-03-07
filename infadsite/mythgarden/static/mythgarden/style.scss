@@ -324,13 +324,22 @@ ul {
     z-index: 10;
   }
 
+  .landscape-filter {
+    top: 0;
+    height: 100%;
+    position: absolute;
+    width: 100%;
+    z-index: 2;
+  }
+
   .landscape {
     bottom: 0;
     position: absolute;
     width: 100%;
   }
+}
 
-  #buildings {
+#buildings {
     background-color: rgba($lavender-purple, 0.5);
     bottom: 0;
     justify-content: space-between;
@@ -338,6 +347,7 @@ ul {
     position: absolute;
     transform: translate(-50%, 0);
     width: 100%;
+  z-index: 5;
 
     .building {
       @include column;
@@ -354,7 +364,6 @@ ul {
     }
   }
 
-}
 
 #local-items {
   @include row;

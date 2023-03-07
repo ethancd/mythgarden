@@ -217,27 +217,35 @@ ul {
     text-align: center;
     position: relative;
     z-index: 10; }
+  #location .landscape-filter {
+    top: 0;
+    height: 100%;
+    position: absolute;
+    width: 100%;
+    z-index: 2; }
   #location .landscape {
     bottom: 0;
     position: absolute;
     width: 100%; }
-  #location #buildings {
-    background-color: rgba(176, 156, 201, 0.5);
-    bottom: 0;
-    justify-content: space-between;
-    left: 50%;
-    position: absolute;
-    transform: translate(-50%, 0);
-    width: 100%; }
-    #location #buildings .building {
-      display: flex;
-      flex-direction: column;
-      max-width: 20%; }
-      #location #buildings .building .icon {
-        font-size: 2rem;
-        text-align: center; }
-      #location #buildings .building .name {
-        font-size: 1.5rem; }
+
+#buildings {
+  background-color: rgba(176, 156, 201, 0.5);
+  bottom: 0;
+  justify-content: space-between;
+  left: 50%;
+  position: absolute;
+  transform: translate(-50%, 0);
+  width: 100%;
+  z-index: 5; }
+  #buildings .building {
+    display: flex;
+    flex-direction: column;
+    max-width: 20%; }
+    #buildings .building .icon {
+      font-size: 2rem;
+      text-align: center; }
+    #buildings .building .name {
+      font-size: 1.5rem; }
 
 #local-items {
   display: flex;

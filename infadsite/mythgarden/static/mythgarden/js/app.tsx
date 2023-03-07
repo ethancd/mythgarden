@@ -75,8 +75,8 @@ class App extends React.Component<Partial<AppProps>, AppState> {
       dialogue
     } = this.state.combinedProps
 
-    const colorFilter = getColorFilterByTime(clock.time);
-    const filterFn = filterFuncFactory(colorFilter);
+    const colorFilter = getColorFilterByTime(clock.time)
+    const filterFn = filterFuncFactory(colorFilter)
 
     return (
       <FilterizeColorContext.Provider value={ filterFn }>
@@ -103,8 +103,8 @@ class App extends React.Component<Partial<AppProps>, AppState> {
             </List>
 
             <section id="center-col">
-              <Location {...place}>
-                <List id='buildings' baseColor={colors.lavenderPurple}>
+              <Location {...{...place, colorFilter}}>
+                <List id='buildings' baseColor={colors.lavenderPurpleTranslucent}>
                   {buildings?.map(building => Building(building))}
                 </List>
               </Location>
