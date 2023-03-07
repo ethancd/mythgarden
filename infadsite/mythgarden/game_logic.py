@@ -183,8 +183,8 @@ class ActionGenerator:
         return Action(
             description=f'Give {item_token.name} to {villager.name}',
             action_type=Action.GIVE,
-            target_object=villager,
-            secondary_target_object=item_token,
+            target_villager=villager,
+            target_item=item_token,
             cost_amount=5,
             cost_unit=Action.MIN,
             log_statement='You gave {item_name} to {villager_name}. Looks like they {valence_text}',
@@ -196,7 +196,7 @@ class ActionGenerator:
         return Action(
             description=f'Talk to {villager.name}',
             action_type=Action.TALK,
-            target_object=villager,
+            target_villager=villager,
             cost_amount=villager.talk_duration,
             cost_unit=Action.MIN,
             log_statement=f'You talked to {villager.name}.',
@@ -207,7 +207,7 @@ class ActionGenerator:
         return Action(
             description=f'Sell {item_token.name}',
             action_type=Action.SELL,
-            target_object=item_token,
+            target_item=item_token,
             cost_amount=item_token.price,
             cost_unit=Action.KOIN,
             log_statement=f'You sold {item_token.name} for {item_token.price} koin.',
@@ -218,7 +218,7 @@ class ActionGenerator:
         return Action(
             description=f'Buy {item_token.name}',
             action_type=Action.BUY,
-            target_object=item_token,
+            target_item=item_token,
             cost_amount=item_token.price,
             cost_unit=Action.KOIN,
             log_statement=f'You bought {item_token.name} for {item_token.price} koin.',
@@ -229,7 +229,7 @@ class ActionGenerator:
         return Action(
             description=f'Enter {building.name}',
             action_type=Action.TRAVEL,
-            target_object=building,
+            target_place=building,
             cost_amount=5,
             cost_unit=Action.MIN,
             log_statement=f'You entered {building.name}.',
@@ -240,7 +240,7 @@ class ActionGenerator:
         return Action(
             description=f'Exit {building.name}',
             action_type=Action.TRAVEL,
-            target_object=building.surround,
+            target_place=building.surround,
             cost_amount=5,
             cost_unit=Action.MIN,
             log_statement=f'You exited {building.name} back out to {building.surround.name}.',
@@ -251,7 +251,7 @@ class ActionGenerator:
         return Action(
             description=f'Plant {seed_token.name}',
             action_type=Action.PLANT,
-            target_object=seed_token,
+            target_item=seed_token,
             cost_amount=15,
             cost_unit=Action.MIN,
             log_statement=f'You planted some {seed_token.name} in the field.',
@@ -262,7 +262,7 @@ class ActionGenerator:
         return Action(
             description=f'Water {plant_token.name}',
             action_type=Action.WATER,
-            target_object=plant_token,
+            target_item=plant_token,
             cost_amount=30,
             cost_unit=Action.MIN,
             log_statement=f'You watered the {plant_token.name}.',
@@ -273,7 +273,7 @@ class ActionGenerator:
         return Action(
             description=f'Harvest {crop_token.name}',
             action_type=Action.HARVEST,
-            target_object=crop_token,
+            target_item=crop_token,
             cost_amount=15,
             cost_unit=Action.MIN,
             log_statement=f'You harvested the {crop_token.name}.',
@@ -284,7 +284,7 @@ class ActionGenerator:
         return Action(
             description=f'Walk {display_direction}',
             action_type=Action.TRAVEL,
-            target_object=destination,
+            target_place=destination,
             direction=direction,
             cost_amount=60,
             cost_unit=Action.MIN,
@@ -351,7 +351,7 @@ class ActionExecutor:
     def execute_travel_action(self, action, session):
         """Executes a travel action, which updates the current location and ticks the clock"""
 
-        session.location = action.target_object
+        session.location = action.target_place
         session.clock.advance(action.cost_amount)
         session.messages.create(text=action.log_statement)
 
@@ -368,7 +368,7 @@ class ActionExecutor:
     def execute_talk_action(self, action, session):
         """Executes a talk action, which displays some dialogue, adds to the villager's affinity, and ticks the clock"""
 
-        villager = action.target_object
+        villager = action.target_villager
         villager_state = session.get_villager_state(villager)
 
         dialogue = self.__get_dialogue_for_talk_action(villager_state, villager)
@@ -398,8 +398,8 @@ class ActionExecutor:
         and adds to the villager's affinity"""
         # also want to set villager_state to has_been_gifted so we can't talk to them again till tomorrow
 
-        villager = action.target_object
-        gift = action.secondary_target_object
+        villager = action.target_villager
+        gift = action.target_item
         valence = villager.gift_valence(gift)
         affinity_amount = self.__calc_gift_affinity_change(valence, gift.rarity, villager.friendliness)
 
@@ -440,7 +440,7 @@ class ActionExecutor:
         """Executes a sell action, which removes an item from the hero's inventory
         and adds the price in koin to the hero's wallet"""
 
-        session.inventory.item_tokens.remove(action.target_object)
+        session.inventory.item_tokens.remove(action.target_item)
         session.wallet.money += action.cost_amount
         session.hero.koin_earned += action.cost_amount
 
@@ -457,7 +457,7 @@ class ActionExecutor:
         """Executes a buy action, which adds an item_token to the hero's inventory that's a copy of one in the shop,
         and deducts the price in koin from the hero's wallet"""
 
-        item = action.target_object
+        item = action.target_item
         new_item = item.make_copy()
         new_item.save()
         session.inventory.item_tokens.add(new_item)
@@ -476,8 +476,8 @@ class ActionExecutor:
     def execute_plant_action(self, action, session):
         """Executes a plant action, which moves a seed from the hero's inventory into the session contents"""
 
-        session.inventory.item_tokens.remove(action.target_object)
-        session.location_state.item_tokens.add(action.target_object)
+        session.inventory.item_tokens.remove(action.target_item)
+        session.location_state.item_tokens.add(action.target_item)
 
         session.clock.advance(action.cost_amount)
         session.messages.create(text=action.log_statement)
@@ -492,7 +492,7 @@ class ActionExecutor:
     def execute_water_action(self, action, session):
         """Executes a water action, which sets the item_token's has_been_watered attribute to True"""
 
-        item_token = action.target_object
+        item_token = action.target_item
         item_token.has_been_watered = True
         item_token.save()
 
@@ -509,8 +509,8 @@ class ActionExecutor:
     def execute_harvest_action(self, action, session):
         """Executes a harvest action, which moves a crop from the session contents into the hero's inventory"""
 
-        session.inventory.item_tokens.add(action.target_object)
-        session.location_state.item_tokens.remove(action.target_object)
+        session.inventory.item_tokens.add(action.target_item)
+        session.location_state.item_tokens.remove(action.target_item)
 
         session.clock.advance(action.cost_amount)
 

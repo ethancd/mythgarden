@@ -1,5 +1,3 @@
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
 from ._constants import DIRECTIONS, KOIN_SIGN, FISHING_DESCRIPTION, DIGGING_DESCRIPTION, FORAGING_DESCRIPTION
@@ -74,18 +72,9 @@ class Action(models.Model):
     cost_amount = models.IntegerField(default=1)
     cost_unit = models.CharField(max_length=6, choices=COST_UNITS)
 
-    # let's be real: we should have a target_item (nullable), target_villager (nullable), and target_location (nullable)
-    # goofy over-engineered content_type should be nixed
-
-    content_type = models.ForeignKey(ContentType, on_delete=models.SET_NULL, null=True, blank=True)
-    object_id = models.PositiveIntegerField(null=True, blank=True)
-    target_object = GenericForeignKey('content_type', 'object_id')  # this can be an Item or a Villager
-
-    secondary_content_type = models.ForeignKey(ContentType, on_delete=models.SET_NULL, null=True, blank=True,
-                                               related_name='secondary_content_type')
-    secondary_object_id = models.PositiveIntegerField(null=True, blank=True)
-    secondary_target_object = GenericForeignKey('secondary_content_type',
-                                                'secondary_object_id')  # for when an action requires two objects
+    target_item = models.ForeignKey('ItemToken', on_delete=models.CASCADE, null=True, blank=True)
+    target_villager = models.ForeignKey('Villager', on_delete=models.CASCADE, null=True, blank=True)
+    target_place = models.ForeignKey('Place', on_delete=models.CASCADE, null=True, blank=True)
 
     direction = models.CharField(max_length=5, choices=DIRECTIONS, null=True, blank=True)
 
@@ -131,12 +120,12 @@ class Action(models.Model):
 
     @property
     def unique_digest(self):
-        return f'{self.description}-{self.object_id}'
+        targets_and_pks = []
+        for target in [self.target_item, self.target_villager, self.target_place]:
+            if target:
+                targets_and_pks.append((target.name, target.pk))
+
+        return f'{self.action_type}-{targets_and_pks}'
 
     def is_cost_in_money(self):
         return self.cost_unit in self.MONEY_UNITS
-
-    class Meta:
-        indexes = [
-            models.Index(fields=["content_type", "object_id"]),
-        ]
