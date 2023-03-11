@@ -1,7 +1,6 @@
 import React from 'react'
 import {ActionProps} from "./action";
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export default function ActionStem (this: any, { action, targets }: ActionStemProps): JSX.Element {
   function extractGiftId(digest: string) {
     const matchObj = digest.match(/\w*-(\d+)-\d+/)
@@ -11,18 +10,18 @@ export default function ActionStem (this: any, { action, targets }: ActionStemPr
     return giftId
   }
 
-  const giftId = extractGiftId(action.unique_digest)
+  const giftId = extractGiftId(action.uniqueDigest)
 
   return (
         <li
             className='action action-stem'
-            key={action.unique_digest}
+            key={action.uniqueDigest}
             data-gift-id={giftId}
             data-villager-names={targets}
         >
             <span className='type'>{action.emoji}</span>&nbsp;
             <span className="description">{action.description}</span>
-            <span className="cost">{action.display_cost}</span>
+            <span className="cost">{action.displayCost}</span>
         </li>
   )
 }

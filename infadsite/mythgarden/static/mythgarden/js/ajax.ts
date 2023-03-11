@@ -33,7 +33,7 @@ async function postAction (uniqueDigest: string): Promise<void> {
         throw response
       }
 
-      if (response.game_over != null) {
+      if (response.gameOver != null) {
         window.location.href = '/'
         return
       }

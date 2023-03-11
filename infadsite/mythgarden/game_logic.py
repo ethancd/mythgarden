@@ -45,11 +45,11 @@ class ActionGenerator:
         except Building.DoesNotExist:
             pass
 
-        if len(buildings) > 0:
-            available_actions += self.gen_enter_actions(buildings)
-
         if len(bridges) > 0:
             available_actions += self.gen_travel_actions(place, bridges)
+
+        if len(buildings) > 0:
+            available_actions += self.gen_enter_actions(buildings)
 
         if place.place_type == FARM:
             available_actions += self.gen_farming_actions(contents, inventory)
@@ -362,8 +362,8 @@ class ActionExecutor:
             'place': session.location,
             'clock': session.clock,
             'buildings': list(session.location.buildings.all()),
-            'local_item_tokens': list(session.local_item_tokens.all()),
-            'villager_states': list(session.occupant_states.all()),
+            'localItemTokens': list(session.local_item_tokens.all()),
+            'villagerStates': list(session.occupant_states.all()),
         }
 
     def execute_talk_action(self, action, session):
@@ -390,7 +390,7 @@ class ActionExecutor:
         return {
             'hero': session.hero,
             'clock': session.clock,
-            'villager_states': list(session.occupant_states.all()),
+            'villagerStates': list(session.occupant_states.all()),
             'dialogue': dialogue,
         }
 
@@ -433,7 +433,7 @@ class ActionExecutor:
         return {
             'hero': session.hero,
             'inventory': list(session.inventory.item_tokens.all()),
-            'villager_states': list(session.occupant_states.all()),
+            'villagerStates': list(session.occupant_states.all()),
             'dialogue': dialogue,
         }
 
@@ -471,7 +471,7 @@ class ActionExecutor:
         return {
             'wallet': session.wallet,
             'inventory': list(session.inventory.item_tokens.all()),
-            'local_item_tokens': list(session.local_item_tokens.all()),
+            'localItemTokens': list(session.local_item_tokens.all()),
         }
 
     def execute_plant_action(self, action, session):
@@ -487,7 +487,7 @@ class ActionExecutor:
         return {
             'clock': session.clock,
             'inventory': list(session.inventory.item_tokens.all()),
-            'local_item_tokens': list(session.local_item_tokens.all()),
+            'localItemTokens': list(session.local_item_tokens.all()),
         }
 
     def execute_water_action(self, action, session):
@@ -504,7 +504,7 @@ class ActionExecutor:
 
         return {
             'clock': session.clock,
-            'local_item_tokens': list(session.local_item_tokens.all()),
+            'localItemTokens': list(session.local_item_tokens.all()),
         }
 
     def execute_harvest_action(self, action, session):
@@ -521,7 +521,7 @@ class ActionExecutor:
         return {
             'clock': session.clock,
             'inventory': list(session.inventory.item_tokens.all()),
-            'local_item_tokens': list(session.local_item_tokens.all()),
+            'localItemTokens': list(session.local_item_tokens.all()),
         }
 
     def execute_gather_action(self, action, session):

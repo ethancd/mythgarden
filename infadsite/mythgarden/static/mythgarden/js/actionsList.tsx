@@ -10,7 +10,7 @@ function ActionsList ({ actions }: ActionsListProps): JSX.Element {
     const actionStemMap: Record<string, string[]> = {}
 
     actions.forEach((action) => {
-      if (action.target_count <= 1) {
+      if (action.targetCount <= 1) {
         newActionsList.push(action)
         return;
       }

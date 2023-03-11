@@ -13,7 +13,7 @@ import { Location, type LocationProps } from './location'
 import { Message, type MessageProps } from './message'
 import Section from './section'
 import { Sun, Moon } from './sky'
-import {Villager, VillagerData, type VillagerProps} from './villager'
+import {Villager, VillagerData } from './villager'
 import {VillagersList} from "./villagersList";
 import Wallet from './wallet'
 
@@ -119,11 +119,9 @@ class App extends React.Component<Partial<AppProps>, AppState> {
       actions,
       place,
       buildings,
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      local_item_tokens,
+      localItemTokens,
       messages,
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      villager_states,
+      villagerStates,
       dialogue
     } = this.state.combinedProps
 
@@ -142,7 +140,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
             <Clock display={clock.display}></Clock>
             <div id='sky-container'>
                 <Sun time={clock.time}></Sun>
-                <Moon time={clock.time} day_number={clock.day_number}></Moon>
+                <Moon time={clock.time} dayNumber={clock.dayNumber}></Moon>
             </div>
           </Section>
 
@@ -165,7 +163,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
               </Location>
 
               <List id='local-items' baseColor={colors.sandyBrown}>
-                {(local_item_tokens?.length > 0) ? this.mapItemsWithEmptySlots(local_item_tokens) : null}
+                {(localItemTokens?.length > 0) ? this.mapItemsWithEmptySlots(localItemTokens) : null}
               </List>
 
               <section id='footer'>
@@ -176,7 +174,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
               </section>
             </section>
 
-            <VillagersList villagers={villager_states}
+            <VillagersList villagers={villagerStates}
                            activeGiftId={activeGiftId}
                            activeVillagerNames={activeVillagerNames}></VillagersList>
           </div>
@@ -193,10 +191,10 @@ interface AppProps {
   dialogue: DialogueProps | null
   hero: HeroProps
   inventory: ItemProps[]
-  local_item_tokens: ItemProps[]
+  localItemTokens: ItemProps[]
   messages: MessageProps[]
   place: LocationProps
-  villager_states: VillagerData[]
+  villagerStates: VillagerData[]
   wallet: string
 }
 

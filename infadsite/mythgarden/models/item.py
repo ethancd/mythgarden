@@ -83,7 +83,7 @@ class ItemToken(models.Model):
             'name': self.name,
             'rarity': self.item.get_rarity_display(),
             'emoji': self.emoji,
-            'has_been_watered': self.has_been_watered,
+            'hasBeenWatered': self.has_been_watered,
             'id': self.id,
         }
 

@@ -2,16 +2,15 @@
 
 import React from 'react'
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export default function Message ({ text, is_error, id }: MessageProps): JSX.Element {
+export default function Message ({ text, isError, id }: MessageProps): JSX.Element {
   return (
-    <div className={`message${is_error ? ' error' : ''}`} key={id}>{text}</div>
+    <div className={`message${isError ? ' error' : ''}`} key={id}>{text}</div>
   )
 }
 
 interface MessageProps {
   text: string
-  is_error: boolean
+  isError: boolean
   id: number
 }
 

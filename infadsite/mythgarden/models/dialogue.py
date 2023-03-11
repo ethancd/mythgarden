@@ -31,8 +31,8 @@ class DialogueLine(models.Model):
     def serialize(self):
         return {
             'name': self.speaker.name,
-            'image_url': self.speaker.image_url,
-            'full_text': self.full_text,
+            'imageUrl': self.speaker.image_url,
+            'fullText': self.full_text,
             'id': self.id,
         }
 

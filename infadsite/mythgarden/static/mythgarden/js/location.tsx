@@ -5,8 +5,7 @@ import Color from 'color'
 import { type ColorFilter } from './lightColorLogic'
 
 const MAX_FILTER_OPACITY = 0.5;
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export default function Location ({ name, image_url, colorFilter, children }: React.PropsWithChildren<LocationProps & HasColorFilter>): JSX.Element {
+export default function Location ({ name, imageUrl, colorFilter, children }: React.PropsWithChildren<LocationProps & HasColorFilter>): JSX.Element {
   const backgroundColor = Color.rgb(colorFilter.rgbTemperature).darken(colorFilter.shadeBy).hex()
   const opacity = Math.min(colorFilter.shadeBy, MAX_FILTER_OPACITY)
 
@@ -17,7 +16,7 @@ export default function Location ({ name, image_url, colorFilter, children }: Re
               backgroundColor,
               opacity,
             }}></div>
-            <img className="landscape" src={image_url}></img>
+            <img className="landscape" src={imageUrl}></img>
             {children}
         </div>
   )
@@ -25,7 +24,7 @@ export default function Location ({ name, image_url, colorFilter, children }: Re
 
 interface LocationProps {
   name: string
-  image_url: string
+  imageUrl: string
 }
 
 interface HasColorFilter {

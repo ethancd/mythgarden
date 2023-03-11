@@ -4,8 +4,7 @@ import React, { useState, useContext } from 'react'
 import colors from './_colors'
 import { FilterizeColorContext } from "./lightColorLogic";
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export default function Dialogue ({ name, image_url, full_text }: DialogueProps): JSX.Element {
+export default function Dialogue ({ name, imageUrl, fullText }: DialogueProps): JSX.Element {
   const [show, setShow] = useState(true)
   const filterizeColor = useContext(FilterizeColorContext)
   const backgroundColor = filterizeColor(colors.parchment)
@@ -15,11 +14,11 @@ export default function Dialogue ({ name, image_url, full_text }: DialogueProps)
             <div id="dialogue" style={{ display: 'flex', backgroundColor }} onClick={() => { setShow(false) }}>
                 <div className="speaker">
                   <div className="portrait">
-                    <img src={image_url}></img>
+                    <img src={imageUrl}></img>
                   </div>
                   <span className="name">{name}</span>
                 </div>
-                <span className="dialogue-text">{full_text}</span>
+                <span className="dialogue-text">{fullText}</span>
             </div>
     )
   } else {
@@ -29,8 +28,8 @@ export default function Dialogue ({ name, image_url, full_text }: DialogueProps)
 
 interface DialogueProps {
   name: string
-  image_url: string
-  full_text: string
+  imageUrl: string
+  fullText: string
 }
 
 export { Dialogue, type DialogueProps }

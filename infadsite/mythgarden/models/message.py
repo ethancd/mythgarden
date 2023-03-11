@@ -13,7 +13,7 @@ class Message(models.Model):
         return {
             'text': self.text,
             'id': self.id,
-            'is_error': self.is_error
+            'isError': self.is_error
         }
 
     @property

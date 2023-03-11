@@ -46,7 +46,7 @@ def action(request):
 
     if session.game_over:
         EventOperator().trigger_game_over(session)
-        return JsonResponse({'game_over': True})
+        return JsonResponse({'gameOver': True})
     else:
         results = {model_name: custom_serialize(data) for model_name, data in updated_models.items()}
         return JsonResponse(results)

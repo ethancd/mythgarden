@@ -40,7 +40,7 @@ class Place(models.Model):
     def serialize(self):
         return {
             'name': self.name,
-            'image_url': self.image_url,
+            'imageUrl': self.image_url,
             'id': self.id,
         }
 

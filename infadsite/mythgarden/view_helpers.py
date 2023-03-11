@@ -34,8 +34,8 @@ def get_home_models(session):
         'place': session.location,
         'inventory': session.inventory.item_tokens.all(),
         'buildings': session.location.buildings.all(),
-        'local_item_tokens': session.local_item_tokens.all(),
-        'villager_states': session.occupant_states.all(),
+        'localItemTokens': session.local_item_tokens.all(),
+        'villagerStates': session.occupant_states.all(),
     }
 
 

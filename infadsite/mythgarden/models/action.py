@@ -87,10 +87,10 @@ class Action(models.Model):
     def serialize(self):
         return {
             'description': self.description,
-            'display_cost': self.display_cost,
+            'displayCost': self.display_cost,
             'emoji': self.emoji,
-            'unique_digest': self.unique_digest,
-            'target_count': self.target_count
+            'uniqueDigest': self.unique_digest,
+            'targetCount': self.target_count
         }
 
     @property

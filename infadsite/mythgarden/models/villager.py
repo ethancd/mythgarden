@@ -37,7 +37,7 @@ class Villager(models.Model):
     def serialize(self):
         return {
             'name': self.name,
-            'image_url': self.image_url
+            'imageUrl': self.image_url
         }
 
     @property
@@ -105,7 +105,7 @@ class VillagerState(models.Model):
             'villager': self.villager.serialize(),
             'affinity': self.display_affinity,
             'name': self.villager.name,
-            'image_url': self.villager.image_url,
+            'imageUrl': self.villager.image_url,
             'description': self.villager.description,
             'id': self.villager.id,
             'location': self.location.serialize(),

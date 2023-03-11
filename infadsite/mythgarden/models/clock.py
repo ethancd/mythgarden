@@ -18,7 +18,7 @@ class Clock(models.Model):
         return {
             'display': self.display,
             'time': self.time,
-            'day_number': self.day_index
+            'dayNumber': self.day_index
         }
 
     @property

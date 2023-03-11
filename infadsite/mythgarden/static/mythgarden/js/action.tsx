@@ -1,19 +1,18 @@
 import React from 'react'
 import { postAction } from './ajax'
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export default function Action (this: any, { description, emoji, display_cost, unique_digest }: ActionProps): JSX.Element {
-  const postThisAction = postAction.bind(this, unique_digest)
+export default function Action (this: any, { description, emoji, displayCost, uniqueDigest }: ActionProps): JSX.Element {
+  const postThisAction = postAction.bind(this, uniqueDigest)
 
   return (
         <li
             onClick={() => { void postThisAction() }}
             className='action'
-            key={unique_digest}
+            key={uniqueDigest}
         >
             <span className='type'>{emoji}</span>&nbsp;
             <span className="description">{description}</span>
-            <span className="cost">{display_cost}</span>
+            <span className="cost">{displayCost}</span>
         </li>
   )
 }
@@ -21,9 +20,9 @@ export default function Action (this: any, { description, emoji, display_cost, u
 interface ActionProps {
   description: string
   emoji: string
-  display_cost: string
-  unique_digest: string
-  target_count: number
+  displayCost: string
+  uniqueDigest: string
+  targetCount: number
 }
 
 export { Action, type ActionProps }

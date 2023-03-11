@@ -60,8 +60,7 @@ function Sun ({ time }: Pick<ClockProps, 'time'>): JSX.Element | null {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-function Moon ({ time, day_number }: Pick<ClockProps, 'time' | 'day_number'>): JSX.Element | null {
+function Moon ({ time, dayNumber }: Pick<ClockProps, 'time' | 'dayNumber'>): JSX.Element | null {
   const isMoonVisible = time < MOON_BYE || time > MOON_HI
 
   const isMoonUp = time <= SUNRISE || time >= SUNSET
@@ -84,14 +83,13 @@ function Moon ({ time, day_number }: Pick<ClockProps, 'time' | 'day_number'>): J
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  function getPhaseWidth (day_number: number): number {
-    return INITIAL_PHASE_WIDTH - (PHASE_WIDTH_STEP * day_number)
+  function getPhaseWidth (dayNumber: number): number {
+    return INITIAL_PHASE_WIDTH - (PHASE_WIDTH_STEP * dayNumber)
   }
 
   const x = getX(time)
   const y = getY(x)
-  const phaseWidth = getPhaseWidth(day_number)
+  const phaseWidth = getPhaseWidth(dayNumber)
 
   if (isMoonVisible) {
     return (

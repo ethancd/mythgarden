@@ -20,10 +20,10 @@ class Hero(models.Model):
     def serialize(self):
         return {
             'score': self.score,
-            'koin_earned': self.koin_earned,
-            'hearts_earned': self.hearts_earned,
+            'koinEarned': self.koin_earned,
+            'heartsEarned': self.hearts_earned,
             'name': self.name,
-            'image_url': self.image_url,
+            'imageUrl': self.image_url,
         }
 
     @property

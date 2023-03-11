@@ -11,7 +11,7 @@ export default function Clock ({ display }: Pick<ClockProps, 'display'>): JSX.El
 interface ClockProps {
   display: string
   time: number
-  day_number: number
+  dayNumber: number
 }
 
 export { Clock, type ClockProps }
