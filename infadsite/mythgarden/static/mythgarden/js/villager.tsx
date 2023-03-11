@@ -1,11 +1,23 @@
 'use strict'
 
 import React from 'react'
+import { postAction } from './ajax'
+
+const GIFT_DIGEST_TEMPLATE = `GIVE-giftId-villagerId`
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-export default function Villager ({ name, image_url, affinity, description, id }: VillagerProps): JSX.Element {
+export default function Villager ({ name, image_url, affinity, description, id, activeGiftId }: VillagerProps): JSX.Element {
+  function giveGift(): void {
+    console.log(activeGiftId)
+    if (activeGiftId == null) return
+
+    const digest = GIFT_DIGEST_TEMPLATE.replace('giftId', `${activeGiftId}`).replace('villagerId',  `${id}`)
+    console.log(digest)
+    void postAction(digest)
+  }
+
   return (
-    <li className="villager" key={id}>
+    <li className={`villager${activeGiftId != null ? ' highlighted' : ''}`} key={id} onClick={giveGift}>
       <div className="row">
         <div className="portrait">
           <img src={image_url}></img>
@@ -20,7 +32,9 @@ export default function Villager ({ name, image_url, affinity, description, id }
   )
 }
 
-interface VillagerProps {
+type VillagerProps = VillagerData & VillagerExtras
+
+interface VillagerData {
   name: string
   image_url: string
   affinity: string
@@ -28,4 +42,8 @@ interface VillagerProps {
   id: number
 }
 
-export { Villager, type VillagerProps }
+interface VillagerExtras {
+  activeGiftId: number | null
+}
+
+export { Villager, type VillagerProps, type VillagerData }

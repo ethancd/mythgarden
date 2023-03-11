@@ -4,7 +4,6 @@ import { postAction } from './ajax'
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export default function Action (this: any, { description, emoji, display_cost, unique_digest }: ActionProps): JSX.Element {
   const postThisAction = postAction.bind(this, unique_digest)
-  console.log(unique_digest)
 
   return (
         <li
@@ -24,6 +23,7 @@ interface ActionProps {
   emoji: string
   display_cost: string
   unique_digest: string
+  target_count: number
 }
 
 export { Action, type ActionProps }

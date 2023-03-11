@@ -38,6 +38,19 @@ class ActionGenerator:
         buildings = list(place.buildings.all())
         bridges = list(Bridge.objects.filter(place_1=place) | Bridge.objects.filter(place_2=place))
 
+        try:
+            building = place.building
+            if building.surround is not None:
+                available_actions += [self.gen_exit_action(building)]
+        except Building.DoesNotExist:
+            pass
+
+        if len(buildings) > 0:
+            available_actions += self.gen_enter_actions(buildings)
+
+        if len(bridges) > 0:
+            available_actions += self.gen_travel_actions(place, bridges)
+
         if place.place_type == FARM:
             available_actions += self.gen_farming_actions(contents, inventory)
 
@@ -46,19 +59,6 @@ class ActionGenerator:
 
         if place.place_type in WILD_TYPES:
             available_actions += self.gen_gather_actions(place)
-
-        if len(buildings) > 0:
-            available_actions += self.gen_enter_actions(buildings)
-
-        try:
-            building = place.building
-            if building.surround is not None:
-                available_actions += [self.gen_exit_action(building)]
-        except Building.DoesNotExist:
-            pass
-
-        if len(bridges) > 0:
-            available_actions += self.gen_travel_actions(place, bridges)
 
         if len(villager_states) > 0:
             available_actions += self.gen_social_actions(villager_states, inventory)
@@ -165,18 +165,19 @@ class ActionGenerator:
         guard_types(villager_states, VillagerState)
         guard_types(inventory, ItemToken)
 
-        actions = []
+        talk_actions = []
+        gift_actions = []
 
         for villager_state in villager_states:
             villager = villager_state.villager
             if not villager_state.has_been_talked_to:
-                actions.append(self.gen_talk_action(villager))
+                talk_actions.append(self.gen_talk_action(villager))
 
             if not villager_state.has_been_given_gift:
                 for item_token in inventory:
-                    actions.append(self.gen_give_action(item_token, villager))
+                    gift_actions.append(self.gen_give_action(item_token, villager))
 
-        return actions
+        return talk_actions + gift_actions
 
     def gen_give_action(self, item_token, villager):
         """Returns an action that gives passed item to passed villager"""

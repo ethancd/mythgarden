@@ -9,7 +9,9 @@ export default function Section ({ id, baseColor, children }: React.PropsWithChi
   const backgroundColor = filterizeColor(baseColor)
 
   return (
-        <section id={id} className={ Color(backgroundColor).isDark() ? 'dark-mode' : ''} style={{ backgroundColor }}>
+        <section id={id}
+                 className={ Color(backgroundColor).isDark() ? 'dark-mode' : ''}
+                 style={{ backgroundColor }}>
             {children}
         </section>
   )

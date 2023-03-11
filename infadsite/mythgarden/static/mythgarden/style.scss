@@ -487,6 +487,20 @@ ul {
   .villager {
     @include column;
 
+    &.highlighted {
+      cursor: pointer;
+      background-color: #ffffffaa;
+      box-sizing: border-box;
+      border: 2px solid gold;
+      box-shadow: 0 0 0.5rem 0 gold;
+
+      &:hover {
+        background-color: #00000044;
+        box-shadow: 0 0 0.5rem 0 darken(gold, 10%);
+        border-color: darken(gold, 10%);
+      }
+    }
+
     .portrait {
       border: 2px solid #008f11;
       height: 2.5rem;

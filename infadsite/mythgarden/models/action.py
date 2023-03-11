@@ -90,6 +90,7 @@ class Action(models.Model):
             'display_cost': self.display_cost,
             'emoji': self.emoji,
             'unique_digest': self.unique_digest,
+            'target_count': self.target_count
         }
 
     @property
@@ -120,12 +121,13 @@ class Action(models.Model):
 
     @property
     def unique_digest(self):
-        targets_and_pks = []
-        for target in [self.target_item, self.target_villager, self.target_place]:
-            if target:
-                targets_and_pks.append((target.name, target.pk))
+        pks = [f'{target.pk}' for target in [self.target_item, self.target_villager, self.target_place] if target]
 
-        return f'{self.action_type}-{targets_and_pks}'
+        return f'{self.action_type}-{"-".join(pks)}'
+
+    @property
+    def target_count(self):
+        return sum(1 for t in [self.target_item, self.target_villager, self.target_place] if t)
 
     def is_cost_in_money(self):
         return self.cost_unit in self.MONEY_UNITS

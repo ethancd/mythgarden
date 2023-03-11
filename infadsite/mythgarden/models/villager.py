@@ -107,7 +107,7 @@ class VillagerState(models.Model):
             'name': self.villager.name,
             'image_url': self.villager.image_url,
             'description': self.villager.description,
-            'id': self.id,
+            'id': self.villager.id,
             'location': self.location.serialize(),
         }
 
