@@ -10,6 +10,9 @@ $parchment: #fcf5ef;
 $dusty-pink: #ffd1d8;
 $white-yellow: #fff5e5;
 $blue-moon-gray: #90c0df;
+$neon-yellow: #ffff33;
+$neon-orange: #ff5f1f;
+$neon-red: #ff3131;
 
 $dark-text: #333;
 $light-text: #eee;
@@ -161,6 +164,18 @@ ul {
   @include game-element;
   font-size: $medium-text;
   margin: $small-gutter;
+
+  &.late {
+    color: $neon-yellow;
+  }
+
+  &.very-late {
+    color: $neon-orange;
+  }
+
+  &.very-very-late {
+    color: $neon-red;
+  }
 }
 
 #sky-container {

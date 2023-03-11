@@ -137,7 +137,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
           <Section id="top-bar" baseColor={colors.skyBlue}>
             <Hero {...hero}></Hero>
             <h1 id="logo">Mythgarden</h1>
-            <Clock display={clock.display}></Clock>
+            <Clock display={clock.display} time={clock.time}></Clock>
             <div id='sky-container'>
                 <Sun time={clock.time}></Sun>
                 <Moon time={clock.time} dayNumber={clock.dayNumber}></Moon>

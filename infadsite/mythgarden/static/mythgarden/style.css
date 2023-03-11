@@ -96,6 +96,12 @@ ul {
   z-index: 2;
   font-size: 2rem;
   margin: 0.5rem; }
+  #clock.late {
+    color: #ffff33; }
+  #clock.very-late {
+    color: #ff5f1f; }
+  #clock.very-very-late {
+    color: #ff3131; }
 
 #sky-container {
   width: calc(100% - 4rem);
