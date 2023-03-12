@@ -6,8 +6,8 @@ from ._constants import IMAGE_PREFIX
 
 class Hero(models.Model):
     session = models.OneToOneField('Session', on_delete=models.CASCADE, primary_key=True)
-    name = models.CharField(max_length=255, default='Squall')
-    image_path = models.CharField(max_length=255, default='portraits/squall-farmer.png')
+    name = models.CharField(max_length=255, default='New Farmer')
+    image_path = models.CharField(max_length=255, default='portraits/default.png')
 
     koin_earned = models.IntegerField(default=0)
     hearts_earned = models.IntegerField(default=0)

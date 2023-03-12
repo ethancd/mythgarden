@@ -18,7 +18,7 @@ class Villager(models.Model):
     full_name = models.CharField(max_length=255, null=True, blank=True)
     description = models.CharField(max_length=255, null=True, blank=True)
     friendliness = models.IntegerField(default=4, validators=[MinValueValidator(1), MaxValueValidator(7)])
-    image_path = models.CharField(max_length=255, default='portraits/squall-farmer.png', null=True, blank=True)
+    image_path = models.CharField(max_length=255, default='portraits/default.png', null=True, blank=True)
     home = models.ForeignKey(Building, on_delete=models.SET_NULL, null=True, blank=True, related_name='residents')
 
     item_type_preferences = models.ManyToManyField('ItemTypePreference', blank=True, related_name='preferred_by')
