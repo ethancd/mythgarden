@@ -13,7 +13,7 @@ class PlaceManager(models.Manager):
 
 class Place(models.Model):
     name = models.CharField(max_length=255, unique=True)
-    image_path = models.CharField(max_length=255, default='places/idyllic-green-farm.png')
+    image_path = models.CharField(max_length=255, default='places/farm-unsplash.jpeg')
 
     ITEM_POOL_TYPE_MAP = {
         MOUNTAIN: [MINERAL, ARTIFACT],
