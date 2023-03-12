@@ -20,11 +20,13 @@ $light-text: #eee;
 /* sizes */
 $fine-text: 0.75rem;
 $small-text: 1rem;
+$smallish-text: 1.25rem;
 $med-small-text: 1.5rem;
 $medium-text: 2rem;
 $med-large-text: 3rem;
 $large-text: 4rem;
 
+$fine-gutter: 0.25rem;
 $small-gutter: 0.5rem;
 $medium-gutter: 1rem;
 
@@ -537,6 +539,41 @@ ul {
 
     .description {
       font-size: $fine-text;
+    }
+
+    .affinity-container {
+      height: $smallish-text;
+      display: flex;
+      gap: $fine-gutter;
+
+      .heart {
+        display: inline-block;
+        height: 100%;
+
+        img {
+          height: $smallish-text;
+          width: auto;
+        }
+      }
+
+      .partial-container {
+        display: inline-block;
+        height: 100%;
+        position: relative;
+        z-index: 2;
+      }
+
+      .partial {
+        overflow: hidden;
+        width: calc($smallish-text * 1.2); // hard-coded h->w ratio of the heart image
+        position: absolute;
+        bottom: 0;
+
+        img {
+          bottom: 0;
+          position: absolute;
+        }
+      }
     }
   }
 }

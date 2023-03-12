@@ -103,12 +103,15 @@ class VillagerState(models.Model):
     def serialize(self):
         return {
             'villager': self.villager.serialize(),
-            'affinity': self.display_affinity,
+            'affinity': {
+                'wholeHearts': self.affinity_tier,
+                'extraHeartFraction': self.affinity_fraction_of_next_tier,
+                'maxHearts': self.TOTAL_TIERS
+            },
             'name': self.villager.name,
             'imageUrl': self.villager.image_url,
             'description': self.villager.description,
             'id': self.villager.id,
-            'location': self.location.serialize(),
         }
 
     @property
@@ -117,6 +120,10 @@ class VillagerState(models.Model):
         empty_hearts = ['🖤' for _ in range(self.TOTAL_TIERS - self.affinity_tier)]
 
         return ''.join(full_hearts + empty_hearts)
+
+    @property
+    def affinity_fraction_of_next_tier(self):
+        return (self.affinity / self.AFFINITY_TIER_SIZE) - self.affinity_tier
 
     @property
     def affinity_tier(self):

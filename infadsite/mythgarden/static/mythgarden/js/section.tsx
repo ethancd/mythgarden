@@ -1,15 +1,16 @@
 'use strict'
 
-import React, { useContext } from 'react'
+import React, {SyntheticEvent, useContext} from 'react'
 import Color from 'color'
 import {FilterizeColorContext} from "./lightColorLogic";
 
-export default function Section ({ id, baseColor, children }: React.PropsWithChildren<SectionProps>): JSX.Element {
+export default function Section ({ id, baseColor, children, handleClick }: React.PropsWithChildren<SectionProps>): JSX.Element {
   const filterizeColor = useContext(FilterizeColorContext)
   const backgroundColor = filterizeColor(baseColor)
 
   return (
         <section id={id}
+                 onClick={handleClick}
                  className={ Color(backgroundColor).isDark() ? 'dark-mode' : ''}
                  style={{ backgroundColor }}>
             {children}
@@ -20,4 +21,5 @@ export default function Section ({ id, baseColor, children }: React.PropsWithChi
 interface SectionProps {
   id: string
   baseColor: string
+  handleClick?: (e: SyntheticEvent) => void
 }

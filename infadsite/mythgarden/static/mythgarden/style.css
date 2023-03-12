@@ -370,5 +370,28 @@ ul {
       justify-content: space-between; }
     #villagers .villager .description {
       font-size: 0.75rem; }
+    #villagers .villager .affinity-container {
+      height: 1.25rem;
+      display: flex;
+      gap: 0.25rem; }
+      #villagers .villager .affinity-container .heart {
+        display: inline-block;
+        height: 100%; }
+        #villagers .villager .affinity-container .heart img {
+          height: 1.25rem;
+          width: auto; }
+      #villagers .villager .affinity-container .partial-container {
+        display: inline-block;
+        height: 100%;
+        position: relative;
+        z-index: 2; }
+      #villagers .villager .affinity-container .partial {
+        overflow: hidden;
+        width: calc($smallish-text * 1.2);
+        position: absolute;
+        bottom: 0; }
+        #villagers .villager .affinity-container .partial img {
+          bottom: 0;
+          position: absolute; }
 
 /*# sourceMappingURL=style.css.map */

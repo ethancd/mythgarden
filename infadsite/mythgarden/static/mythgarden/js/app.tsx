@@ -52,11 +52,13 @@ class App extends React.Component<Partial<AppProps>, AppState> {
     this.scrollToMessageBottom()
   }
 
+  // might be nice to move this to a MessagesList component and just do it on render there
   scrollToMessageBottom (): void {
     const messageContainer = document.getElementById('message-log') as HTMLElement
     messageContainer.scrollTop = messageContainer.scrollHeight
   }
 
+  // might be nice to move this to an ItemsList component
   mapItemsWithEmptySlots (items: ItemProps[]): JSX.Element[] {
     const paddedItems = items.concat(Array(MAX_ITEMS - items.length).fill(null))
 
@@ -71,7 +73,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
     return componentDomNode
   }
 
-  getActionClickData(dataset: DOMStringMap): ActionClickData {
+  marshalActionClickData(dataset: DOMStringMap): ActionClickData {
     const giftId = dataset.giftId == null ? null : parseInt(dataset.giftId)
     const villagerNames = dataset.villagerNames == null ? [] : dataset.villagerNames.split(',')
 
@@ -82,13 +84,14 @@ class App extends React.Component<Partial<AppProps>, AppState> {
   }
 
   handleClick (e: SyntheticEvent): void {
+    console.log('clicked')
     this.clearHighlights()
 
     const componentTarget = this.getComponentTarget(e)
     if (componentTarget == null) return
 
     if (componentTarget.classList.contains('action-stem')) {
-      const actionClickData = this.getActionClickData(componentTarget.dataset)
+      const actionClickData = this.marshalActionClickData(componentTarget.dataset)
 
       this.highlightTargetVillagers(actionClickData)
     }
@@ -132,7 +135,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
 
     return (
       <FilterizeColorContext.Provider value={ filterFn }>
-        <Section id="page" baseColor={colors.whiteYellow}>
+        <Section id="page" baseColor={colors.whiteYellow} handleClick={this.handleClick.bind(this)}>
 
           <Section id="top-bar" baseColor={colors.skyBlue}>
             <Hero {...hero}></Hero>

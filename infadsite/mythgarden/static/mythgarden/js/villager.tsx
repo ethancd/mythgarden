@@ -2,16 +2,15 @@
 
 import React from 'react'
 import { postAction } from './ajax'
+import {Affinity, AffinityProps} from "./affinity";
 
 const GIFT_DIGEST_TEMPLATE = `GIVE-giftId-villagerId`
 
 export default function Villager ({ name, imageUrl, affinity, description, id, activeGiftId }: VillagerProps): JSX.Element {
   function giveGift(): void {
-    console.log(activeGiftId)
     if (activeGiftId == null) return
 
     const digest = GIFT_DIGEST_TEMPLATE.replace('giftId', `${activeGiftId}`).replace('villagerId',  `${id}`)
-    console.log(digest)
     void postAction(digest)
   }
 
@@ -23,7 +22,7 @@ export default function Villager ({ name, imageUrl, affinity, description, id, a
         </div>
         <div className="column">
           <span className="name">{name}</span>
-          <span className="affinity">{affinity}</span>
+          <Affinity {...affinity}></Affinity>
         </div>
       </div>
       <span className="description">{description}</span>
@@ -36,9 +35,9 @@ type VillagerProps = VillagerData & VillagerExtras
 interface VillagerData {
   name: string
   imageUrl: string
-  affinity: string
   description: string
   id: number
+  affinity: AffinityProps
 }
 
 interface VillagerExtras {
