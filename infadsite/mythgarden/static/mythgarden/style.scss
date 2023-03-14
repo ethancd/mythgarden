@@ -10,9 +10,12 @@ $parchment: #fcf5ef;
 $dusty-pink: #ffd1d8;
 $white-yellow: #fff5e5;
 $blue-moon-gray: #90c0df;
+$off-black-gray: #333;
+$off-white-gray: #ddd;
 $neon-yellow: #ffff33;
 $neon-orange: #ff5f1f;
 $neon-red: #ff3131;
+$invisible: #ffffff00;
 
 $dark-text: #333;
 $light-text: #eee;
@@ -34,7 +37,7 @@ $medium-gutter: 1rem;
 
 body, html {
   color: $dark-text;
-  font-family: "Roboto Mono", Roboto, sans-serif;
+  font-family: Montserrat, Verdana, sans-serif;
   font-size: $small-text;
   margin: 0;
   padding: 0;
@@ -58,6 +61,18 @@ h1, h2, h3 {
 
   &.dark-mode {
     color: $light-text;
+
+    #actions {
+      .action {
+        border-color: $off-white-gray;
+      }
+    }
+
+    #location {
+      h2.name {
+        background-color: #000000aa;
+      }
+    }
   }
 }
 
@@ -271,24 +286,27 @@ ul {
     flex-grow: 1;
 
     &.empty-slot {
-      border-color: beige;
+      border-color: $invisible;
       opacity: 0.5;
     }
 
     &.common {
-      border-color: sandybrown;
+      border-color: $invisible;
     }
 
     &.uncommon {
       border-color: limegreen;
+      background-color: fade-out(limegreen, 0.5);
     }
 
     &.rare {
       border-color: dodgerblue;
+      background-color: fade-out(dodgerblue, 0.5);
     }
 
     &.epic {
       border-color: rebeccapurple;
+      background-color: fade-out(rebeccapurple, 0.5);
     }
 
     .type {
@@ -328,17 +346,16 @@ ul {
 #actions {
   @include column;
   background-color: pink;
-  gap: $small-gutter;
   width: 20%;
   overflow-y: auto;
 
   .action {
-    border: 2px solid lightpink;
-    box-sizing: border-box;
+    border-bottom: 1px solid $off-black-gray;
     cursor: pointer;
     display: flex;
     font-size: $small-text;
     justify-content: space-between;
+    padding: $small-gutter 0;
     width: 100%;
 
     span {
@@ -388,14 +405,6 @@ ul {
     bottom: 0;
     position: absolute;
     width: 100%;
-  }
-}
-
-.dark-mode {
-  #location {
-    h2.name {
-      background-color: #000000aa;
-    }
   }
 }
 
@@ -496,6 +505,10 @@ ul {
     padding-bottom: $small-gutter;
     margin-top: $small-gutter;
     border-bottom: 1px solid darkgreen;
+
+    &:last-child {
+      border: none;
+    }
 
     &.error {
       color: darkred;

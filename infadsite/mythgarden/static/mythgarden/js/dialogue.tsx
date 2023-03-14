@@ -32,4 +32,6 @@ interface DialogueProps {
   fullText: string
 }
 
-export { Dialogue, type DialogueProps }
+type DialogueData = DialogueProps & { id: number }
+
+export { Dialogue, type DialogueProps, type DialogueData }

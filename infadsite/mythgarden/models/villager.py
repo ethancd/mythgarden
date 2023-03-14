@@ -68,19 +68,6 @@ class Villager(models.Model):
 
         return dialogue
 
-    @property
-    def talk_duration(self):
-        FRIENDLINESS_TO_TALK_DURATION = {
-            1: 5,
-            2: 10,
-            3: 15,
-            4: 30,
-            5: 45,
-            6: 60,
-            7: 90,
-        }
-        return FRIENDLINESS_TO_TALK_DURATION[self.friendliness]
-
 
 class VillagerState(models.Model):
     MAX_AFFINITY = 100

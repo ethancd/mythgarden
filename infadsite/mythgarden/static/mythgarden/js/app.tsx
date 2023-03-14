@@ -4,7 +4,7 @@ import { ActionsList } from './actionsList'
 import { type ActionClickData } from './actionStem'
 import { Building, type BuildingProps } from './building'
 import { Clock, type ClockProps } from './clock'
-import { Dialogue, type DialogueProps } from './dialogue'
+import { Dialogue, type DialogueProps, type DialogueData} from './dialogue'
 import EmptyItem from './emptyItem'
 import { Hero, type HeroProps } from './hero'
 import { Item, type ItemProps } from './item'
@@ -177,7 +177,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
                 <List id='message-log' baseColor={colors.parchment}>
                   {messages?.map(message => Message({ ...message }))}
                 </List>
-                {(dialogue != null ? <Dialogue {...dialogue}></Dialogue> : null)}
+                {(dialogue != null ? <Dialogue {...dialogue} key={dialogue.id}></Dialogue> : null)}
               </section>
             </section>
 
@@ -195,7 +195,7 @@ interface AppProps {
   actions: ActionProps[]
   buildings: BuildingProps[]
   clock: ClockProps
-  dialogue: DialogueProps | null
+  dialogue: DialogueData
   hero: HeroProps
   inventory: ItemProps[]
   localItemTokens: ItemProps[]

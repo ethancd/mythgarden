@@ -4,7 +4,7 @@ from .models import Bridge, Action, Place, Building, Session, VillagerState, Ite
     DialogueLine, ScheduledEvent
 from .models._constants import SEED, SPROUT, CROP, COMMON, UNCOMMON, RARE, EPIC, RARITIES, RARITY_WEIGHTS, FARM, SHOP, \
     WILD_TYPES, FOREST, MOUNTAIN, BEACH, LOVE, LIKE, NEUTRAL, DISLIKE, HATE, SUNDAY, DAWN, FISHING_DESCRIPTION, \
-    DIGGING_DESCRIPTION, FORAGING_DESCRIPTION, SUNSET
+    DIGGING_DESCRIPTION, FORAGING_DESCRIPTION, SUNSET, TALK_MINUTES_PER_FRIENDLINESS
 from .static_helpers import guard_type, guard_types
 
 
@@ -198,7 +198,7 @@ class ActionGenerator:
             description=f'Talk to {villager.name}',
             action_type=Action.TALK,
             target_villager=villager,
-            cost_amount=villager.talk_duration,
+            cost_amount=villager.friendliness * TALK_MINUTES_PER_FRIENDLINESS,
             cost_unit=Action.MIN,
             log_statement=f'You talked to {villager.name}.',
         )
@@ -373,7 +373,8 @@ class ActionExecutor:
         villager_state = session.get_villager_state(villager)
 
         dialogue = self.__get_dialogue_for_talk_action(villager_state, villager)
-        hearts_gained = self.__update_affinity(villager_state, villager.friendliness, session.hero)
+        affinity_amount = self.__calc_talk_affinity_change(villager_state.affinity_tier, villager.friendliness)
+        hearts_gained = self.__update_affinity(villager_state, affinity_amount)
 
         session.hero.hearts_earned += hearts_gained
         session.clock.advance(action.cost_amount)
@@ -402,11 +403,11 @@ class ActionExecutor:
         villager = action.target_villager
         gift = action.target_item
         valence = villager.gift_valence(gift)
-        affinity_amount = self.__calc_gift_affinity_change(valence, gift.rarity, villager.friendliness)
+        affinity_amount = self.__calc_gift_affinity_change(valence, gift.rarity)
 
         villager_state = session.occupant_states.filter(villager=villager).first()
         villager_state.has_been_given_gift = True
-        hearts_gained = self.__update_affinity(villager_state, affinity_amount, session.hero)
+        hearts_gained = self.__update_affinity(villager_state, affinity_amount)
 
         session.hero.hearts_earned += hearts_gained
 
@@ -589,31 +590,47 @@ class ActionExecutor:
 
         raise ValueError(f'No items found in location {location.name} of any rarity')
 
-    def __calc_gift_affinity_change(self, valence, rarity, friendliness):
+    def __calc_talk_affinity_change(self, affinity_tier, friendliness):
+        """Calculates the change in affinity for a talk action based on the affinity tier the villager is already at
+        and their base friendliness"""
+
+    #    0aff -> 1x
+    #    1aff -> 1.5x
+    #    2aff -> 2x
+    #    3aff -> 2.5x
+    #    4aff+ -> 3x
+
+        base_value = friendliness
+        multiplier = 1 + (affinity_tier / 2)
+
+        return int(base_value * multiplier)
+
+
+    def __calc_gift_affinity_change(self, valence, rarity):
         """Calculates the change in affinity for a gift based on valence of villager's reaction,
         item's rarity, villager's friendliness"""
 
         VALENCE_VALUE_MAP = {
             LOVE: 20,
-            LIKE: 6,
-            NEUTRAL: 2,
+            LIKE: 10,
+            NEUTRAL: 5,
             DISLIKE: 0,
-            HATE: -2,
+            HATE: -5,
         }
 
         RARITY_MULTIPLIER_MAP = {
             COMMON: 0.5,
             UNCOMMON: 1,
-            RARE: 2,
-            EPIC: 4,
+            RARE: 1.5,
+            EPIC: 2,
         }
 
         base_value = VALENCE_VALUE_MAP[valence]
         multiplier = RARITY_MULTIPLIER_MAP[rarity]
 
-        return int((base_value * multiplier) + friendliness)
+        return int(base_value * multiplier)
 
-    def __update_affinity(self, villager_state, amount, hero):
+    def __update_affinity(self, villager_state, amount):
         """Updates the villager's villager_state affinity and returns the number of "hearts" gained (affinity tier diff)"""
 
         old_tier = villager_state.affinity_tier
