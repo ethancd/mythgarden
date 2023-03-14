@@ -160,14 +160,18 @@ class App extends React.Component<Partial<AppProps>, AppState> {
 
             <section id="center-col">
               <Location {...{...place, colorFilter}}>
+                {/* might be nice to have a BuildingsList component so we can give individual buildings a filterable bg color */}
                 <List id='buildings' baseColor={colors.lavenderPurpleTranslucent}>
                   {buildings?.map(building => Building(building))}
                 </List>
               </Location>
 
-              <List id='local-items' baseColor={colors.sandyBrown}>
-                {(localItemTokens?.length > 0) ? this.mapItemsWithEmptySlots(localItemTokens) : null}
-              </List>
+              {(localItemTokens?.length > 0)
+                ? <List id='local-items' baseColor={colors.sandyBrown}>
+                    {this.mapItemsWithEmptySlots(localItemTokens)}
+                  </List>
+                : null
+              }
 
               <section id='footer'>
                 <List id='message-log' baseColor={colors.parchment}>

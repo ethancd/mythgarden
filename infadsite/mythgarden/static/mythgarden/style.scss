@@ -26,17 +26,18 @@ $medium-text: 2rem;
 $med-large-text: 3rem;
 $large-text: 4rem;
 
-$fine-gutter: 0.25rem;
+$fine-gutter: 0.125rem;
 $small-gutter: 0.5rem;
 $medium-gutter: 1rem;
 
 /* site-wide */
 
-body {
+body, html {
   color: $dark-text;
   font-family: "Roboto Mono", Roboto, sans-serif;
   font-size: $small-text;
   margin: 0;
+  padding: 0;
 }
 
 /* reset */
@@ -52,7 +53,7 @@ h1, h2, h3 {
 /* layout */
 
 #page {
-  height: calc(100vh - 8px); //hack -- need to figure out how to make it full-page no scroll bar in cross-browser/responsive way
+  height: 100vh;
   background-color: $white-yellow;
 
   &.dark-mode {
@@ -97,9 +98,9 @@ ul {
 #top-bar {
   background-color: $sky-blue;
   display: flex;
-  height: 20%;
+  height: 19%;
   justify-content: space-between;
-  margin-bottom: $small-gutter;
+  margin-bottom: 1vh;
   position: relative;
   width: 100%;
 }
@@ -112,7 +113,8 @@ ul {
 
   .portrait {
     border: 2px solid #008f11;
-    height: 96px;
+    height: 100%;
+    box-sizing: border-box;
 
     img {
       height: 100%;
@@ -122,11 +124,15 @@ ul {
 
   .column {
     justify-content: space-between;
+    margin-top: $small-gutter;
   }
 
   .name {
-    margin-top: $small-gutter;
     font-size: $medium-text;
+
+    @media only screen and (max-width: 900px) {
+      font-size: $med-small-text;
+    }
   }
 }
 
@@ -159,6 +165,10 @@ ul {
   @include game-element;
   *:first-child {
     font-size: $medium-text;
+
+    @media only screen and (max-width: 900px) {
+      font-size: $smallish-text;
+    }
   }
 }
 
@@ -166,6 +176,10 @@ ul {
   @include game-element;
   font-size: $medium-text;
   margin: $small-gutter;
+
+  @media only screen and (max-width: 900px) {
+    font-size: $med-small-text;
+  }
 
   &.late {
     color: $neon-yellow;
@@ -246,7 +260,7 @@ ul {
 #inventory {
   @include column;
   background-color: $yellow-leather;
-  height: 50%;
+  height: 80%;
   justify-content: space-between;
   width: 100%;
 
@@ -254,6 +268,7 @@ ul {
     border: 2px solid;
     overflow: hidden;
     white-space: nowrap;
+    flex-grow: 1;
 
     &.empty-slot {
       border-color: beige;
@@ -279,10 +294,18 @@ ul {
     .type {
       font-size: $medium-text;
       margin-right: $small-gutter;
+
+      @media only screen and (max-width: 900px) {
+        font-size: $med-small-text;
+      }
     }
 
     .name {
       font-size: $med-small-text;
+
+      @media only screen and (max-width: 900px) {
+        font-size: $small-text;
+      }
     }
   }
 }
@@ -291,6 +314,12 @@ ul {
   background-color: $dollar-bill-green;
   font-size: $large-text;
   text-align: center;
+  overflow: hidden;
+  height: 20%;
+
+  @media only screen and (max-width: 900px) {
+    font-size: $med-large-text;
+  }
 }
 
 /* column between left-sidebar and center-col */
@@ -301,6 +330,7 @@ ul {
   background-color: pink;
   gap: $small-gutter;
   width: 20%;
+  overflow-y: auto;
 
   .action {
     border: 2px solid lightpink;
@@ -309,12 +339,14 @@ ul {
     display: flex;
     font-size: $small-text;
     justify-content: space-between;
-    overflow: hidden;
-    white-space: nowrap;
     width: 100%;
 
-    &.executing {
-      background-color: #8f0011;
+    span {
+      display: inline-block;
+
+      &.description {
+        text-align: center;
+      }
     }
   }
 }
@@ -326,19 +358,22 @@ ul {
   height: 100%;
   overflow: hidden;
   width: 60%;
+  justify-content: space-between;
 }
 
 #location {
   height: 50%;
   position: relative;
   width: 100%;
+  flex-grow: 0;
 
-  .name {
+  h2.name {
     font-size: $medium-text;
     font-weight: bold;
     text-align: center;
     position: relative;
     z-index: 10;
+    background-color: #ffffffaa;
   }
 
   .landscape-filter {
@@ -356,15 +391,23 @@ ul {
   }
 }
 
+.dark-mode {
+  #location {
+    h2.name {
+      background-color: #000000aa;
+    }
+  }
+}
+
 #buildings {
-    background-color: rgba($lavender-purple, 0.5);
     bottom: 0;
     justify-content: space-between;
+  background-color: rgba($lavender-purple, 0.5);
     left: 50%;
     position: absolute;
     transform: translate(-50%, 0);
     width: 100%;
-  z-index: 5;
+    z-index: 5;
 
     .building {
       @include column;
@@ -373,10 +416,19 @@ ul {
       .icon {
         font-size: $medium-text;
         text-align: center;
+
+        @media only screen and (max-width: 900px) {
+          font-size: $smallish-text;
+        }
       }
 
       .name {
+        text-align: center;
         font-size: $med-small-text;
+
+        @media only screen and (max-width: 900px) {
+          font-size: $fine-text;
+        }
       }
     }
   }
@@ -395,20 +447,25 @@ ul {
     flex-direction: column;
     width: 15%;
     box-sizing: border-box;
+    overflow: hidden;
 
     &.empty-slot {
       border-color: beige;
       opacity: 0.5;
     }
 
-    .type-emoji {
-      font-size: $medium-text;
+    .type {
+      font-size: $med-small-text;
       text-align: center;
     }
 
-    .item-name {
-      font-size: $small-text;
+    .name {
       text-align: center;
+      font-size: $med-small-text;
+
+      @media only screen and (max-width: 900px) {
+        font-size: $fine-text;
+      }
     }
 
     &.watered {
@@ -417,8 +474,10 @@ ul {
   }
 }
 
+
 #footer {
   height: 30%;
+  flex-grow: 1;
   width: 100%;
   position: relative;
 }
@@ -428,16 +487,15 @@ ul {
   display: block;
   width: 100%;
   height: 100%;
-  overflow-y: scroll;
+  overflow-y: auto;
 
   .message {
-    font-size: $medium-text;
+    font-size: $med-small-text;
     overflow: hidden;
     width: 100%;
     padding-bottom: $small-gutter;
     margin-top: $small-gutter;
     border-bottom: 1px solid darkgreen;
-    color: darkgreen;
 
     &.error {
       color: darkred;
@@ -472,13 +530,11 @@ ul {
   }
 
   .name {
-    color: #133;
     font-size: $medium-text
   }
 
   .dialogue-text {
-    color: #133;
-    font-size: $med-small-text;
+    font-size: $smallish-text;
   }
 
   &:hover::after {
@@ -498,7 +554,8 @@ ul {
   background-color: $dusty-pink;
   gap: $small-gutter;
   height: 100%;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   width: 20%;
 
   .villager {
@@ -542,7 +599,7 @@ ul {
     }
 
     .affinity-container {
-      height: $smallish-text;
+      height: $small-text;
       display: flex;
       gap: $fine-gutter;
 
@@ -551,7 +608,7 @@ ul {
         height: 100%;
 
         img {
-          height: $smallish-text;
+          height: $small-text;
           width: auto;
         }
       }
@@ -564,8 +621,9 @@ ul {
       }
 
       .partial {
+        opacity: .9;
         overflow: hidden;
-        width: calc($smallish-text * 1.2); // hard-coded h->w ratio of the heart image
+        width: calc($small-text * 1.2); // hard-coded h->w ratio of the heart image
         position: absolute;
         bottom: 0;
 
