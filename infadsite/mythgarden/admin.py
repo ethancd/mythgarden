@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import ScheduledEvent, Session, Hero, Inventory, Clock, Wallet, Place, Building, Bridge, Item, PlaceState, Villager, VillagerState, ItemTypePreference
+from .models import ScheduledEvent, Session, Hero, HeroState, Inventory, Clock, Wallet, Place, Building, Bridge, Item, PlaceState, Villager, VillagerState, ItemTypePreference
 
 
 class ClockInline(admin.TabularInline):
@@ -14,7 +14,7 @@ class WalletInline(admin.TabularInline):
 
 
 class HeroInline(admin.TabularInline):
-    model = Hero
+    model = HeroState
     max_num = 1
 
 
@@ -66,6 +66,7 @@ admin.site.register(Item)
 admin.site.register(Building)
 admin.site.register(Clock)
 admin.site.register(Wallet)
+admin.site.register(HeroState)
 admin.site.register(Hero)
 admin.site.register(Inventory, InventoryAdmin)
 admin.site.register(PlaceState)

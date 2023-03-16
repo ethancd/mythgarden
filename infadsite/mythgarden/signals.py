@@ -1,12 +1,12 @@
 from django.core.validators import ValidationError
 from django.db import transaction
-from django.db.models.signals import post_save, m2m_changed
+from django.db.models.signals import pre_save, post_save, m2m_changed
 from django.dispatch import receiver
 
 from .game_logic import EventOperator
 from .models._constants import MAX_ITEMS
 from .models.clock import Clock
-from .models.hero import Hero
+from .models.hero import Hero, HeroState
 from .models.inventory import Inventory
 from .models.message import Message
 from .models.place import PlaceState
@@ -31,11 +31,19 @@ def time_has_passed(sender, instance, **kwargs):
     with transaction.atomic():
         EventOperator().react_to_time_passing(instance, instance.session)
 
+@receiver(pre_save, sender=Session)
+def ensure_hero_exists(sender, instance, **kwargs):
+    try:
+        return instance.hero is not None
+    except Session.hero.RelatedObjectDoesNotExist:
+        if instance._state.adding and instance.is_first_session:
+            instance.hero = Hero.objects.create()
+            instance.save()
 
 @receiver(post_save, sender=Session)
 def create_belongings(sender, instance, created, **kwargs):
     if created and not instance.skip_post_save_signal:
-        Hero.objects.create(session=instance)
+        HeroState.objects.create(session=instance, hero=instance.hero)
         Inventory.objects.create(session=instance)
         Clock.objects.create(session=instance)
         Wallet.objects.create(session=instance)

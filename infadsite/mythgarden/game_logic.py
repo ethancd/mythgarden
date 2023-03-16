@@ -1,10 +1,11 @@
 import random
+import math
 
 from .models import Bridge, Action, Place, Building, Session, VillagerState, ItemToken, \
     DialogueLine, ScheduledEvent
 from .models._constants import SEED, SPROUT, CROP, COMMON, UNCOMMON, RARE, EPIC, RARITIES, RARITY_WEIGHTS, FARM, SHOP, \
     WILD_TYPES, FOREST, MOUNTAIN, BEACH, LOVE, LIKE, NEUTRAL, DISLIKE, HATE, SUNDAY, DAWN, FISHING_DESCRIPTION, \
-    DIGGING_DESCRIPTION, FORAGING_DESCRIPTION, SUNSET, TALK_MINUTES_PER_FRIENDLINESS
+    DIGGING_DESCRIPTION, FORAGING_DESCRIPTION, SUNSET, TALK_MINUTES_PER_FRIENDLINESS, MAX_BOOST_LEVEL, BOOST_DENOMINATOR
 from .static_helpers import guard_type, guard_types
 
 
@@ -22,12 +23,13 @@ class ActionGenerator:
         contents = list(session.local_item_tokens.all())
         villager_states = list(session.occupant_states.all())
         clock = session.clock
+        boost_level = session.hero.boost_level
 
-        actions = self.gen_available_actions(place, inventory, contents, villager_states, clock)
+        actions = self.gen_available_actions(place, inventory, contents, villager_states, clock, boost_level)
 
         return actions
 
-    def gen_available_actions(self, place, inventory, contents, villager_states, clock):
+    def gen_available_actions(self, place, inventory, contents, villager_states, clock, boost_level):
         """Returns a list of available actions for the hero in the current session, taking into account:
         - the current inventory
         - the location's current present items/occupants (contents and villagers)
@@ -66,7 +68,9 @@ class ActionGenerator:
         if place.is_farmhouse and clock.time >= SUNSET:
             available_actions += [self.gen_sleep_action(clock)]
 
-        return available_actions
+        actions = self.apply_speed_boost(available_actions, boost_level)
+
+        return actions
 
     def gen_farming_actions(self, field_contents, inventory):
         """Returns a list of farming actions: what seeds can be planted from the inventory,
@@ -332,6 +336,18 @@ class ActionGenerator:
             log_statement='You tuck yourself into bed. Sweet dreams!',
         )
 
+    def apply_speed_boost(self, actions, boost_level):
+        """Reduce the cost_amount of time-based actions proportional to the given speed_boost"""
+        if not boost_level or boost_level == 0:
+            return actions
+
+        boost_fraction = 1 - (min(boost_level, MAX_BOOST_LEVEL) / BOOST_DENOMINATOR)
+
+        for action in actions:
+            if not action.is_cost_in_money():
+                action.cost_amount = math.floor(action.cost_amount * boost_fraction)
+
+        return actions
 
 class ActionExecutor:
     def execute(self, action, session):
@@ -376,7 +392,7 @@ class ActionExecutor:
         affinity_amount = self.__calc_talk_affinity_change(villager_state.affinity_tier, villager.friendliness)
         hearts_gained = self.__update_affinity(villager_state, affinity_amount)
 
-        session.hero.hearts_earned += hearts_gained
+        session.hero_state.hearts_earned += hearts_gained
         session.clock.advance(action.cost_amount)
         villager_state.mark_as_talked_to()
         affinity_message = self.__make_affinity_message_if_any(hearts_gained, villager)
@@ -389,7 +405,7 @@ class ActionExecutor:
         session.save_data()
 
         return {
-            'hero': session.hero,
+            'hero': session.hero_state,
             'clock': session.clock,
             'villagerStates': list(session.occupant_states.all()),
             'dialogue': dialogue,
@@ -409,7 +425,7 @@ class ActionExecutor:
         villager_state.has_been_given_gift = True
         hearts_gained = self.__update_affinity(villager_state, affinity_amount)
 
-        session.hero.hearts_earned += hearts_gained
+        session.hero_state.hearts_earned += hearts_gained
 
         villager_state.save()
 
@@ -432,7 +448,7 @@ class ActionExecutor:
         session.save_data()
 
         return {
-            'hero': session.hero,
+            'hero': session.hero_state,
             'inventory': list(session.inventory.item_tokens.all()),
             'villagerStates': list(session.occupant_states.all()),
             'dialogue': dialogue,
@@ -444,13 +460,13 @@ class ActionExecutor:
 
         session.inventory.item_tokens.remove(action.target_item)
         session.wallet.money += action.cost_amount
-        session.hero.koin_earned += action.cost_amount
+        session.hero_state.koin_earned += action.cost_amount
 
         session.messages.create(text=action.log_statement)
         session.save_data()
 
         return {
-            'hero': session.hero,
+            'hero': session.hero_state,
             'wallet': session.wallet,
             'inventory': list(session.inventory.item_tokens.all()),
         }
@@ -546,7 +562,7 @@ class ActionExecutor:
     def execute_sleep_action(self, action, session):
         """Executes a sleep action, which advances the clock to midnight"""
 
-        session.hero.is_in_bed = True
+        session.hero_state.is_in_bed = True
         session.clock.advance(action.cost_amount)
 
         session.messages.create(text=action.log_statement)
@@ -604,7 +620,6 @@ class ActionExecutor:
         multiplier = 1 + (affinity_tier / 2)
 
         return int(base_value * multiplier)
-
 
     def __calc_gift_affinity_change(self, valence, rarity):
         """Calculates the change in affinity for a gift based on valence of villager's reaction,
@@ -692,7 +707,7 @@ class EventOperator:
         if clock.is_new_day:
             self.reset_for_new_day(clock, session)
 
-            sleep_message, is_error = self.fall_asleep(clock, session.hero)
+            sleep_message, is_error = self.fall_asleep(clock, session.hero_state)
             session.messages.create(text=sleep_message, is_error=is_error)
 
         # run scheduled events (from database)
@@ -726,15 +741,15 @@ class EventOperator:
 
         farm_state.item_tokens.set(new_contents)
 
-    def fall_asleep(self, clock, hero):
+    def fall_asleep(self, clock, hero_state):
         """Advances the clock to dawn or midday, depending on whether the hero is in bed or not,
         and returns a message"""
         if clock.time > DAWN:
             raise Exception(f'Time on the new day should be before dawn, not {clock.time}')
 
-        if hero.is_in_bed:
-            hero.is_in_bed = False
-            hero.save()
+        if hero_state.is_in_bed:
+            hero_state.is_in_bed = False
+            hero_state.save()
             clock.advance(clock.minutes_to_dawn)
             sleep_message = "You got a good night's sleep and wake up at dawn."
             is_error = False
@@ -747,12 +762,29 @@ class EventOperator:
         return sleep_message, is_error
 
     def trigger_game_over(self, session):
+        hero_state = session.hero_state
         hero = session.hero
-        end_of_game_message = f'You made it to the end of the week! You earned {hero.koin_earned} koin and ' \
-                              f'{hero.hearts_earned} hearts, for a total score of {hero.score}. ' \
-                              'Prepare to enter the time loop and start over again!'
+
+        is_new_high_score = hero.set_high_score(hero_state.score)
+
+        end_of_game_message = self.get_end_of_game_message(hero_state, is_new_high_score)
 
         session.reset_session_state(end_of_game_message)
+
+    def get_end_of_game_message(self, hero_state, is_new_high_score):
+        start = f'You ended the week with {hero_state.koin_earned} koin and ' \
+                f'{hero_state.hearts_earned} hearts for a total score of {hero_state.score}.'
+
+        if is_new_high_score:
+            middle = f"That's a new high score! Feeling your movements quicken slightly with the shifting of time," \
+
+        else:
+            middle = f"That doesn't beat your high score -- but there's always next loop! "\
+                       "Strengthened by the wisdom of experience," \
+
+        end = "you enter the time loop to begin the week again."
+
+        return f'{start} {middle} {end}'
 
     def trigger_scheduled_events(self, clock, event_states, session):
         """Triggers all scheduled events that are due to occur at the current time"""

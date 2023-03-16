@@ -235,15 +235,15 @@ class ExecuteTalkActionTests(TestCase):
         """
         execute_talk_action gives the hero hearts when update_affinity returns more than 0
         """
-        self.session.hero.hearts_earned = 0
-        self.session.hero.save()
+        self.session.hero_state.hearts_earned = 0
+        self.session.hero_state.save()
 
         with patch.object(self.ae, '_ActionExecutor__update_affinity', return_value=1) as mock:
             self.ae.execute_talk_action(self.action, self.session)
 
-            self.session.hero.refresh_from_db()
+            self.session.hero_state.refresh_from_db()
 
-            self.assertEqual(self.session.hero.hearts_earned, 1)
+            self.assertEqual(self.session.hero_state.hearts_earned, 1)
 
     def test_calls_clock_advance_with_action_cost(self):
         """
@@ -283,7 +283,7 @@ class ExecuteTalkActionTests(TestCase):
         result = self.ae.execute_talk_action(self.action, self.session)
 
         expected = {
-            'hero': self.session.hero,
+            'hero': self.session.hero_state,
             'clock': self.clock,
             'villager_states': [self.villager_state],
             'dialogue': self.dialogue,

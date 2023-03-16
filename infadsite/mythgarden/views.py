@@ -16,6 +16,7 @@ from .models import Session
 
 @ensure_csrf_cookie
 def home(request):
+    # Session.objects.all().delete()
     session = load_session(request)
     home_models = get_home_models(session)
 
@@ -45,7 +46,8 @@ def action(request):
         return JsonResponse({'error': e.message, 'messages': get_serialized_messages(session)})
 
     if session.game_over:
-        EventOperator().trigger_game_over(session)
+        with transaction.atomic():
+            EventOperator().trigger_game_over(session)
         return JsonResponse({'gameOver': True})
     else:
         results = {model_name: custom_serialize(data) for model_name, data in updated_models.items()}

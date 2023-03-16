@@ -1,7 +1,7 @@
 'use strict'
 
 import React from 'react'
-import { type ClockProps } from './clock'
+import { type ClockData } from './clock'
 
 const SUNRISE = 6 * 60
 const SUNSET = 18 * 60
@@ -26,7 +26,7 @@ const parabola = (x: number): number => (4 * x) - (4 * x * x)
 
 const getPercent = (n: number): string => `${n * 100}%`
 
-function Sun ({ time }: Pick<ClockProps, 'time'>): JSX.Element | null {
+function Sun ({ time }: Pick<ClockData, 'time'>): JSX.Element | null {
   const isSunVisible = time > TRUE_DAWN && time < TRUE_NIGHT
   const isSunUp = time >= SUNRISE && time <= SUNSET
 
@@ -60,7 +60,7 @@ function Sun ({ time }: Pick<ClockProps, 'time'>): JSX.Element | null {
   }
 }
 
-function Moon ({ time, dayNumber }: Pick<ClockProps, 'time' | 'dayNumber'>): JSX.Element | null {
+function Moon ({ time, dayNumber }: Pick<ClockData, 'time' | 'dayNumber'>): JSX.Element | null {
   const isMoonVisible = time < MOON_BYE || time > MOON_HI
 
   const isMoonUp = time <= SUNRISE || time >= SUNSET

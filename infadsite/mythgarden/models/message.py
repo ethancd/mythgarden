@@ -18,4 +18,4 @@ class Message(models.Model):
 
     @property
     def abbr_text(self):
-        return f"{self.full_text[:50]}{'...' if len(self.full_text) > 50 else ''}"
+        return f"{self.text[:50]}{'...' if len(self.text) > 50 else ''}"

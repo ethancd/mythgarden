@@ -13,10 +13,14 @@ def load_session(request):
     session_key = request.session.get('session_key', None)
 
     if session_key is None:
-        session = Session.objects.create()
+        session = Session.objects.create(is_first_session=True)
         request.session['session_key'] = session.pk
-    else:
-        session = Session.objects.get_or_create(pk=session_key)[0]
+        return session
+
+    try:
+        session = Session.objects.get(pk=session_key)
+    except Session.DoesNotExist:
+        session = Session.objects.create(pk=session_key, is_first_session=True)
 
     return session
 
@@ -27,7 +31,7 @@ def get_home_models(session):
 
     return {
         'actions': actions,
-        'hero': session.hero,
+        'hero': session.hero_state,
         'clock': session.clock,
         'wallet': session.wallet,
         'messages': session.messages.all(),

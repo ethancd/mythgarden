@@ -3,10 +3,10 @@ import { Action, type ActionProps } from './action'
 import { ActionsList } from './actionsList'
 import { type ActionClickData } from './actionStem'
 import { Building, type BuildingProps } from './building'
-import { Clock, type ClockProps } from './clock'
-import { Dialogue, type DialogueProps, type DialogueData} from './dialogue'
+import { Clock, type ClockData } from './clock'
+import { Dialogue, type DialogueData} from './dialogue'
 import EmptyItem from './emptyItem'
-import { Hero, type HeroProps } from './hero'
+import { Hero, type HeroData } from './hero'
 import { Item, type ItemProps } from './item'
 import List from './list'
 import { Location, type LocationProps } from './location'
@@ -140,7 +140,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
           <Section id="top-bar" baseColor={colors.skyBlue}>
             <Hero {...hero}></Hero>
             <h1 id="logo">Mythgarden</h1>
-            <Clock display={clock.display} time={clock.time}></Clock>
+            <Clock display={clock.display} time={clock.time} boostLevel={hero.boostLevel}></Clock>
             <div id='sky-container'>
                 <Sun time={clock.time}></Sun>
                 <Moon time={clock.time} dayNumber={clock.dayNumber}></Moon>
@@ -194,9 +194,9 @@ class App extends React.Component<Partial<AppProps>, AppState> {
 interface AppProps {
   actions: ActionProps[]
   buildings: BuildingProps[]
-  clock: ClockProps
-  dialogue: DialogueData
-  hero: HeroProps
+  clock: ClockData
+  dialogue: DialogueData | null
+  hero: HeroData
   inventory: ItemProps[]
   localItemTokens: ItemProps[]
   messages: MessageProps[]

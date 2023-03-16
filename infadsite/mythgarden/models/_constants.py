@@ -157,3 +157,6 @@ FORAGING_DESCRIPTION = 'Forage for plants'
 WELCOME_MESSAGE = 'Welcome to Mythgarden! You have one week to grow crops, make friends, and find treasures. Good luck and have fun!'
 
 TALK_MINUTES_PER_FRIENDLINESS = 10
+
+BOOST_DENOMINATOR = 30  # means that every level of boost reduces action time by 1/30th, aka from 90->87, 60->58, 30->29
+MAX_BOOST_LEVEL = BOOST_DENOMINATOR - 1  # max boost will reduce all action times by 29/30ths, so we don't allow all times to go to 0min

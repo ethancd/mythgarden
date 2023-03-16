@@ -4,7 +4,7 @@ from .bridge import Bridge
 from .clock import Clock
 from .dialogue import DialogueLine
 from .event import ScheduledEvent, ScheduledEventState
-from .hero import Hero
+from .hero import Hero, HeroState
 from .message import Message
 from .inventory import Inventory
 from .item import Item, ItemToken

@@ -2,6 +2,7 @@
 /* variables */
 /* colors */
 /* sizes */
+/* degrees */
 /* site-wide */
 body, html {
   color: #333;
@@ -104,8 +105,17 @@ ul {
       #score *:first-child {
         font-size: 1.25rem; } }
 
+#high-score {
+  font-size: 1rem;
+  opacity: 0.6; }
+  @media only screen and (max-width: 900px) {
+    #high-score {
+      font-size: 0.75rem; } }
+
 #clock {
   z-index: 2;
+  display: flex;
+  flex-direction: column;
   font-size: 2rem;
   margin: 0.5rem; }
   @media only screen and (max-width: 900px) {
@@ -117,6 +127,14 @@ ul {
     color: #ff5f1f; }
   #clock.very-very-late {
     color: #ff3131; }
+
+#boost {
+  opacity: 0.6;
+  font-size: 1.25rem;
+  text-align: right; }
+  @media only screen and (max-width: 900px) {
+    #boost {
+      font-size: 1rem; } }
 
 #sky-container {
   width: calc(100% - 4rem);

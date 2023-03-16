@@ -2,7 +2,7 @@
 
 import React from 'react'
 
-export default function Hero ({ name, imageUrl, score, koinEarned, heartsEarned }: HeroProps): JSX.Element {
+export default function Hero ({ name, imageUrl, score, highScore, koinEarned, heartsEarned }: HeroProps): JSX.Element {
   return (
     <div id="hero">
       <div className="portrait">
@@ -10,18 +10,25 @@ export default function Hero ({ name, imageUrl, score, koinEarned, heartsEarned 
       </div>
       <div className="column">
         <div className="name">{name}</div>
-        <div id="score"><span>{score}</span> <span>(⚜️{koinEarned} x {heartsEarned}❤️)</span></div>
+        <div id="score">
+          <span>{score}</span> <span>(⚜️{koinEarned} x {heartsEarned}❤️)</span>
+          {highScore > 0 ? <span id='high-score'> High Score: {highScore}</span> : null }
+        </div>
       </div>
     </div>
   )
 }
 
-interface HeroProps {
+interface HeroData {
   name: string
   imageUrl: string
   score: number
+  highScore: number
   koinEarned: number
   heartsEarned: number
+  boostLevel: number
 }
 
-export { Hero, type HeroProps }
+type HeroProps = Omit<HeroData, 'boostLevel'>
+
+export { Hero, type HeroData }

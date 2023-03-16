@@ -11,6 +11,9 @@ from ._constants import WELCOME_MESSAGE
 class Session(models.Model):
     key = models.CharField(max_length=32, primary_key=True, default=generate_uuid)
     location = models.ForeignKey(Place, on_delete=models.CASCADE, null=True, default=Place.get_default_pk)
+    hero = models.OneToOneField('Hero', on_delete=models.CASCADE, related_name='current_session')
+
+    is_first_session = models.BooleanField(default=False)
     skip_post_save_signal = models.BooleanField(default=False)
     initial_message_text = models.CharField(max_length=255, default=WELCOME_MESSAGE)
     game_over = models.BooleanField(default=False)
@@ -20,7 +23,7 @@ class Session(models.Model):
         so excluding place_states and villager_states"""
 
         self.save()
-        self.hero.save()
+        self.hero_state.save()
         self.wallet.save()
         self.inventory.save()  # probably unnecessary, since inventory doesn't have any fields right now
         self.clock.save()
@@ -70,10 +73,11 @@ class Session(models.Model):
 
     def reset_session_state(self, end_of_game_message):
         key = self.key
+        hero = self.hero
 
         self.delete()
 
-        return Session.objects.create(key=key, initial_message_text=end_of_game_message)
+        return Session.objects.create(key=key, hero=hero, initial_message_text=end_of_game_message)
 
     def abbr_key_tag(self):
         return f'({self.key[:8]}...)'

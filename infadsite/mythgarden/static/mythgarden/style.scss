@@ -33,6 +33,10 @@ $fine-gutter: 0.125rem;
 $small-gutter: 0.5rem;
 $medium-gutter: 1rem;
 
+/* degrees */
+
+$meta-element-opacity: 0.6;
+
 /* site-wide */
 
 body, html {
@@ -187,8 +191,18 @@ ul {
   }
 }
 
+#high-score {
+  font-size: $small-text;
+  opacity: $meta-element-opacity;
+
+  @media only screen and (max-width: 900px) {
+    font-size: $fine-text;
+  }
+}
+
 #clock {
   @include game-element;
+  @include column;
   font-size: $medium-text;
   margin: $small-gutter;
 
@@ -207,6 +221,17 @@ ul {
   &.very-very-late {
     color: $neon-red;
   }
+}
+
+#boost {
+  opacity: $meta-element-opacity;
+  font-size: $smallish-text;
+  text-align: right;
+
+  @media only screen and (max-width: 900px) {
+    font-size: $small-text;
+  }
+
 }
 
 #sky-container {
