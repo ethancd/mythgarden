@@ -19,7 +19,7 @@ class Session(models.Model):
     game_over = models.BooleanField(default=False)
 
     def save_data(self):
-        """save model objects that the current session has a handle on --
+        """save model objects that the current session has a handle on –
         so excluding place_states and villager_states"""
 
         self.save()

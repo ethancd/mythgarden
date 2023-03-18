@@ -16,7 +16,6 @@ from .models import Session
 
 @ensure_csrf_cookie
 def home(request):
-    # Session.objects.all().delete()
     session = load_session(request)
     home_models = get_home_models(session)
 

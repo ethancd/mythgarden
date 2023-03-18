@@ -109,9 +109,6 @@ class ActionGenerator:
             actions.append(self.gen_buy_action(item_token))
 
         for item_token in inventory:
-            if item_token.item_type == SEED:
-                continue
-
             actions.append(self.gen_sell_action(item_token))
 
         return actions
@@ -460,7 +457,8 @@ class ActionExecutor:
 
         session.inventory.item_tokens.remove(action.target_item)
         session.wallet.money += action.cost_amount
-        session.hero_state.koin_earned += action.cost_amount
+        if not action.target_item.bought_from_store:
+            session.hero_state.koin_earned += action.cost_amount
 
         session.messages.create(text=action.log_statement)
         session.save_data()
@@ -477,6 +475,7 @@ class ActionExecutor:
 
         item = action.target_item
         new_item = item.make_copy()
+        new_item.bought_from_store = True
         new_item.save()
         session.inventory.item_tokens.add(new_item)
 
@@ -694,7 +693,6 @@ class ActionExecutor:
         }
         return VALENCE_TO_DIALOGUE_TRIGGER_MAP[valence]
 
-
 class EventOperator:
     def react_to_time_passing(self, clock, session):
         # check for game over and short circuit if so
@@ -725,7 +723,7 @@ class EventOperator:
         villager_states.update(has_been_talked_to=False, has_been_given_gift=False)
 
     def grow_crops(self, farm_state):
-        """Find all seeds/sprouts in the farm and "grow" them if they've been watered --
+        """Find all seeds/sprouts in the farm and "grow" them if they've been watered –
         ie replace them with a new item token at the next growth stage."""
         item_tokens = farm_state.item_tokens.all()
         new_contents = []
@@ -779,7 +777,7 @@ class EventOperator:
             middle = f"That's a new high score! Feeling your movements quicken slightly with the shifting of time," \
 
         else:
-            middle = f"That doesn't beat your high score -- but there's always next loop! "\
+            middle = f"That doesn't beat your high score – but there's always next loop! "\
                        "Strengthened by the wisdom of experience," \
 
         end = "you enter the time loop to begin the week again."

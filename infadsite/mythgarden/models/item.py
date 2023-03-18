@@ -74,6 +74,7 @@ class ItemToken(models.Model):
     session = models.ForeignKey('Session', on_delete=models.CASCADE, related_name='item_tokens')
     item = models.ForeignKey('Item', on_delete=models.CASCADE, related_name='tokens')
     has_been_watered = models.BooleanField(default=False)
+    bought_from_store = models.BooleanField(default=False)
 
     def __str__(self):
         return self.item.name + ' ' + self.session.abbr_key_tag()

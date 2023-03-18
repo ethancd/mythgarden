@@ -3,13 +3,13 @@ from typing import Iterable
 from django.core.validators import ValidationError
 
 from .game_logic import ActionGenerator, can_afford_action
-from .models import Session
+from .models import Session, Hero
 
 
 def load_session(request):
     """Loads a session from the database or creates a new one if one does not exist.
     Also saves the session key to the request session."""
-
+    
     session_key = request.session.get('session_key', None)
 
     if session_key is None:
