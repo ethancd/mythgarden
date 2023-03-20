@@ -1,8 +1,8 @@
 from django.db import models
 from django.templatetags.static import static
+from random import randint
 
 from ._constants import IMAGE_PREFIX
-from ..static_helpers import generate_uuid
 
 
 class Hero(models.Model):
@@ -14,7 +14,7 @@ class Hero(models.Model):
 
     @classmethod
     def get_default_pk(cls):
-        new_hero = cls.objects.create(pk=generate_uuid())
+        new_hero = cls.objects.create()
         return new_hero.pk
 
     def set_high_score(self, new_score):
@@ -35,7 +35,7 @@ class Hero(models.Model):
 
 class HeroState(models.Model):
     session = models.OneToOneField('Session', on_delete=models.CASCADE, primary_key=True, related_name='hero_state')
-    hero = models.OneToOneField('Hero', on_delete=models.CASCADE, default=Hero.get_default_pk)
+    hero = models.OneToOneField('Hero', on_delete=models.CASCADE, default=Hero.get_default_pk, null=True)
 
     koin_earned = models.IntegerField(default=0)
     hearts_earned = models.IntegerField(default=0)
