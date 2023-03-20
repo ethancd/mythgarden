@@ -2,6 +2,7 @@ from django.db import models
 from django.templatetags.static import static
 
 from ._constants import IMAGE_PREFIX
+from ..static_helpers import generate_uuid
 
 
 class Hero(models.Model):
@@ -13,7 +14,7 @@ class Hero(models.Model):
 
     @classmethod
     def get_default_pk(cls):
-        new_hero = cls.objects.create()
+        new_hero = cls.objects.create(pk=generate_uuid())
         return new_hero.pk
 
     def set_high_score(self, new_score):
