@@ -35,7 +35,7 @@ class Hero(models.Model):
 
 class HeroState(models.Model):
     session = models.OneToOneField('Session', on_delete=models.CASCADE, primary_key=True, related_name='hero_state')
-    hero = models.OneToOneField('Hero', on_delete=models.CASCADE, default=Hero.get_default_pk, null=True)
+    hero = models.ForeignKey('Hero', on_delete=models.CASCADE, default=Hero.get_default_pk, null=True)
 
     koin_earned = models.IntegerField(default=0)
     hearts_earned = models.IntegerField(default=0)

@@ -14,7 +14,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='session',
             name='hero',
-            field=models.OneToOneField(default=1, on_delete=django.db.models.deletion.CASCADE, related_name='current_session', to='mythgarden.hero'),
-            preserve_default=False,
+            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='current_session', to='mythgarden.hero'),
         ),
     ]

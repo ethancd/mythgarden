@@ -33,7 +33,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='herostate',
             name='hero',
-            field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, null=True, related_name='states', to='mythgarden.hero'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, null=True, related_name='states', to='mythgarden.hero'),
             preserve_default=False,
         ),
     ]

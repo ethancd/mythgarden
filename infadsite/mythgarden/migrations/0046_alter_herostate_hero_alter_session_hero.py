@@ -15,11 +15,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='herostate',
             name='hero',
-            field=models.OneToOneField(default=mythgarden.models.hero.Hero.get_default_pk, on_delete=django.db.models.deletion.CASCADE, to='mythgarden.hero'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='mythgarden.hero', null=True),
         ),
         migrations.AlterField(
             model_name='session',
             name='hero',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='current_session', to='mythgarden.hero'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='current_session', to='mythgarden.hero', null=True),
         ),
     ]

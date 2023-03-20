@@ -24,6 +24,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='herostate',
             name='hero',
-            field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='mythgarden.hero'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='mythgarden.hero', null=True),
         ),
     ]
