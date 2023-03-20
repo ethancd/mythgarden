@@ -31,19 +31,11 @@ def time_has_passed(sender, instance, **kwargs):
     with transaction.atomic():
         EventOperator().react_to_time_passing(instance, instance.session)
 
-@receiver(pre_save, sender=Session)
-def ensure_hero_exists(sender, instance, **kwargs):
-    try:
-        return instance.hero is not None
-    except Session.hero.RelatedObjectDoesNotExist:
-        if instance._state.adding and instance.is_first_session:
-            instance.hero = Hero.objects.create()
-            instance.save()
 
 @receiver(post_save, sender=Session)
 def create_belongings(sender, instance, created, **kwargs):
     if created and not instance.skip_post_save_signal:
-        HeroState.objects.create(session=instance, hero=instance.hero)
+        HeroState.objects.create(session=instance)
         Inventory.objects.create(session=instance)
         Clock.objects.create(session=instance)
         Wallet.objects.create(session=instance)

@@ -1,6 +1,7 @@
 from django.db import models
 
 from .event import ScheduledEvent, ScheduledEventState
+from .hero import Hero
 from .place import Place
 from .villager import VillagerState
 from ..static_helpers import generate_uuid
@@ -11,7 +12,7 @@ from ._constants import WELCOME_MESSAGE
 class Session(models.Model):
     key = models.CharField(max_length=32, primary_key=True, default=generate_uuid)
     location = models.ForeignKey(Place, on_delete=models.CASCADE, null=True, default=Place.get_default_pk)
-    hero = models.OneToOneField('Hero', on_delete=models.CASCADE, related_name='current_session')
+    hero = models.ForeignKey('Hero', on_delete=models.CASCADE, related_name='current_session', null=True, default=Hero.get_default_pk)
 
     is_first_session = models.BooleanField(default=False)
     skip_post_save_signal = models.BooleanField(default=False)

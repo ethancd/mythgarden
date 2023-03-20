@@ -2,6 +2,7 @@
 
 from django.db import migrations, models
 import django.db.models.deletion
+import mythgarden.models
 
 
 class Migration(migrations.Migration):
@@ -32,7 +33,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='herostate',
             name='hero',
-            field=models.OneToOneField(default=1, on_delete=django.db.models.deletion.CASCADE, related_name='states', to='mythgarden.hero'),
+            field=models.OneToOneField(default=mythgarden.models.hero.Hero.get_default_pk, on_delete=django.db.models.deletion.CASCADE, related_name='states', to='mythgarden.hero'),
             preserve_default=False,
         ),
     ]

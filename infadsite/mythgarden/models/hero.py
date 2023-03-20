@@ -11,6 +11,11 @@ class Hero(models.Model):
     high_score = models.IntegerField(default=0)
     boost_level = models.IntegerField(default=0)
 
+    @classmethod
+    def get_default_pk(cls):
+        new_hero = cls.objects.create()
+        return new_hero.pk
+
     def set_high_score(self, new_score):
         if new_score > self.high_score:
             self.high_score = new_score
@@ -29,7 +34,7 @@ class Hero(models.Model):
 
 class HeroState(models.Model):
     session = models.OneToOneField('Session', on_delete=models.CASCADE, primary_key=True, related_name='hero_state')
-    hero = models.OneToOneField('Hero', on_delete=models.CASCADE)
+    hero = models.OneToOneField('Hero', on_delete=models.CASCADE, default=Hero.get_default_pk)
 
     koin_earned = models.IntegerField(default=0)
     hearts_earned = models.IntegerField(default=0)
