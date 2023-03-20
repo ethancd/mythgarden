@@ -35,7 +35,7 @@ def time_has_passed(sender, instance, **kwargs):
 @receiver(post_save, sender=Session)
 def create_belongings(sender, instance, created, **kwargs):
     if created and not instance.skip_post_save_signal:
-        HeroState.objects.create(session=instance)
+        HeroState.objects.create(session=instance, hero=instance.hero)
         Inventory.objects.create(session=instance)
         Clock.objects.create(session=instance)
         Wallet.objects.create(session=instance)

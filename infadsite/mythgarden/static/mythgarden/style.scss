@@ -45,6 +45,7 @@ body, html {
   font-size: $small-text;
   margin: 0;
   padding: 0;
+  -webkit-user-select: none;
 }
 
 /* reset */
@@ -210,15 +211,15 @@ ul {
     font-size: $med-small-text;
   }
 
-  &.late {
+  .late {
     color: $neon-yellow;
   }
 
-  &.very-late {
+  .very-late {
     color: $neon-orange;
   }
 
-  &.very-very-late {
+  .very-very-late {
     color: $neon-red;
   }
 }

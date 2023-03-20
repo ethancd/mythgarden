@@ -5,7 +5,8 @@ from .models import Bridge, Action, Place, Building, Session, VillagerState, Ite
     DialogueLine, ScheduledEvent
 from .models._constants import SEED, SPROUT, CROP, COMMON, UNCOMMON, RARE, EPIC, RARITIES, RARITY_WEIGHTS, FARM, SHOP, \
     WILD_TYPES, FOREST, MOUNTAIN, BEACH, LOVE, LIKE, NEUTRAL, DISLIKE, HATE, SUNDAY, DAWN, FISHING_DESCRIPTION, \
-    DIGGING_DESCRIPTION, FORAGING_DESCRIPTION, SUNSET, TALK_MINUTES_PER_FRIENDLINESS, MAX_BOOST_LEVEL, BOOST_DENOMINATOR
+    DIGGING_DESCRIPTION, FORAGING_DESCRIPTION, SUNSET, TALK_MINUTES_PER_FRIENDLINESS, MAX_BOOST_LEVEL, \
+    BOOST_DENOMINATOR
 from .static_helpers import guard_type, guard_types
 
 
@@ -341,7 +342,7 @@ class ActionGenerator:
         boost_fraction = 1 - (min(boost_level, MAX_BOOST_LEVEL) / BOOST_DENOMINATOR)
 
         for action in actions:
-            if not action.is_cost_in_money():
+            if not action.is_cost_in_money() and action.action_type is not Action.SLEEP:
                 action.cost_amount = math.floor(action.cost_amount * boost_fraction)
 
         return actions
