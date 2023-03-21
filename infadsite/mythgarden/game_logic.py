@@ -184,7 +184,7 @@ class ActionGenerator:
     def gen_give_action(self, item_token, villager):
         """Returns an action that gives passed item to passed villager"""
         return Action(
-            description=f'Give {item_token.name} to {villager.name}',
+            description=f'Gift {item_token.name} to {villager.name}',
             action_type=Action.GIVE,
             target_villager=villager,
             target_item=item_token,
@@ -765,6 +765,10 @@ class EventOperator:
         hero = session.hero
 
         is_new_high_score = hero.set_high_score(hero_state.score)
+
+        if is_new_high_score:
+            hero.boost_level += 1
+            hero.save()
 
         end_of_game_message = self.get_end_of_game_message(hero_state, is_new_high_score)
 

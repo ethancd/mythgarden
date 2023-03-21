@@ -17,7 +17,7 @@ function ActionsList ({ actions }: ActionsListProps): JSX.Element {
 
       const descriptionSplit = action.description.split(' ')
       const targetName = descriptionSplit[descriptionSplit.length -1]
-      const truncatedDescription = descriptionSplit.slice(0, -1).join(' ') + '...'
+      const truncatedDescription = descriptionSplit.slice(0, -2).join(' ')
       const isInNewList = newActionsList.find(a => a.description === truncatedDescription)
 
       if (isInNewList == null) {

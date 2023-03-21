@@ -21,10 +21,10 @@ export default function Villager ({ name, imageUrl, affinity, description, id, a
           <img src={imageUrl}></img>
         </div>
         <div className="column">
-          <span className="name">{name}</span>
           <Affinity {...affinity}></Affinity>
         </div>
       </div>
+      <span className="name">{name}</span>
       <span className="description">{description}</span>
     </li>
   )
