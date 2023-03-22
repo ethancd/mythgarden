@@ -51,3 +51,10 @@ def action(request):
     else:
         results = {model_name: custom_serialize(data) for model_name, data in updated_models.items()}
         return JsonResponse(results)
+
+def kys(request):
+    """A shortcut to reset the game state to the start of the week. A staple for timeloop games everywhere."""
+    session = get_object_or_404(Session, pk=request.session['session_key'])
+
+    EventOperator().trigger_kys(session)
+    return HttpResponseRedirect(reverse('mythgarden:home'))

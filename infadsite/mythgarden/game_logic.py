@@ -6,7 +6,7 @@ from .models import Bridge, Action, Place, Building, Session, VillagerState, Ite
 from .models._constants import SEED, SPROUT, CROP, COMMON, UNCOMMON, RARE, EPIC, RARITIES, RARITY_WEIGHTS, FARM, SHOP, \
     WILD_TYPES, FOREST, MOUNTAIN, BEACH, LOVE, LIKE, NEUTRAL, DISLIKE, HATE, SUNDAY, DAWN, FISHING_DESCRIPTION, \
     DIGGING_DESCRIPTION, FORAGING_DESCRIPTION, SUNSET, TALK_MINUTES_PER_FRIENDLINESS, MAX_BOOST_LEVEL, \
-    BOOST_DENOMINATOR
+    BOOST_DENOMINATOR, KYS_MESSAGE
 from .static_helpers import guard_type, guard_types
 
 
@@ -773,6 +773,9 @@ class EventOperator:
         end_of_game_message = self.get_end_of_game_message(hero_state, is_new_high_score)
 
         session.reset_session_state(end_of_game_message)
+
+    def trigger_kys(self, session):
+        session.reset_session_state(KYS_MESSAGE)
 
     def get_end_of_game_message(self, hero_state, is_new_high_score):
         start = f'You ended the week with {hero_state.koin_earned} koin and ' \

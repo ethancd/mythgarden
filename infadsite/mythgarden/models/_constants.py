@@ -160,3 +160,5 @@ TALK_MINUTES_PER_FRIENDLINESS = 10
 
 BOOST_DENOMINATOR = 30  # means that every level of boost reduces action time by 1/30th, aka from 90->87, 60->58, 30->29
 MAX_BOOST_LEVEL = BOOST_DENOMINATOR - 1  # max boost will reduce all action times by 29/30ths, so we don't allow all times to go to 0min
+
+KYS_MESSAGE = 'Whether out of despair, boredom, tactical necessity, or a whimsical fit of pique, you hurl yourself off a nearby cliff to your death. A few moments later, you brush the dirt off your dauntless shoulder and enter the time loop to begin the week again.'
