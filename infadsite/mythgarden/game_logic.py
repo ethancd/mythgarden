@@ -412,7 +412,6 @@ class ActionExecutor:
     def execute_give_action(self, action, session):
         """Executes a give action, which removes an item from the hero's inventory
         and adds to the villager's affinity"""
-        # also want to set villager_state to has_been_gifted so we can't talk to them again till tomorrow
 
         villager = action.target_villager
         gift = action.target_item
@@ -427,7 +426,7 @@ class ActionExecutor:
 
         villager_state.save()
 
-        trigger = self.__get_gift_dialogue_trigger(valence)
+        trigger = self.__get_gift_dialogue_trigger(affinity_amount)
         dialogue = villager.get_dialogue(trigger)
 
         session.clock.advance(action.cost_amount)
@@ -591,10 +590,20 @@ class ActionExecutor:
         # if none found, try again with another rarity;
         # if no items at all, error out
         rarities = [r for r in RARITIES]
+
         while len(rarities) > 0:
             weights = [RARITY_WEIGHTS[r] for r in rarities]
             rarity = random.choices(rarities, weights=weights, k=1)[0]
-            choices = location.item_pool.filter(rarity=rarity)
+
+            items_at_rarity = location.item_pool.filter(rarity=rarity)
+
+            # find the item types among items at this rarity, then pick a random type to filter on
+            available_types = list(items_at_rarity.values_list("item_type", flat=True).distinct())
+
+            print(available_types)
+            item_type = random.choice(available_types)
+
+            choices = items_at_rarity.filter(item_type=item_type)
 
             if choices.count() > 0:
                 item = choices.order_by('?').first()
@@ -617,7 +626,7 @@ class ActionExecutor:
     #    4aff+ -> 3x
 
         base_value = friendliness
-        multiplier = 1 + (affinity_tier / 2)
+        multiplier = 1
 
         return int(base_value * multiplier)
 
@@ -626,18 +635,18 @@ class ActionExecutor:
         item's rarity, villager's friendliness"""
 
         VALENCE_VALUE_MAP = {
-            LOVE: 20,
-            LIKE: 10,
-            NEUTRAL: 5,
+            LOVE: 10,
+            LIKE: 5,
+            NEUTRAL: 2.5,
             DISLIKE: 0,
-            HATE: -5,
+            HATE: -2.5,
         }
 
         RARITY_MULTIPLIER_MAP = {
-            COMMON: 0.5,
-            UNCOMMON: 1,
-            RARE: 1.5,
-            EPIC: 2,
+            COMMON: 1,
+            UNCOMMON: 2,
+            RARE: 3,
+            EPIC: 4,
         }
 
         base_value = VALENCE_VALUE_MAP[valence]
@@ -682,17 +691,21 @@ class ActionExecutor:
         else:
             return DialogueLine.FIRST_MEETING
 
-    def __get_gift_dialogue_trigger(self, valence):
-        """Returns a trigger object for a gift action based on the valence of their reaction"""
+    def __get_gift_dialogue_trigger(self, affinity):
+        """Returns a dialogue trigger based on the total affinity gained from a gift action"""
 
-        VALENCE_TO_DIALOGUE_TRIGGER_MAP = {
-            LOVE: DialogueLine.LOVED_GIFT,
-            LIKE: DialogueLine.LIKED_GIFT,
-            NEUTRAL: DialogueLine.NEUTRAL_GIFT,
-            DISLIKE: DialogueLine.DISLIKED_GIFT,
-            HATE: DialogueLine.HATED_GIFT,
-        }
-        return VALENCE_TO_DIALOGUE_TRIGGER_MAP[valence]
+        if affinity >= 20:
+            return DialogueLine.LOVED_GIFT
+        elif affinity >= 10:
+            return DialogueLine.LIKED_GIFT
+        elif affinity > 0:
+            return DialogueLine.NEUTRAL_GIFT
+        elif affinity == 0:
+            return DialogueLine.DISLIKED_GIFT
+        elif affinity < 0:
+            return DialogueLine.HATED_GIFT
+        else:
+            raise ValueError("Gift dialogue trigger conditions have let an affinity number fall through somehow")
 
 class EventOperator:
     def react_to_time_passing(self, clock, session):

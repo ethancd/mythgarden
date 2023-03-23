@@ -553,16 +553,18 @@ ul {
   top: 0;
   z-index: 10;
   cursor: pointer;
+  overflow-y: auto;
 
   .speaker {
-    @include row;
+    @include column;
     gap: $small-gutter;
+
   }
 
   .portrait {
-    border: 2px solid #008f11;
-    height: 2.5rem;
-    width: 2.5rem;
+    border: 2px solid $dusty-pink;
+    height: 5rem;
+    width: 5rem;
 
     img {
       height: 100%;

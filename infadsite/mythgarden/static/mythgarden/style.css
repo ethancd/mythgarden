@@ -374,15 +374,16 @@ ul {
   position: absolute;
   top: 0;
   z-index: 10;
-  cursor: pointer; }
+  cursor: pointer;
+  overflow-y: auto; }
   #dialogue .speaker {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     gap: 0.5rem; }
   #dialogue .portrait {
-    border: 2px solid #008f11;
-    height: 2.5rem;
-    width: 2.5rem; }
+    border: 2px solid #ffd1d8;
+    height: 5rem;
+    width: 5rem; }
     #dialogue .portrait img {
       height: 100%;
       width: auto; }

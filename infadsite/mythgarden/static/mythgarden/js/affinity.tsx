@@ -13,6 +13,7 @@ export default function Affinity({wholeHearts, extraHeartFraction, maxHearts}: A
 
   const emptyHearts = calcEmptyHearts()
   const redPath = STATIC_PREFIX + 'red-heart.png'
+  const maroonPath = STATIC_PREFIX + 'maroon-heart.png'
   const blackPath = STATIC_PREFIX + 'black-heart.png'
   const height = `${extraHeartFraction * 100}%`
 
@@ -23,7 +24,7 @@ export default function Affinity({wholeHearts, extraHeartFraction, maxHearts}: A
 
       {extraHeartFraction > 0
         ? <span className='partial-container' key='partial'>
-            <span className='heart partial' style={{height}}><img src={redPath}></img></span>
+            <span className='heart partial' style={{height}}><img src={maroonPath}></img></span>
             <span className='heart'><img src={blackPath}></img></span>
           </span>
         : null
