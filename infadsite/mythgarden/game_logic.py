@@ -4,9 +4,9 @@ import math
 from .models import Bridge, Action, Place, Building, Session, VillagerState, ItemToken, \
     DialogueLine, ScheduledEvent
 from .models._constants import SEED, SPROUT, CROP, COMMON, UNCOMMON, RARE, EPIC, RARITIES, RARITY_WEIGHTS, FARM, SHOP, \
-    WILD_TYPES, FOREST, MOUNTAIN, BEACH, LOVE, LIKE, NEUTRAL, DISLIKE, HATE, SUNDAY, DAWN, FISHING_DESCRIPTION, \
+    WILD_TYPES, FOREST, MOUNTAIN, BEACH, LOVE, LIKE, NEUTRAL, DISLIKE, HATE, FIRST_DAY, DAWN, FISHING_DESCRIPTION, \
     DIGGING_DESCRIPTION, FORAGING_DESCRIPTION, SUNSET, TALK_MINUTES_PER_FRIENDLINESS, MAX_BOOST_LEVEL, \
-    BOOST_DENOMINATOR, KYS_MESSAGE
+    BOOST_DENOMINATOR, KYS_MESSAGE, EXIT_DESCRIPTION
 from .static_helpers import guard_type, guard_types
 
 
@@ -241,12 +241,12 @@ class ActionGenerator:
     def gen_exit_action(self, building):
         """Returns an action that exits the current place"""
         return Action(
-            description=f'Exit {building.name}',
+            description=EXIT_DESCRIPTION,
             action_type=Action.TRAVEL,
             target_place=building.surround,
             cost_amount=5,
             cost_unit=Action.MIN,
-            log_statement=f'You exited {building.name} back out to {building.surround.name}.',
+            log_statement=f'You exited {building.name}.',
         )
 
     def gen_plant_action(self, seed_token):
@@ -285,13 +285,13 @@ class ActionGenerator:
     def gen_travel_action(self, destination, direction, display_direction):
         """Returns an action that travels to given destination in given direction"""
         return Action(
-            description=f'Walk {display_direction}',
+            description=f'Go {display_direction}',
             action_type=Action.TRAVEL,
             target_place=destination,
             direction=direction,
             cost_amount=60,
             cost_unit=Action.MIN,
-            log_statement=f'You travelled {display_direction} to {destination.name}.',
+            log_statement=f'You travelled to {destination.name}.',
         )
 
     def gen_fishing_action(self):
@@ -327,7 +327,7 @@ class ActionGenerator:
     def gen_sleep_action(self, clock):
         """Returns an action for the hero to go to sleep till the next day"""
         return Action(
-            description='Go to sleep',
+            description='Sleep',
             action_type=Action.SLEEP,
             cost_amount=clock.minutes_to_midnight,
             cost_unit=Action.MIN,
@@ -838,4 +838,4 @@ class EventOperator:
         return event_is_now_or_in_past and not event_state.has_occurred
 
     def __is_game_over(self, clock):
-        return clock.is_new_day and clock.day == SUNDAY
+        return clock.is_new_day and clock.day == FIRST_DAY

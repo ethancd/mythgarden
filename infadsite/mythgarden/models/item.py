@@ -54,9 +54,14 @@ class Item(models.Model):
 
     def get_next_name(self):
         # could have some Item.name validation that ensures that the name ends with the item type for seed/sprout/crop
+        # e.g. Parsnip Seed -> Parsnip Sprout -> Parsnip
+
         curr_type_name = dict(ITEM_TYPES)[self.item_type]
         next_type_name = dict(ITEM_TYPES)[self.get_next_type()]
-        return self.name.replace(curr_type_name, next_type_name)
+        if self.get_next_type() == CROP:
+            return self.name.replace(f' {curr_type_name}', '')
+        else:
+            return self.name.replace(curr_type_name, next_type_name)
 
     def get_next_price(self):
         # seed -> sprout is mostly irrelevant, so goal is to make seed -> crop hit the CROP_PROFIT_MULTIPLIER

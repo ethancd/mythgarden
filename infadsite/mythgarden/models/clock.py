@@ -1,13 +1,13 @@
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
-from ._constants import MINUTES_IN_A_DAY, DAYS_OF_WEEK, SUNDAY, DAWN, MINUTES_IN_A_HALF_DAY, \
+from ._constants import MINUTES_IN_A_DAY, DAYS_OF_WEEK, FIRST_DAY, DAWN, MINUTES_IN_A_HALF_DAY, \
     OVERSLEPT_TIME, DAY_TO_INDEX
 
 
 class Clock(models.Model):
     session = models.OneToOneField('Session', on_delete=models.CASCADE, primary_key=True)
-    day = models.CharField(default=SUNDAY, max_length=9, choices=DAYS_OF_WEEK)
+    day = models.CharField(default=FIRST_DAY, max_length=9, choices=DAYS_OF_WEEK)
     time = models.IntegerField(default=DAWN, validators=[MinValueValidator(0), MaxValueValidator(MINUTES_IN_A_DAY - 1)])
     is_new_day = models.BooleanField(default=False)
 

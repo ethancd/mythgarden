@@ -1,7 +1,7 @@
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
-from ._constants import DAYS_OF_WEEK, MINUTES_IN_A_DAY, DAWN, SUNDAY
+from ._constants import DAYS_OF_WEEK, MINUTES_IN_A_DAY, DAWN, MONDAY
 
 
 class ScheduledEvent(models.Model):
@@ -11,7 +11,7 @@ class ScheduledEvent(models.Model):
         (ITEMS_APPEAR, 'Items appear'),
     ]
 
-    day = models.CharField(default=SUNDAY, max_length=9, choices=DAYS_OF_WEEK)
+    day = models.CharField(max_length=9, choices=DAYS_OF_WEEK, null=True)
     time = models.IntegerField(default=DAWN,
                                validators=[MinValueValidator(0), MaxValueValidator(MINUTES_IN_A_DAY - 1)])
 
