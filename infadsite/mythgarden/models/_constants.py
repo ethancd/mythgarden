@@ -28,23 +28,25 @@ FRIDAY = 'FRI'
 SATURDAY = 'SAT'
 
 DAYS_OF_WEEK = [
-    (SUNDAY, 'Sun'),
     (MONDAY, 'Mon'),
     (TUESDAY, 'Tue'),
     (WEDNESDAY, 'Wed'),
     (THURSDAY, 'Thu'),
     (FRIDAY, 'Fri'),
     (SATURDAY, 'Sat'),
+    (SUNDAY, 'Sun'),
 ]
 
+FIRST_DAY = DAYS_OF_WEEK[0][0]
+
 DAY_TO_INDEX = {
-    SUNDAY: 0,
-    MONDAY: 1,
-    TUESDAY: 2,
-    WEDNESDAY: 3,
-    THURSDAY: 4,
-    FRIDAY: 5,
-    SATURDAY: 6,
+    MONDAY: 0,
+    TUESDAY: 1,
+    WEDNESDAY: 2,
+    THURSDAY: 3,
+    FRIDAY: 4,
+    SATURDAY: 5,
+    SUNDAY: 6,
 }
 
 KOIN_SIGN = '⚜️'
@@ -55,7 +57,9 @@ CROP = 'CROP'
 GIFT = 'GIFT'
 FISH = 'FISH'
 MINERAL = 'MINERAL'
-ARTIFACT = 'ARTIFACT'
+FOSSIL = 'FOSSIL'
+TECHNO = 'TECHNO'
+MAGIC = 'MAGIC'
 HERB = 'HERB'
 FLOWER = 'FLOWER'
 BERRY = 'BERRY'
@@ -67,7 +71,9 @@ ITEM_EMOJIS = {
     GIFT: '🎁',
     FISH: '🐟',
     MINERAL: '💎',
-    ARTIFACT: '🗿',
+    FOSSIL: '🦴',
+    TECHNO: '⚙️',
+    MAGIC: '✨',
     HERB: '🌿',
     FLOWER: '🌸',
     BERRY: '🍓',
@@ -80,7 +86,9 @@ ITEM_TYPES = [
     (GIFT, 'Gift'),
     (FISH, 'Fish'),
     (MINERAL, 'Mineral'),
-    (ARTIFACT, 'Artifact'),
+    (FOSSIL, 'Fossil'),
+    (TECHNO, 'Techno'),
+    (MAGIC, 'Magic'),
     (HERB, 'Herb'),
     (FLOWER, 'Flower'),
     (BERRY, 'Berry'),
@@ -153,6 +161,7 @@ IMAGE_PREFIX = 'mythgarden/images/'
 FISHING_DESCRIPTION = 'Go fishing'
 DIGGING_DESCRIPTION = 'Dig for something interesting'
 FORAGING_DESCRIPTION = 'Forage for plants'
+EXIT_DESCRIPTION = 'Exit'
 
 WELCOME_MESSAGE = 'Welcome to Mythgarden! You have one week to grow crops, make friends, and find treasures. Good luck and have fun!'
 

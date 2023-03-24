@@ -1,6 +1,7 @@
 from django.db import models
 
-from ._constants import DIRECTIONS, KOIN_SIGN, FISHING_DESCRIPTION, DIGGING_DESCRIPTION, FORAGING_DESCRIPTION
+from ._constants import DIRECTIONS, KOIN_SIGN, FISHING_DESCRIPTION, DIGGING_DESCRIPTION, FORAGING_DESCRIPTION, \
+    EXIT_DESCRIPTION
 
 
 class Action(models.Model):
@@ -15,16 +16,23 @@ class Action(models.Model):
     GATHER = 'GATHER'
     SLEEP = 'SLEEP'
 
+    ENTER = 'ENTER'
+    EXIT = 'EXIT'
+
     FISHING = 'FISHING'
     DIGGING = 'DIGGING'
     FORAGING = 'FORAGING'
 
     ACTION_EMOJIS = {
-        TRAVEL: '🚶',
+        TRAVEL: {
+            TRAVEL: '🚶',
+            ENTER: '🏠',
+            EXIT: '🚪',
+        },
         TALK: '💬',
         GIVE: '🎁',
         WATER: '💧',
-        PLANT: '🌱',
+        PLANT: '🌰',
         HARVEST: '🌾',
         BUY: '🛒',
         SELL: '💰',
@@ -103,8 +111,19 @@ class Action(models.Model):
             }
             gather_type = GATHER_DESCRIPTION_MAP[self.description]
             return self.ACTION_EMOJIS[self.GATHER][gather_type]
+        elif self.action_type == self.TRAVEL:
+            travel_type = self.get_travel_type_of_action()
+            return self.ACTION_EMOJIS[self.TRAVEL][travel_type]
         else:
             return self.ACTION_EMOJIS[self.action_type]
+
+    def get_travel_type_of_action(self):
+        if self.description == EXIT_DESCRIPTION:
+            return self.EXIT
+        elif 'Enter' in self.description:
+            return self.ENTER
+        else:
+            return self.TRAVEL
 
     @property
     def display_cost(self):
