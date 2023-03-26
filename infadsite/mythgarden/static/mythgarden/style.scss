@@ -308,12 +308,14 @@ ul {
   width: 100%;
 
   .item {
+    @include row;
     border: 2px solid;
     overflow: hidden;
-    white-space: nowrap;
     flex-grow: 1;
     word-wrap: break-word;
-
+    max-width: 100%;
+    align-items: center;
+    gap: $small-gutter;
 
     &.empty-slot {
       border-color: $invisible;
@@ -358,7 +360,6 @@ ul {
 
     .type {
       font-size: $medium-text;
-      margin-right: $small-gutter;
       position: relative;
 
       @media only screen and (max-width: 900px) {
@@ -380,6 +381,8 @@ ul {
 
     .name {
       font-size: $med-small-text;
+      display: inline-block;
+      max-width: 80%;
 
       @media only screen and (max-width: 900px) {
         font-size: $small-text;
@@ -620,7 +623,7 @@ ul {
     font-size: $smallish-text;
   }
 
-  &:hover::after {
+  &:after {
     color: #8f0011;
     content: '×';
     font-size: $med-large-text;

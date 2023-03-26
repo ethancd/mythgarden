@@ -11,7 +11,12 @@ function ActionsList ({ actions }: ActionsListProps): JSX.Element {
 
     actions.forEach((action) => {
       if (action.targetCount <= 1) {
-        newActionsList.push(action)
+        const isInNewList = newActionsList.find(a => a.description === action.description)
+
+        if (isInNewList == null) {
+          newActionsList.push(action)
+        }
+
         return;
       }
 

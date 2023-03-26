@@ -194,11 +194,15 @@ ul {
   justify-content: space-between;
   width: 100%; }
   #inventory .item {
+    display: flex;
+    flex-direction: row;
     border: 2px solid;
     overflow: hidden;
-    white-space: nowrap;
     flex-grow: 1;
-    word-wrap: break-word; }
+    word-wrap: break-word;
+    max-width: 100%;
+    align-items: center;
+    gap: 0.5rem; }
     #inventory .item.empty-slot {
       border-color: #ffffff00;
       opacity: 0.5; }
@@ -226,7 +230,6 @@ ul {
         color: rebeccapurple; }
     #inventory .item .type {
       font-size: 2rem;
-      margin-right: 0.5rem;
       position: relative; }
       @media only screen and (max-width: 900px) {
         #inventory .item .type {
@@ -241,7 +244,9 @@ ul {
           #inventory .item .type:after {
             font-size: 1.5rem; } }
     #inventory .item .name {
-      font-size: 1.5rem; }
+      font-size: 1.5rem;
+      display: inline-block;
+      max-width: 80%; }
       @media only screen and (max-width: 900px) {
         #inventory .item .name {
           font-size: 1rem; } }
@@ -419,7 +424,7 @@ ul {
     font-size: 2rem; }
   #dialogue .dialogue-text {
     font-size: 1.25rem; }
-  #dialogue:hover::after {
+  #dialogue:after {
     color: #8f0011;
     content: '×';
     font-size: 3rem;
