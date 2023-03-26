@@ -89,6 +89,9 @@ class Building(Place):
     def serialize(self):
         return super().serialize()
 
+    class Meta:
+        ordering = ['name']
+
 
 class PlaceState(models.Model):
     session = models.ForeignKey('Session', on_delete=models.CASCADE, related_name='place_states')

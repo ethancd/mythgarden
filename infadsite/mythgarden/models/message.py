@@ -19,3 +19,6 @@ class Message(models.Model):
     @property
     def abbr_text(self):
         return f"{self.text[:50]}{'...' if len(self.text) > 50 else ''}"
+
+    class Meta:
+        ordering = ['pk']

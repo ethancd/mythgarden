@@ -117,3 +117,6 @@ class ItemToken(models.Model):
     @property
     def emoji(self):
         return self.item.emoji
+
+    class Meta:
+        ordering = ['pk']

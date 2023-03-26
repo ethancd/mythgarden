@@ -68,6 +68,9 @@ class Villager(models.Model):
 
         return dialogue
 
+    class Meta:
+        ordering = ['name']
+
 
 class VillagerState(models.Model):
     MAX_AFFINITY = 100
@@ -139,3 +142,6 @@ class VillagerState(models.Model):
         self.has_been_talked_to = True
         self.has_ever_been_talked_to = True
         self.save()
+
+    class Meta:
+        ordering = ['villager__name']
