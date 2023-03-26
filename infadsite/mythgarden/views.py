@@ -39,7 +39,6 @@ def action(request):
         with transaction.atomic():
             updated_models = ActionExecutor().execute(requested_action, session)
             updated_models['actions'] = ActionGenerator().get_actions_for_session(session)
-            updated_models['messages'] = list(session.messages.all())
     except (ValidationError, IntegrityError) as e:
         session.messages.create(text=e.message, is_error=True)
         return JsonResponse({'error': e.message, 'messages': get_serialized_messages(session)})

@@ -197,7 +197,8 @@ ul {
     border: 2px solid;
     overflow: hidden;
     white-space: nowrap;
-    flex-grow: 1; }
+    flex-grow: 1;
+    word-wrap: break-word; }
     #inventory .item.empty-slot {
       border-color: #ffffff00;
       opacity: 0.5; }
@@ -206,18 +207,39 @@ ul {
     #inventory .item.uncommon {
       border-color: limegreen;
       background-color: rgba(50, 205, 50, 0.5); }
+      #inventory .item.uncommon .type:after {
+        content: '*';
+        color: #1e7b1e; }
     #inventory .item.rare {
       border-color: dodgerblue;
-      background-color: rgba(30, 144, 255, 0.5); }
+      background-color: rgba(30, 144, 255, 0.5);
+      box-shadow: 0 0 0.1rem 0 dodgerblue; }
+      #inventory .item.rare .type:after {
+        content: '**';
+        color: #005db7; }
     #inventory .item.epic {
       border-color: rebeccapurple;
-      background-color: rgba(102, 51, 153, 0.5); }
+      background-color: rgba(102, 51, 153, 0.5);
+      box-shadow: 0 0 0.25rem 0 rebeccapurple; }
+      #inventory .item.epic .type:after {
+        content: '***';
+        color: rebeccapurple; }
     #inventory .item .type {
       font-size: 2rem;
-      margin-right: 0.5rem; }
+      margin-right: 0.5rem;
+      position: relative; }
       @media only screen and (max-width: 900px) {
         #inventory .item .type {
           font-size: 1.5rem; } }
+      #inventory .item .type:after {
+        content: '';
+        position: absolute;
+        font-size: 2rem;
+        bottom: calc(0% - $medium-text);
+        left: 0; }
+        @media only screen and (max-width: 900px) {
+          #inventory .item .type:after {
+            font-size: 1.5rem; } }
     #inventory .item .name {
       font-size: 1.5rem; }
       @media only screen and (max-width: 900px) {
@@ -321,11 +343,13 @@ ul {
   overflow: hidden;
   width: 100%; }
   #local-items .item {
+    position: relative;
     display: flex;
     flex-direction: column;
     width: 15%;
     box-sizing: border-box;
-    overflow: hidden; }
+    overflow: hidden;
+    word-wrap: break-word; }
     #local-items .item.empty-slot {
       border-color: beige;
       opacity: 0.5; }
@@ -334,10 +358,14 @@ ul {
       text-align: center; }
     #local-items .item .name {
       text-align: center;
-      font-size: 1.5rem; }
+      font-size: 1rem; }
       @media only screen and (max-width: 900px) {
         #local-items .item .name {
           font-size: 0.75rem; } }
+    #local-items .item .quantity {
+      position: absolute;
+      right: 0.5rem;
+      top: 0.5rem; }
     #local-items .item.watered {
       border: 1px solid blue; }
 

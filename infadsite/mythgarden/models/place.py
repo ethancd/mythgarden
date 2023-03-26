@@ -2,7 +2,7 @@ from django.db import models
 from django.templatetags.static import static
 
 from ._constants import PLACE_TYPES, FARM, TOWN, MOUNTAIN, FOREST, BEACH, HOME, MINERAL, FOSSIL, FISH, HERB, FLOWER, \
-    BERRY, TECHNO, MAGIC, IMAGE_PREFIX
+    BERRY, TECHNO, MAGIC, IMAGE_PREFIX, SHOP
 from .item import Item, ItemToken
 
 
@@ -23,8 +23,6 @@ class Place(models.Model):
 
     place_type = models.CharField(max_length=8, choices=PLACE_TYPES, default=TOWN)
 
-    default_items = models.ManyToManyField('Item', blank=True)
-
     item_pool = models.ManyToManyField('Item', blank=True, related_name='pool_locations')
 
     objects = PlaceManager()
@@ -32,6 +30,11 @@ class Place(models.Model):
     @classmethod
     def get_default_pk(cls):
         place, created = cls.objects.get_or_create(name='The Farm', place_type=FARM)
+        return place.pk
+
+    @classmethod
+    def get_default_shop_pk(cls):
+        place, created = cls.objects.get_or_create(name='mom and pop shop', place_type=SHOP)
         return place.pk
 
     def __str__(self):
@@ -92,26 +95,6 @@ class PlaceState(models.Model):
     place = models.ForeignKey(Place, on_delete=models.CASCADE, related_name='states')
 
     item_tokens = models.ManyToManyField('ItemToken', blank=True)
-    occupants = models.ManyToManyField('Villager', blank=True)
 
     def __str__(self):
         return f'{self.place} state ' + self.session.abbr_key_tag()
-
-    def save(self, *args, **kwargs):
-        if self._state.adding:
-            # save place state first so we can have id and assign contents and occupants
-            super().save(*args, **kwargs)
-
-            # set contents and occupants based on place defaults
-
-            item_token_objs = [ItemToken(session=self.session, item=item) for item in self.place.default_items.all()]
-            item_tokens = ItemToken.objects.bulk_create(item_token_objs)
-            self.item_tokens.set(item_tokens)
-
-            try:
-                building = self.place.building
-                self.occupants.set(building.residents.all())
-            except Building.DoesNotExist:
-                pass
-        else:
-            super().save(*args, **kwargs)

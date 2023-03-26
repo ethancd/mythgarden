@@ -80,6 +80,7 @@ class ItemToken(models.Model):
     item = models.ForeignKey('Item', on_delete=models.CASCADE, related_name='tokens')
     has_been_watered = models.BooleanField(default=False)
     bought_from_store = models.BooleanField(default=False)
+    quantity = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
         return self.item.name + ' ' + self.session.abbr_key_tag()
@@ -91,6 +92,7 @@ class ItemToken(models.Model):
             'emoji': self.emoji,
             'hasBeenWatered': self.has_been_watered,
             'id': self.id,
+            'quantity': self.quantity
         }
 
     def make_copy(self):
@@ -115,5 +117,3 @@ class ItemToken(models.Model):
     @property
     def emoji(self):
         return self.item.emoji
-
-

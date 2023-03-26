@@ -1,27 +1,59 @@
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
-from ._constants import DAYS_OF_WEEK, MINUTES_IN_A_DAY, DAWN, MONDAY
+from ._constants import DAYS_OF_WEEK, MINUTES_IN_A_DAY, DAWN
+
+from .place import Place
 
 
 class ScheduledEvent(models.Model):
-    ITEMS_APPEAR = 'ITEMS_APPEAR'
+    SHOP_POPULATES = 'SHOP_POPULATES'
+    VILLAGER_APPEARS = 'VILLAGER_APPEARS'
 
     EVENT_TYPES = [
-        (ITEMS_APPEAR, 'Items appear'),
+        (SHOP_POPULATES, 'Shop populates'),
+        (VILLAGER_APPEARS, 'Villager appears'),
     ]
 
     day = models.CharField(max_length=9, choices=DAYS_OF_WEEK, null=True)
+    is_daily = models.BooleanField(default=False)
     time = models.IntegerField(default=DAWN,
                                validators=[MinValueValidator(0), MaxValueValidator(MINUTES_IN_A_DAY - 1)])
 
-    place = models.ForeignKey('Place', on_delete=models.SET_NULL, null=True, blank=True, related_name='scheduled_events')
-    items = models.ManyToManyField('Item', blank=True, related_name='scheduled_events')
-
-    event_type = models.CharField(max_length=12, choices=EVENT_TYPES, default=ITEMS_APPEAR)
+    event_type = models.CharField(max_length=16, choices=EVENT_TYPES)
 
     def __str__(self):
-        return f'Scheduled Event: {self.get_event_type_display()} in {self.place} at {self.time} on {self.day}'
+        return f'Scheduled Event: {self.get_event_type_display()} at {self.time} on {self.day}'
+
+
+class PopulateShopEvent(ScheduledEvent):
+    seed = models.ForeignKey('Item', on_delete=models.CASCADE, null=True, blank=True, related_name='seed_shop_event')
+    gift = models.ForeignKey('Item', on_delete=models.CASCADE, null=True, blank=True, related_name='gift_shop_event')
+    gift_quantity = models.IntegerField(null=True, blank=True)
+
+    merch_slots = models.ManyToManyField('MerchSlot', blank=True)
+
+    shop = models.ForeignKey('Place', on_delete=models.CASCADE, default=Place.get_default_shop_pk)
+
+    def save(self, *args, **kwargs):
+        if not self.event_type:
+            self.event_type = ScheduledEvent.SHOP_POPULATES
+
+        return super().save(*args, **kwargs)
+
+
+class VillagerAppearsEvent(ScheduledEvent):
+    place = models.ForeignKey('Place', on_delete=models.CASCADE, null=True, blank=True)
+    villager = models.ForeignKey('Villager', on_delete=models.CASCADE)
+
+    def save(self, *args, **kwargs):
+        if not self.event_type:
+            self.event_type = ScheduledEvent.VILLAGER_APPEARS
+
+        return super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'Event: {self.villager} appears in {self.place} at {self.time} on {self.day}'
 
 
 class ScheduledEventState(models.Model):

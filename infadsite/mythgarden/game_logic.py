@@ -1,12 +1,12 @@
 import random
 import math
 
-from .models import Bridge, Action, Place, Building, Session, VillagerState, ItemToken, \
+from .models import Bridge, Action, Place, Building, Session, VillagerState, Item, ItemToken, \
     DialogueLine, ScheduledEvent
 from .models._constants import SEED, SPROUT, CROP, COMMON, UNCOMMON, RARE, EPIC, RARITIES, RARITY_WEIGHTS, FARM, SHOP, \
     WILD_TYPES, FOREST, MOUNTAIN, BEACH, LOVE, LIKE, NEUTRAL, DISLIKE, HATE, FIRST_DAY, DAWN, FISHING_DESCRIPTION, \
     DIGGING_DESCRIPTION, FORAGING_DESCRIPTION, SUNSET, TALK_MINUTES_PER_FRIENDLINESS, MAX_BOOST_LEVEL, \
-    BOOST_DENOMINATOR, KYS_MESSAGE, EXIT_DESCRIPTION
+    BOOST_DENOMINATOR, KYS_MESSAGE, EXIT_DESCRIPTION, DAYS_OF_WEEK, MAX_ITEMS
 from .static_helpers import guard_type, guard_types
 
 
@@ -255,7 +255,7 @@ class ActionGenerator:
             description=f'Plant {seed_token.name}',
             action_type=Action.PLANT,
             target_item=seed_token,
-            cost_amount=15,
+            cost_amount=30,
             cost_unit=Action.MIN,
             log_statement=f'You planted some {seed_token.name} in the field.',
         )
@@ -277,7 +277,7 @@ class ActionGenerator:
             description=f'Harvest {crop_token.name}',
             action_type=Action.HARVEST,
             target_item=crop_token,
-            cost_amount=15,
+            cost_amount=30,
             cost_unit=Action.MIN,
             log_statement=f'You harvested the {crop_token.name}.',
         )
@@ -358,6 +358,8 @@ class ActionExecutor:
 
         if hasattr(self, ex) and callable(getattr(self, ex)):
             updated_models = getattr(self, ex)(action, session)
+            updated_models['villagerStates'] = list(session.occupant_states.all())
+            updated_models['messages'] = list(session.messages.all())
         else:
             raise ValueError(f'Unknown action type: {action.get_action_type_display().lower()}')
 
@@ -377,7 +379,6 @@ class ActionExecutor:
             'clock': session.clock,
             'buildings': list(session.location.buildings.all()),
             'localItemTokens': list(session.local_item_tokens.all()),
-            'villagerStates': list(session.occupant_states.all()),
         }
 
     def execute_talk_action(self, action, session):
@@ -405,7 +406,6 @@ class ActionExecutor:
         return {
             'hero': session.hero_state,
             'clock': session.clock,
-            'villagerStates': list(session.occupant_states.all()),
             'dialogue': dialogue,
         }
 
@@ -447,7 +447,6 @@ class ActionExecutor:
         return {
             'hero': session.hero_state,
             'inventory': list(session.inventory.item_tokens.all()),
-            'villagerStates': list(session.occupant_states.all()),
             'dialogue': dialogue,
         }
 
@@ -455,9 +454,26 @@ class ActionExecutor:
         """Executes a sell action, which removes an item from the hero's inventory
         and adds the price in koin to the hero's wallet"""
 
-        session.inventory.item_tokens.remove(action.target_item)
+        item = action.target_item
+
+        session.inventory.item_tokens.remove(item)
+
+        #  if the item should get repopulated into the store, do that
+        if item.bought_from_store and item.item_type != SEED:
+            matching_item_in_store = session.local_item_tokens.filter(item=item.item)
+            store_has_open_slot = session.local_item_tokens.count() < MAX_ITEMS
+
+            if matching_item_in_store.exists():
+                matching_item = matching_item_in_store.first()
+                matching_item.quantity += 1
+                matching_item.save()
+            elif store_has_open_slot:
+                item.quantity = 1
+                item.save()
+                session.location_state.item_tokens.add(item)
+
         session.wallet.money += action.cost_amount
-        if not action.target_item.bought_from_store:
+        if not item.bought_from_store:
             session.hero_state.koin_earned += action.cost_amount
 
         session.messages.create(text=action.log_statement)
@@ -466,6 +482,7 @@ class ActionExecutor:
         return {
             'hero': session.hero_state,
             'wallet': session.wallet,
+            'localItemTokens': list(session.local_item_tokens.all()),
             'inventory': list(session.inventory.item_tokens.all()),
         }
 
@@ -474,10 +491,20 @@ class ActionExecutor:
         and deducts the price in koin from the hero's wallet"""
 
         item = action.target_item
+
         new_item = item.make_copy()
         new_item.bought_from_store = True
+        new_item.quantity = None
         new_item.save()
         session.inventory.item_tokens.add(new_item)
+
+        if item.quantity:
+            item.quantity -= 1
+
+            if item.quantity == 0:
+                session.location_state.item_tokens.remove(item)
+            else:
+                item.save()
 
         session.wallet.money -= action.cost_amount
 
@@ -715,26 +742,142 @@ class EventOperator:
             session.save()
             return
 
-        # check for start of day and run hard-coded events
+        # if in the middle of the day, just run scheduled events (from database)
+        if not clock.is_new_day:
+            self.trigger_scheduled_events_for_so_far_today(clock, session)
+
+        # if start of the day, finish yesterday's events, run hard-coded events, run scheduled events, then sleep
         if clock.is_new_day:
+            self.trigger_remaining_events_from_yesterday(clock, session)
             self.reset_for_new_day(clock, session)
 
-            sleep_message, is_error = self.fall_asleep(clock, session.hero_state)
-            session.messages.create(text=sleep_message, is_error=is_error)
+            self.trigger_scheduled_events_for_so_far_today(clock, session)
 
-        # run scheduled events (from database)
-        self.trigger_scheduled_events(clock, list(session.event_states.all()), session)
+            self.fall_asleep(clock, session)  # this advances the clock! must happen after all other events :D
+
+    def trigger_remaining_events_from_yesterday(self, clock, session):
+        # If we're starting a new day, then per force we want to trigger any untriggered events that were set
+        # to go off yesterday.
+        yesterday_index = (clock.day_index - 1)
+        yesterday = DAYS_OF_WEEK[yesterday_index][0]
+
+        events_to_trigger_queue = self.__build_events_to_trigger_queue(yesterday, session.event_states)
+
+        self.trigger_events(list(events_to_trigger_queue), session)
+
+    def trigger_scheduled_events_for_so_far_today(self, clock, session):
+        events_to_trigger_sometime_today_queue = self.__build_events_to_trigger_queue(clock.day, session.event_states)
+
+        events_to_trigger_queue = events_to_trigger_sometime_today_queue.filter(event__time__lte=clock.time)
+
+        self.trigger_events(list(events_to_trigger_queue), session)
+
+    def trigger_events(self, event_states, session):
+        for event_state in event_states:
+            self.trigger_event(event_state.event, session)
+            event_state.mark_as_occurred()
+
+    def __build_events_to_trigger_queue(self, day, event_states):
+        """Build an ordered queue of events to trigger with the following properties:
+        -- has not yet occurred AND
+        -- is_daily OR is set to occur on the given day
+        -- is ordered by time ascending, then is_daily=true, then is_daily=false
+        (by having is_daily=True first, we can "overwrite" a daily event with a more specific one-day event at the same time)
+        """
+        untriggered_events = event_states.filter(has_occurred=False)
+
+        events_to_trigger_queue = untriggered_events.filter(event__is_daily=True) | untriggered_events.filter(event__day=day)
+
+        events_to_trigger_queue.order_by('event__time', '-event__is_daily', 'event__pk')  # orders by time, then is_daily=True, then is_daily=False
+
+        return events_to_trigger_queue
+
+    def trigger_event(self, event, session):
+        """Triggers the given event based on the event_type"""
+        if event.event_type == ScheduledEvent.SHOP_POPULATES:
+            self.populate_shop(event.populateshopevent, session)  # django forces PopulateShopEvent into populateshopevent
+        elif event.event_type == ScheduledEvent.VILLAGER_APPEARS:
+            self.villager_appears(event.villagerappearsevent, session)
+
+    def populate_shop(self, event, session):
+        """Fill the shop inventory for the day, which includes:
+        -unlimited stock of a seed
+        -limited gift (determined by items and gift quantity)
+        -random merchandise (determined by merch_slots)"""
+
+        item_tokens = []
+
+        if event.seed:
+            seed = ItemToken(session=session, item=event.seed)
+            item_tokens.append(seed)
+
+        if event.merch_slots.count() > 0:
+            merchandise_tokens = self.__generate_merchandise_tokens(list(event.merch_slots.all()), session)
+            item_tokens += merchandise_tokens
+
+        if event.gift:
+            gift = ItemToken(session=session, item=event.gift, quantity=event.gift_quantity)
+            item_tokens.append(gift)
+
+        ItemToken.objects.bulk_create(item_tokens)
+
+        place_state, created = session.place_states.get_or_create(place=event.shop)
+        place_state.item_tokens.set(item_tokens)
+
+        print(f'Populated shop with: {[i for i in item_tokens]}')
+
+    def __generate_merchandise_tokens(self, merch_slots, session):
+        merch_tokens = []
+
+        for merch_slot in merch_slots:
+            item_token = self.__generate_merch_token(merch_slot, session)
+            merch_tokens.append(item_token)
+
+        return merch_tokens
+
+    def __generate_merch_token(self, merch_slot, session):
+        item_type = random.choice(merch_slot.potential_item_types)
+        rarity = merch_slot.get_rarity(item_type)
+        quantity = merch_slot.quantity
+
+        item = Item.objects.filter(item_type=item_type, rarity=rarity).order_by('?').first()
+
+        return ItemToken(session=session, item=item, quantity=quantity)
+
+    def villager_appears(self, event, session):
+        villager_state = session.get_villager_state(event.villager)
+        place_state = session.get_place_state(event.place)
+        villager_state.location_state = place_state
+        villager_state.save()
+
+        print(f'Villager {villager_state.villager} has gone to {villager_state.location_state}')
+        if place_state:
+            print(f'So now {place_state} contains {[o.villager for o in place_state.occupants.all()]}')
+
+    def make_items_appear(self, event, session):
+        """Make items appear in the place saved on the event"""
+        item_tokens = []
+        for item in event.items.all():
+            item_tokens.append(ItemToken(session=session, item=item))
+        ItemToken.objects.bulk_create(item_tokens)
+
+        place_state, created = session.place_states.get_or_create(place=event.shop)
+
+        place_state.item_tokens.set(item_tokens)
 
     def reset_for_new_day(self, clock, session):
         clock.is_new_day = False
         clock.save()
 
         self.reset_villager_states(session.villager_states.all())
-
+        self.reset_daily_events(session.event_states.all())
         self.grow_crops(session.place_states.get(place__place_type=FARM))
 
     def reset_villager_states(self, villager_states):
         villager_states.update(has_been_talked_to=False, has_been_given_gift=False)
+
+    def reset_daily_events(self, event_states):
+        event_states.filter(event__is_daily=True).update(has_occurred=False)
 
     def grow_crops(self, farm_state):
         """Find all seeds/sprouts in the farm and "grow" them if they've been watered –
@@ -753,9 +896,12 @@ class EventOperator:
 
         farm_state.item_tokens.set(new_contents)
 
-    def fall_asleep(self, clock, hero_state):
+    def fall_asleep(self, clock, session):
         """Advances the clock to dawn or midday, depending on whether the hero is in bed or not,
         and returns a message"""
+
+        hero_state = session.hero_state
+
         if clock.time > DAWN:
             raise Exception(f'Time on the new day should be before dawn, not {clock.time}')
 
@@ -771,7 +917,8 @@ class EventOperator:
             is_error = True
 
         clock.save()
-        return sleep_message, is_error
+
+        session.messages.create(text=sleep_message, is_error=is_error)
 
     def trigger_game_over(self, session):
         hero_state = session.hero_state
@@ -804,38 +951,6 @@ class EventOperator:
         end = "you enter the time loop to begin the week again."
 
         return f'{start} {middle} {end}'
-
-    def trigger_scheduled_events(self, clock, event_states, session):
-        """Triggers all scheduled events that are due to occur at the current time"""
-
-        for event_state in event_states:
-            if self.__should_trigger(event_state, clock):
-                self.trigger_event(event_state.event, session)
-                event_state.mark_as_occurred()
-
-    def trigger_event(self, event, session):
-        """Triggers the given event based on the event_type"""
-        if event.event_type == ScheduledEvent.ITEMS_APPEAR:
-            self.make_items_appear(event, session)
-
-    def make_items_appear(self, event, session):
-        """Make items appear in the place saved on the event"""
-        item_tokens = []
-        for item in event.items.all():
-            item_tokens.append(ItemToken(session=session, item=item))
-        ItemToken.objects.bulk_create(item_tokens)
-
-        place_state, created = session.place_states.get_or_create(place=event.place)
-
-        place_state.item_tokens.set(item_tokens)
-
-    # private methods
-    def __should_trigger(self, event_state, clock):
-        """Returns True if the event should be triggered, False otherwise"""
-        event = event_state.event
-        event_is_now_or_in_past = clock.is_now_or_in_past(event.day, event.time)
-
-        return event_is_now_or_in_past and not event_state.has_occurred
 
     def __is_game_over(self, clock):
         return clock.is_new_day and clock.day == FIRST_DAY

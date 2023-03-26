@@ -312,6 +312,8 @@ ul {
     overflow: hidden;
     white-space: nowrap;
     flex-grow: 1;
+    word-wrap: break-word;
+
 
     &.empty-slot {
       border-color: $invisible;
@@ -325,24 +327,54 @@ ul {
     &.uncommon {
       border-color: limegreen;
       background-color: fade-out(limegreen, 0.5);
+
+      .type:after {
+        content: '*';
+        color: darken(limegreen, 20%);
+      }
     }
 
     &.rare {
       border-color: dodgerblue;
       background-color: fade-out(dodgerblue, 0.5);
+      box-shadow: 0 0 0.1rem 0 dodgerblue;
+
+      .type:after {
+        content: '**';
+        color: darken(dodgerblue, 20%);
+      }
     }
 
     &.epic {
       border-color: rebeccapurple;
       background-color: fade-out(rebeccapurple, 0.5);
+      box-shadow: 0 0 0.25rem 0 rebeccapurple;
+
+      .type:after {
+        content: '***';
+        color: rebeccapurple;
+      }
     }
 
     .type {
       font-size: $medium-text;
       margin-right: $small-gutter;
+      position: relative;
 
       @media only screen and (max-width: 900px) {
         font-size: $med-small-text;
+      }
+
+      &:after {
+        content: '';
+        position: absolute;
+        font-size: $medium-text;
+        bottom: calc(0% - $medium-text);
+        left: 0;
+
+        @media only screen and (max-width: 900px) {
+          font-size: $med-small-text;
+        }
       }
     }
 
@@ -480,11 +512,13 @@ ul {
   width: 100%;
 
   .item {
+    position: relative;
     display: flex;
     flex-direction: column;
     width: 15%;
     box-sizing: border-box;
     overflow: hidden;
+    word-wrap: break-word;
 
     &.empty-slot {
       border-color: beige;
@@ -498,11 +532,17 @@ ul {
 
     .name {
       text-align: center;
-      font-size: $med-small-text;
+      font-size: $small-text;
 
       @media only screen and (max-width: 900px) {
         font-size: $fine-text;
       }
+    }
+
+    .quantity {
+      position: absolute;
+      right: $small-gutter;
+      top: $small-gutter;
     }
 
     &.watered {

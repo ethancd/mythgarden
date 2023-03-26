@@ -33,26 +33,21 @@ class Session(models.Model):
     def location_state(self):
         return self.place_states.get_or_create(place=self.location)[0]
 
-    @property
-    def occupants(self):
-        return self.location_state.occupants.all()
+    def get_place_state(self, place):
+        if not place:
+            return None
+
+        return self.place_states.get(place=place)
 
     @property
     def occupant_states(self):
-        occupant_states = self.villager_states.filter(villager__in=self.occupants)
-
-        # ensure all occupants have a state
-        for villager in self.occupants.all():
-            if occupant_states.filter(villager=villager).exists():
-                continue
-
-            villager_state = self.villager_states.create(villager=villager, location=self.location)
-            occupant_states |= VillagerState.objects.filter(pk=villager_state.pk)
-
-        return occupant_states
+        return self.location_state.occupants.all()
 
     def get_villager_state(self, villager):
-        return self.occupant_states.filter(villager=villager).first()
+        if not villager:
+            return None
+
+        return self.villager_states.get(villager=villager)
 
     @property
     def local_item_tokens(self):

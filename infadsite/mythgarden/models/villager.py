@@ -3,7 +3,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.templatetags.static import static
 
 from .item_type_preference import ItemTypePreference
-from .place import Place, Building
+from .place import Place, PlaceState, Building
 from .dialogue import DialogueLine
 
 from ._constants import NEUTRAL, IMAGE_PREFIX
@@ -78,7 +78,7 @@ class VillagerState(models.Model):
     villager = models.ForeignKey('Villager', on_delete=models.CASCADE, related_name='states')
 
     affinity = models.IntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(MAX_AFFINITY)])
-    location = models.ForeignKey(Place, on_delete=models.CASCADE, related_name='villagers')  # , default=villager.home)
+    location_state = models.ForeignKey(PlaceState, on_delete=models.SET_NULL, related_name='occupants', null=True, blank=True)
 
     has_been_talked_to = models.BooleanField(default=False)
     has_ever_been_talked_to = models.BooleanField(default=False)
@@ -86,6 +86,13 @@ class VillagerState(models.Model):
 
     def __str__(self):
         return f'{self.villager} state ' + self.session.abbr_key_tag()
+
+    def save(self, *args, **kwargs):
+        if self._state.adding and not self.location_state and self.villager.home:
+            place_state, created = PlaceState.objects.get_or_create(session=self.session, place=self.villager.home)
+            self.location_state = place_state
+
+        super().save(*args, **kwargs)
 
     def serialize(self):
         return {

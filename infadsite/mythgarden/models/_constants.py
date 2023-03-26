@@ -136,6 +136,53 @@ VALENCES = [
     (HATE, 'hate'),
 ]
 
+MINOR = 'MINOR'
+MEDIUM = 'MEDIUM'
+MAJOR = 'MAJOR'
+GRAND = 'GRAND'
+
+MERCH_SLOT_TYPES = [
+    (MINOR, 'minor'),
+    (MEDIUM, 'medium'),
+    (MAJOR, 'major'),
+    (GRAND, 'grand')
+]
+
+BASIC_MERCH_TYPE_TO_RARITY_MAPPING = {
+    MINOR: COMMON,
+    MEDIUM: UNCOMMON,
+    MAJOR: RARE,
+    GRAND: EPIC,
+}
+
+PREMIUM_MERCH_TYPE_TO_RARITY_MAPPING = {
+    MINOR: None,
+    MEDIUM: COMMON,
+    MAJOR: UNCOMMON,
+    GRAND: RARE,
+}
+
+MERCH_TYPE_TO_QUANTITY_MAPPING = {
+    MINOR: 3,
+    MEDIUM: 2,
+    MAJOR: 2,
+    GRAND: 1
+}
+
+BASIC_ITEM_TYPES = [
+    FISH,
+    FOSSIL,
+    HERB,
+    BERRY,
+]
+
+PREMIUM_ITEM_TYPES = [
+    FLOWER,
+    MINERAL,
+    TECHNO,
+    MAGIC
+]
+
 FARM = 'FARM'
 TOWN = 'TOWN'
 MOUNTAIN = 'MOUNTAIN'
