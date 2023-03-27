@@ -21,6 +21,17 @@ h1, h2, h3 {
   padding: 0;
   vertical-align: baseline; }
 
+textarea {
+  border: none;
+  background-color: transparent;
+  overflow: auto;
+  outline: none;
+  box-shadow: none;
+  resize: none;
+  font-size: inherit;
+  font-family: inherit;
+  padding: 0; }
+
 /* layout */
 #page {
   height: 100vh;

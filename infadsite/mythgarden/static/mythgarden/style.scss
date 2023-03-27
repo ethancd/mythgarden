@@ -60,6 +60,18 @@ h1, h2, h3 {
   vertical-align: baseline;
 }
 
+textarea {
+  border: none;
+  background-color: transparent;
+  overflow: auto;
+  outline: none;
+  box-shadow: none;
+  resize: none;
+  font-size: inherit;
+  font-family: inherit;
+  padding: 0;
+}
+
 /* layout */
 
 #page {
@@ -151,6 +163,9 @@ ul {
 
   .name {
     font-size: $medium-text;
+
+    textarea {
+    }
 
     @media only screen and (max-width: 900px) {
       font-size: $med-small-text;

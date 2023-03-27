@@ -6,7 +6,7 @@ from ._constants import IMAGE_PREFIX
 
 
 class Hero(models.Model):
-    name = models.CharField(max_length=255, default='New Farmer')
+    name = models.CharField(max_length=16, default='New Farmer')
     image_path = models.CharField(max_length=255, default='portraits/default.png')
 
     high_score = models.IntegerField(default=0)
@@ -24,6 +24,14 @@ class Hero(models.Model):
             return True
         else:
             return False
+
+    @property
+    def is_default_name(self):
+        return self.name == 'New Farmer'
+
+    @property
+    def is_default_portrait(self):
+        return self.image_path == 'portraits/default.png'
 
     @property
     def image_url(self):
@@ -51,6 +59,8 @@ class HeroState(models.Model):
             'koinEarned': self.koin_earned,
             'heartsEarned': self.hearts_earned,
             'name': self.hero.name,
+            'isDefaultName': self.hero.is_default_name,
+            'isDefaultPortrait': self.hero.is_default_portrait,
             'imageUrl': self.hero.image_url,
             'boostLevel': self.hero.boost_level
         }

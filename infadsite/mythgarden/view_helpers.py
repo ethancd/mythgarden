@@ -69,3 +69,22 @@ def custom_serialize(obj):
         return [custom_serialize(i) for i in obj]
     else:
         return obj.serialize()
+
+
+def set_user_data(hero, data):
+    updated_fields = []
+
+    if data.get('name') and hero.name != data['name']:
+        hero.name = data['name']
+        updated_fields.append('farmer name')
+
+    if data.get('image_path') and hero.image_path != data['image_path']:
+        hero.image_path = data['image_path']
+        updated_fields.append('portrait')
+
+    hero.save()
+
+    if len(updated_fields) > 0:
+        return f"Saved new {' & '.join(updated_fields)}!"
+    else:
+        return None

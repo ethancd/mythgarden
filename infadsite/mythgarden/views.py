@@ -1,4 +1,5 @@
 from sqlite3 import IntegrityError
+import json
 
 from django.core.validators import ValidationError
 from django.db import transaction
@@ -9,7 +10,7 @@ from django.urls import reverse
 from django.views.decorators.csrf import ensure_csrf_cookie
 
 from .view_helpers import load_session, get_home_models, get_requested_action, get_serialized_messages, \
-    validate_action, custom_serialize
+    validate_action, custom_serialize, set_user_data
 from .game_logic import ActionGenerator, ActionExecutor, EventOperator
 from .models import Session
 
@@ -51,9 +52,32 @@ def action(request):
         results = {model_name: custom_serialize(data) for model_name, data in updated_models.items()}
         return JsonResponse(results)
 
+
 def kys(request):
     """A shortcut to reset the game state to the start of the week. A staple for timeloop games everywhere."""
     session = get_object_or_404(Session, pk=request.session['session_key'])
 
     EventOperator().trigger_kys(session)
     return HttpResponseRedirect(reverse('mythgarden:home'))
+
+
+def user_data(request):
+    """Endpoint for updating user data like hero's name, choice of portrait, etc."""
+    if not request.method == 'POST':
+        return HttpResponseRedirect(reverse('mythgarden:home'))
+
+    session = get_object_or_404(Session, pk=request.session['session_key'])
+
+    try:
+        hero = session.hero
+        new_data = json.loads(request.body)['userData']
+        print(new_data)
+        with transaction.atomic():
+            success_message = set_user_data(hero, new_data)
+            if success_message:
+                session.messages.create(text=success_message)
+    except ValidationError as e:
+        session.messages.create(text=e.message, is_error=True)
+        return JsonResponse({'error': e.message, 'messages': get_serialized_messages(session)})
+
+    return JsonResponse({'messages': get_serialized_messages(session)})
