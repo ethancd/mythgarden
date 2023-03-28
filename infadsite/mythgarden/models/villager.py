@@ -6,7 +6,8 @@ from .item_type_preference import ItemTypePreference
 from .place import Place, PlaceState, Building
 from .dialogue import DialogueLine
 
-from ._constants import NEUTRAL, IMAGE_PREFIX
+from ._constants import NEUTRAL, IMAGE_PREFIX, VILLAGER_PORTRAIT_DIR
+
 
 class VillagerManager(models.Manager):
     def get_by_natural_key(self, name):
@@ -18,7 +19,7 @@ class Villager(models.Model):
     full_name = models.CharField(max_length=255, null=True, blank=True)
     description = models.CharField(max_length=255, null=True, blank=True)
     friendliness = models.IntegerField(default=4, validators=[MinValueValidator(1), MaxValueValidator(7)])
-    image_path = models.CharField(max_length=255, default='portraits/default.png', null=True, blank=True)
+    image_path = models.CharField(max_length=255, default='default.png', null=True, blank=True)
     home = models.ForeignKey(Building, on_delete=models.SET_NULL, null=True, blank=True, related_name='residents')
 
     item_type_preferences = models.ManyToManyField('ItemTypePreference', blank=True, related_name='preferred_by')
@@ -45,7 +46,7 @@ class Villager(models.Model):
         if not self.image_path:
             return None
 
-        return static(f'{IMAGE_PREFIX}{self.image_path}')
+        return static(f'{IMAGE_PREFIX}/{VILLAGER_PORTRAIT_DIR}/{self.image_path}')
 
     def gift_valence(self, item):
         """return how villager feels about a gift"""

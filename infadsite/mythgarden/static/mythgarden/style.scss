@@ -16,6 +16,7 @@ $neon-yellow: #ffff33;
 $neon-orange: #ff5f1f;
 $neon-red: #ff3131;
 $invisible: #ffffff00;
+$smoky-glass: #333333 + '88';
 
 $dark-text: #333;
 $light-text: #eee;
@@ -34,6 +35,7 @@ $small-gutter: 0.5rem;
 $medium-gutter: 1rem;
 
 $villager-portrait-size: calc($small-text * 5 + $fine-gutter * 4);
+$portrait-radius: 25%;
 
 /* degrees */
 
@@ -127,6 +129,28 @@ ul {
   z-index: 2;
 }
 
+@mixin rounded-portrait {
+  border-radius: $portrait-radius;
+  overflow: hidden;
+}
+
+$fuschia: #b827fc;
+$electric-blue: #2c90fc;
+$bright-green: #b8fd33;
+$light-orange: #fec837;
+$hot-red: #fd1892;
+
+
+@mixin rainbow-border {
+  border: 5px solid transparent;
+  border-image: linear-gradient(to bottom right,
+    $fuschia 0%,
+    $electric-blue 25%,
+    $bright-green 50%,
+    $light-orange 75%,
+    $hot-red 100%);
+  border-image-slice: 1;
+}
 /* top-bar HUD elements */
 
 #top-bar {
@@ -146,9 +170,12 @@ ul {
   z-index: 2;
 
   .portrait {
+    @include rounded-portrait;
     border: 2px solid #008f11;
     height: 100%;
     box-sizing: border-box;
+    cursor: pointer;
+
 
     img {
       height: 100%;
@@ -169,6 +196,43 @@ ul {
 
     @media only screen and (max-width: 900px) {
       font-size: $med-small-text;
+    }
+  }
+}
+
+#gallery {
+  @include row;
+  @include rainbow-border;
+  position: absolute;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  top: 5vh;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70%;
+  z-index: 100;
+  background-color: fade-out($off-black-gray, 0.05);
+  overflow-y: auto;
+  height: 95vh;
+  box-sizing: border-box;
+  gap: $medium-gutter;
+  box-shadow: 0 0 10rem 5rem $off-black-gray;
+
+  .portrait {
+    @include rounded-portrait;
+    border: 1px solid black;
+    height: 40vh;
+    cursor: pointer;
+    box-sizing: border-box;
+
+    &.current {
+      border: 3px solid $fuschia;
+      box-shadow: 0 0 5px 5px $fuschia;
+    }
+
+    img {
+      height: 100%;
+      width: auto;
     }
   }
 }
@@ -678,6 +742,8 @@ ul {
     .portrait {
       border: 2px solid darken($dusty-pink, 10%);
       width: calc(100% - (2 * ($small-text * 1.2)));
+      border-radius: $portrait-radius;
+      overflow: hidden;
 
       img {
         height: auto;

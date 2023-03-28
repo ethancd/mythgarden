@@ -20,6 +20,7 @@ import Wallet from './wallet'
 import { isDeepEqual } from './staticUtils'
 import { FilterizeColorContext, filterFuncFactory, getColorFilterByTime } from './lightColorLogic'
 import colors from './_colors'
+import Gallery from "./gallery";
 
 const MAX_ITEMS = 6
 
@@ -29,7 +30,8 @@ class App extends React.Component<Partial<AppProps>, AppState> {
     this.state = {
       combinedProps: props,
       activeGiftId: null,
-      activeVillagerNames: []
+      activeVillagerNames: [],
+      showGallery: false,
     }
   }
 
@@ -66,11 +68,15 @@ class App extends React.Component<Partial<AppProps>, AppState> {
   }
 
   getComponentTarget(e: React.SyntheticEvent<Element, Event>) {
-    const componentClasses = ['action', 'action-stem', 'item', 'villager']
+    const componentClasses = ['action', 'action-stem', 'item', 'villager', 'hero-portrait', 'gallery']
     const componentClassSelector = componentClasses.map(c => '.' + c).join(', ')
     const componentDomNode = (e.target as HTMLElement).closest(componentClassSelector) as HTMLElement
 
     return componentDomNode
+  }
+
+  hasClass(element: HTMLElement, className: string) {
+    return element.classList.contains(className);
   }
 
   marshalActionClickData(dataset: DOMStringMap): ActionClickData {
@@ -84,16 +90,21 @@ class App extends React.Component<Partial<AppProps>, AppState> {
   }
 
   handleClick (e: SyntheticEvent): void {
-    console.log('clicked')
-    this.clearHighlights()
+    this.clearActiveUX()
 
-    const componentTarget = this.getComponentTarget(e)
-    if (componentTarget == null) return
+    const target = this.getComponentTarget(e)
+    if (target == null) return
 
-    if (componentTarget.classList.contains('action-stem')) {
-      const actionClickData = this.marshalActionClickData(componentTarget.dataset)
-
+    if (this.hasClass(target, 'action-stem')) {
+      const actionClickData = this.marshalActionClickData(target.dataset)
       this.highlightTargetVillagers(actionClickData)
+    }
+
+    if (this.hasClass(target, 'hero-portrait')) {
+      // click hero-portrait = toggle gallery open/closed
+      if (!this.state.showGallery) {
+        this.showGallery()
+      }
     }
   }
 
@@ -108,14 +119,18 @@ class App extends React.Component<Partial<AppProps>, AppState> {
     this.setState({ activeGiftId: giftId, activeVillagerNames: villagerNames })
   }
 
-  clearHighlights (): void {
-    console.log('clearing!')
-    this.setState({ activeGiftId: null, activeVillagerNames: []})
+  showGallery (): void {
+    this.setState({ showGallery: true })
+  }
+
+  clearActiveUX (): void {
+    this.setState({ activeGiftId: null, activeVillagerNames: [], showGallery: false })
   }
 
   render (): JSX.Element {
     const {
       hero,
+      portraitUrls,
       clock,
       wallet,
       inventory,
@@ -128,7 +143,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
       dialogue
     } = this.state.combinedProps
 
-    const { activeGiftId, activeVillagerNames } = this.state
+    const { activeGiftId, activeVillagerNames, showGallery } = this.state
 
     const colorFilter = getColorFilterByTime(clock.time)
     const filterFn = filterFuncFactory(colorFilter)
@@ -139,6 +154,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
 
           <Section id="top-bar" baseColor={colors.skyBlue}>
             <Hero {...hero}></Hero>
+            <Gallery {...{show: showGallery, currentPortraitUrl: hero.imageUrl, portraitUrls} }></Gallery>
             <h1 id="logo">Mythgarden</h1>
             <Clock display={clock.display} time={clock.time} boostLevel={hero.boostLevel}></Clock>
             <div id='sky-container'>
@@ -203,12 +219,14 @@ interface AppProps {
   place: LocationProps
   villagerStates: VillagerData[]
   wallet: string
+  portraitUrls: string[]
 }
 
 interface AppState {
   combinedProps: AppProps
   activeGiftId: number|null
   activeVillagerNames: string[]
+  showGallery: boolean
 }
 
 export { App, type AppProps }

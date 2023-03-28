@@ -2,7 +2,7 @@ from django.db import models
 from django.templatetags.static import static
 
 from ._constants import PLACE_TYPES, FARM, TOWN, MOUNTAIN, FOREST, BEACH, HOME, MINERAL, FOSSIL, FISH, HERB, FLOWER, \
-    BERRY, TECHNO, MAGIC, IMAGE_PREFIX, SHOP
+    BERRY, TECHNO, MAGIC, IMAGE_PREFIX, PLACE_IMAGE_DIR, SHOP
 from .item import Item, ItemToken
 
 
@@ -13,7 +13,7 @@ class PlaceManager(models.Manager):
 
 class Place(models.Model):
     name = models.CharField(max_length=255, unique=True)
-    image_path = models.CharField(max_length=255, default='places/farm-unsplash.jpeg')
+    image_path = models.CharField(max_length=255, default='farm-unsplash.jpeg')
 
     ITEM_POOL_TYPE_MAP = {
         MOUNTAIN: [MINERAL, FOSSIL, TECHNO, MAGIC],
@@ -52,7 +52,7 @@ class Place(models.Model):
         if not self.image_path:
             return None
 
-        return static(f'{IMAGE_PREFIX}{self.image_path}')
+        return static(f'{IMAGE_PREFIX}/{PLACE_IMAGE_DIR}/{self.image_path}')
 
     def save(self, *args, **kwargs):
         if self._state.adding:

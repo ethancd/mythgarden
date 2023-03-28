@@ -3,15 +3,18 @@ from .action import Action
 from .bridge import Bridge
 from .clock import Clock
 from .dialogue import DialogueLine
-from .hero import Hero, HeroState
 from .merch_slot import MerchSlot
 from .message import Message
+from .farmer_portrait import FarmerPortrait
 from .inventory import Inventory
 from .item import Item, ItemToken
 from .item_type_preference import ItemTypePreference
 from .wallet import Wallet
 
-# models which import from just .item
+# imports from just .farmer_portrait
+from .hero import Hero, HeroState
+
+# imports from just .item
 from .place import Place, PlaceState, Building
 
 # imports from just .place

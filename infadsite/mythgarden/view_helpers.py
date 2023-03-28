@@ -3,7 +3,7 @@ from typing import Iterable
 from django.core.validators import ValidationError
 
 from .game_logic import ActionGenerator, can_afford_action
-from .models import Session, Hero
+from .models import Session, FarmerPortrait
 
 
 def load_session(request):
@@ -28,9 +28,11 @@ def load_session(request):
 def get_home_models(session):
     """Returns a dictionary of models that are needed to render the home page."""
     actions = ActionGenerator().get_actions_for_session(session)
+    portrait_urls = FarmerPortrait.get_gallery_portrait_urls()
 
     return {
         'actions': actions,
+        'portraitUrls': portrait_urls,
         'hero': session.hero_state,
         'clock': session.clock,
         'wallet': session.wallet,
@@ -78,8 +80,9 @@ def set_user_data(hero, data):
         hero.name = data['name']
         updated_fields.append('farmer name')
 
-    if data.get('image_path') and hero.image_path != data['image_path']:
-        hero.image_path = data['image_path']
+    if data.get('portraitPath') and hero.portrait.image_path != data['portraitPath']:
+        new_portrait = FarmerPortrait.objects.get(image_path=data['portraitPath'])
+        hero.portrait = new_portrait
         updated_fields.append('portrait')
 
     hero.save()

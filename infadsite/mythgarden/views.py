@@ -71,7 +71,7 @@ def user_data(request):
     try:
         hero = session.hero
         new_data = json.loads(request.body)['userData']
-        print(new_data)
+
         with transaction.atomic():
             success_message = set_user_data(hero, new_data)
             if success_message:
@@ -80,4 +80,4 @@ def user_data(request):
         session.messages.create(text=e.message, is_error=True)
         return JsonResponse({'error': e.message, 'messages': get_serialized_messages(session)})
 
-    return JsonResponse({'messages': get_serialized_messages(session)})
+    return JsonResponse({'hero': custom_serialize(session.hero_state), 'messages': get_serialized_messages(session)})

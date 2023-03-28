@@ -2,6 +2,7 @@ import Cookies from 'js-cookie'
 
 import renderApp from './react-script'
 import { type MessageProps } from './message'
+import {HeroData} from "./hero";
 
 // fn: given a post url and a data object, make an xhr call to the server and return the response
 async function post (url: string, data: object): Promise<Response> {
@@ -53,7 +54,7 @@ async function postUserData (userData: UserData): Promise<void> {
       if (response.error != null) {
         throw response
       }
-      renderApp({ messages: response.messages as MessageProps[] })
+      renderApp({ hero: response.hero as HeroData, messages: response.messages as MessageProps[] })
     }).catch((response: any) => {
       console.log(response)
       renderApp({ messages: response.messages as MessageProps[] })

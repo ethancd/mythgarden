@@ -1,13 +1,12 @@
 from django.db import models
-from django.templatetags.static import static
-from random import randint
 
-from ._constants import IMAGE_PREFIX
+from ._constants import DEFAULT_PORTRAIT
+from .farmer_portrait import FarmerPortrait
 
 
 class Hero(models.Model):
     name = models.CharField(max_length=16, default='New Farmer')
-    image_path = models.CharField(max_length=255, default='portraits/default.png')
+    portrait = models.ForeignKey(FarmerPortrait, on_delete=models.SET_DEFAULT, default=FarmerPortrait.get_default_pk)
 
     high_score = models.IntegerField(default=0)
     boost_level = models.IntegerField(default=0)
@@ -31,14 +30,17 @@ class Hero(models.Model):
 
     @property
     def is_default_portrait(self):
-        return self.image_path == 'portraits/default.png'
+        if not self.portrait:
+            return False
+
+        return self.portrait.image_path == DEFAULT_PORTRAIT
 
     @property
     def image_url(self):
-        if not self.image_path:
+        if not self.portrait:
             return None
 
-        return static(f'{IMAGE_PREFIX}{self.image_path}')
+        return self.portrait.image_url
 
 
 class HeroState(models.Model):

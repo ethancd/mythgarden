@@ -1,6 +1,6 @@
 from django.db import models
 
-from ._constants import ITEM_TYPES, CROP, FLOWER, BERRY, SEED, SPROUT, FISH, HERB, VALENCES, LIKE, DISLIKE, NEUTRAL
+from ._constants import ITEM_TYPES, CROP, FLOWER, BERRY, SEED, SPROUT, FISH, HERB, GIFT, VALENCES, LIKE, DISLIKE, NEUTRAL, HATE, LOVE
 
 
 class ItemTypePreference(models.Model):
@@ -8,10 +8,11 @@ class ItemTypePreference(models.Model):
         CROP: LIKE,
         FLOWER: LIKE,
         BERRY: LIKE,
-        SEED: DISLIKE,
+        SEED: HATE,
         SPROUT: DISLIKE,
         FISH: DISLIKE,
         HERB: DISLIKE,
+        GIFT: LOVE
     }
 
     item_type = models.CharField(max_length=8, choices=ITEM_TYPES)
