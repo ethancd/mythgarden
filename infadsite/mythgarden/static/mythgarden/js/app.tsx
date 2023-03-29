@@ -172,7 +172,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
               <Wallet value={wallet}></Wallet>
             </section>
 
-            <ActionsList actions={actions}></ActionsList>
+            <ActionsList actions={actions} villagerCount={villagerStates.length}></ActionsList>
 
             <section id="center-col">
               <Location {...{...place, colorFilter}}>

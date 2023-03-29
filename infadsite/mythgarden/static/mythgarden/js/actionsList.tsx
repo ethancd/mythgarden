@@ -4,13 +4,15 @@ import { Action, type ActionProps} from "./action";
 import { ActionStem } from "./actionStem";
 import colors from "./_colors";
 
-function ActionsList ({ actions }: ActionsListProps): JSX.Element {
+function ActionsList ({ actions, villagerCount }: ActionsListProps): JSX.Element {
   function collapseActions(actions: ActionProps[]) {
     const newActionsList: ActionProps[] = []
     const actionStemMap: Record<string, string[]> = {}
 
     actions.forEach((action) => {
-      if (action.targetCount <= 1) {
+      console.log(action)
+      console.log(villagerCount)
+      if (action.targetCount <= 1 || villagerCount <= 1) {
         const isInNewList = newActionsList.find(a => a.description === action.description)
 
         if (isInNewList == null) {
@@ -55,6 +57,7 @@ function ActionsList ({ actions }: ActionsListProps): JSX.Element {
 
 interface ActionsListProps {
   actions: ActionProps[]
+  villagerCount: number
 }
 
 export { ActionsList }
