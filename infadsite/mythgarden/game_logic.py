@@ -109,11 +109,11 @@ class ActionGenerator:
 
         actions = []
 
-        for item_token in inventory:
-            actions.append(self.gen_sell_action(item_token))
-
         for item_token in shop_contents:
             actions.append(self.gen_buy_action(item_token))
+            
+        for item_token in inventory:
+            actions.append(self.gen_sell_action(item_token))
 
         return actions
 
