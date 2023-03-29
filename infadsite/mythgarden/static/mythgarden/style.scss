@@ -16,7 +16,7 @@ $neon-yellow: #ffff33;
 $neon-orange: #ff5f1f;
 $neon-red: #ff3131;
 $invisible: #ffffff00;
-$smoky-glass: #333333 + '88';
+$aqua: #05d0eb;
 
 $dark-text: #333;
 $light-text: #eee;
@@ -496,16 +496,26 @@ $hot-red: #fd1892;
     cursor: pointer;
     display: flex;
     font-size: $small-text;
-    justify-content: space-between;
+    justify-content: flex-start;
     padding: $small-gutter 0;
     width: 100%;
 
     span {
       display: inline-block;
+    }
 
-      &.description {
-        text-align: center;
-      }
+    .type {
+      min-width: 2.5rem;
+    }
+
+    .description {
+      text-align: center;
+      flex-grow: 1;
+    }
+
+    .cost {
+      min-width: 2.5rem;
+      text-align: right;
     }
   }
 }
@@ -628,7 +638,8 @@ $hot-red: #fd1892;
     }
 
     &.watered {
-      border: 1px solid blue;
+      border: 1px dashed $aqua;
+      background-color: fade-out($aqua, 0.5);
     }
   }
 }

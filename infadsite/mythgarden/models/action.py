@@ -13,6 +13,8 @@ class Action(models.Model):
     HARVEST = 'HARVEST'
     BUY = 'BUY'
     SELL = 'SELL'
+    PUT = 'PUT'
+    TAKE = 'TAKE'
     GATHER = 'GATHER'
     SLEEP = 'SLEEP'
 
@@ -36,6 +38,8 @@ class Action(models.Model):
         HARVEST: '🌾',
         BUY: '🛒',
         SELL: '💰',
+        PUT: '📦',
+        TAKE: '🎒',
         GATHER: {
             FISHING: '🎣',
             DIGGING: '⛏',
@@ -53,32 +57,33 @@ class Action(models.Model):
         (HARVEST, 'Harvest'),
         (BUY, 'Buy'),
         (SELL, 'Sell'),
+        (PUT, 'Put'),
+        (TAKE, 'Take'),
         (GATHER, 'Gather'),
         (SLEEP, 'Sleep'),
     ]
 
     MIN = 'MINUTE'
     HOUR = 'HOUR'
-    DAY = 'DAY'
     KOIN = 'KOIN'
 
     HOUR_ABBR = 'hr'
-    MIN_ABBR = 'min'
+    MIN_SIGN = '🕒'
 
     COST_UNITS = [
-        (MIN, MIN_ABBR),
+        (MIN, MIN_SIGN),
         (HOUR, HOUR_ABBR),
         (KOIN, KOIN_SIGN),
     ]
 
-    TIME_UNITS = [MIN, HOUR, DAY]
+    TIME_UNITS = [MIN, HOUR]
     MONEY_UNITS = [KOIN]
 
     action_type = models.CharField(max_length=7, choices=ACTION_TYPES)
     description = models.CharField(max_length=255)
 
-    cost_amount = models.IntegerField(default=1)
-    cost_unit = models.CharField(max_length=6, choices=COST_UNITS)
+    cost_amount = models.IntegerField(default=1, null=True, blank=True)
+    cost_unit = models.CharField(max_length=6, choices=COST_UNITS, null=True, blank=True)
 
     target_item = models.ForeignKey('ItemToken', on_delete=models.CASCADE, null=True, blank=True)
     target_villager = models.ForeignKey('Villager', on_delete=models.CASCADE, null=True, blank=True)
@@ -104,18 +109,22 @@ class Action(models.Model):
     @property
     def emoji(self):
         if self.action_type == self.GATHER:
-            GATHER_DESCRIPTION_MAP = {
-                FISHING_DESCRIPTION: self.FISHING,
-                DIGGING_DESCRIPTION: self.DIGGING,
-                FORAGING_DESCRIPTION: self.FORAGING,
-            }
-            gather_type = GATHER_DESCRIPTION_MAP[self.description]
+            gather_type = self.get_gather_type_of_action()
             return self.ACTION_EMOJIS[self.GATHER][gather_type]
         elif self.action_type == self.TRAVEL:
             travel_type = self.get_travel_type_of_action()
             return self.ACTION_EMOJIS[self.TRAVEL][travel_type]
         else:
             return self.ACTION_EMOJIS[self.action_type]
+
+    def get_gather_type_of_action(self):
+        GATHER_DESCRIPTION_MAP = {
+            FISHING_DESCRIPTION: self.FISHING,
+            DIGGING_DESCRIPTION: self.DIGGING,
+            FORAGING_DESCRIPTION: self.FORAGING,
+        }
+
+        return GATHER_DESCRIPTION_MAP[self.description]
 
     def get_travel_type_of_action(self):
         if self.description == EXIT_DESCRIPTION:
@@ -127,14 +136,11 @@ class Action(models.Model):
 
     @property
     def display_cost(self):
+        if not self.cost_amount or not self.cost_unit:
+            return ''
+
         if self.is_cost_in_money():
             return self.get_cost_unit_display() + str(self.cost_amount)
-        elif self.cost_amount > 60 and self.cost_unit == self.MIN:
-            if self.cost_amount % 60 == 0:
-                return f'{self.cost_amount // 60}{self.HOUR_ABBR}'
-            else:
-                return f'{self.cost_amount // 60}{self.HOUR_ABBR} ' \
-                       f'{self.cost_amount % 60}{self.MIN_ABBR}'
         else:
             return str(self.cost_amount) + self.get_cost_unit_display()
 

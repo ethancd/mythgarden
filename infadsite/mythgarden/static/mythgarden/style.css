@@ -321,13 +321,19 @@ ul {
     cursor: pointer;
     display: flex;
     font-size: 1rem;
-    justify-content: space-between;
+    justify-content: flex-start;
     padding: 0.5rem 0;
     width: 100%; }
     #actions .action span {
       display: inline-block; }
-      #actions .action span.description {
-        text-align: center; }
+    #actions .action .type {
+      min-width: 2.5rem; }
+    #actions .action .description {
+      text-align: center;
+      flex-grow: 1; }
+    #actions .action .cost {
+      min-width: 2.5rem;
+      text-align: right; }
 
 /* center-col elements */
 #center-col {
@@ -420,7 +426,8 @@ ul {
       right: 0.5rem;
       top: 0.5rem; }
     #local-items .item.watered {
-      border: 1px solid blue; }
+      border: 1px dashed #05d0eb;
+      background-color: rgba(5, 208, 235, 0.5); }
 
 #footer {
   height: 30%;

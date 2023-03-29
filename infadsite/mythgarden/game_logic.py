@@ -66,8 +66,11 @@ class ActionGenerator:
         if len(villager_states) > 0:
             available_actions += self.gen_social_actions(villager_states, inventory)
 
-        if place.is_farmhouse and clock.time >= SUNSET:
-            available_actions += [self.gen_sleep_action(clock)]
+        if place.is_farmhouse:
+            available_actions += self.gen_storage_actions(contents, inventory)
+
+            if clock.time >= SUNSET:
+                available_actions += [self.gen_sleep_action()]
 
         actions = self.apply_speed_boost(available_actions, boost_level)
 
@@ -106,11 +109,11 @@ class ActionGenerator:
 
         actions = []
 
-        for item_token in shop_contents:
-            actions.append(self.gen_buy_action(item_token))
-
         for item_token in inventory:
             actions.append(self.gen_sell_action(item_token))
+
+        for item_token in shop_contents:
+            actions.append(self.gen_buy_action(item_token))
 
         return actions
 
@@ -181,6 +184,22 @@ class ActionGenerator:
 
         return talk_actions + gift_actions
 
+    def gen_storage_actions(self, storage_contents, inventory):
+        """Returns a list of storage actions: what items can be moved from inventory to storage,
+        and what items can be taken from the storage into inventory"""
+        guard_types(storage_contents, ItemToken)
+        guard_types(inventory, ItemToken)
+
+        actions = []
+
+        for item_token in inventory:
+            actions.append(self.gen_put_action(item_token))
+
+        for item_token in storage_contents:
+            actions.append(self.gen_take_action(item_token))
+
+        return actions
+
     def gen_give_action(self, item_token, villager):
         """Returns an action that gives passed item to passed villager"""
         return Action(
@@ -222,9 +241,25 @@ class ActionGenerator:
             description=f'Buy {item_token.name}',
             action_type=Action.BUY,
             target_item=item_token,
-            cost_amount=item_token.price,
-            cost_unit=Action.KOIN,
             log_statement=f'You bought {item_token.name} for {item_token.price} koin.',
+        )
+
+    def gen_put_action(self, item_token):
+        """Returns an action that puts given item into storage"""
+        return Action(
+            description=f'Put {item_token.name} in chest',
+            action_type=Action.PUT,
+            target_item=item_token,
+            log_statement=f'You put {item_token.name} away.',
+        )
+
+    def gen_take_action(self, item_token):
+        """Returns an action that takes given item out of storage"""
+        return Action(
+            description=f'Take {item_token.name} from chest',
+            action_type=Action.TAKE,
+            target_item=item_token,
+            log_statement=f'You took {item_token.name} out.',
         )
 
     def gen_enter_action(self, building):
@@ -324,13 +359,11 @@ class ActionGenerator:
             log_statement='You found {result}!',
         )
 
-    def gen_sleep_action(self, clock):
+    def gen_sleep_action(self):
         """Returns an action for the hero to go to sleep till the next day"""
         return Action(
             description='Sleep',
             action_type=Action.SLEEP,
-            cost_amount=clock.minutes_to_midnight,
-            cost_unit=Action.MIN,
             log_statement='You tuck yourself into bed. Sweet dreams!',
         )
 
@@ -369,9 +402,9 @@ class ActionExecutor:
         """Executes a travel action, which updates the current location and ticks the clock"""
 
         session.location = action.target_place
-        session.clock.advance(action.cost_amount)
         session.messages.create(text=action.log_statement)
 
+        session.clock.advance(action.cost_amount)
         session.save_data()
 
         return {
@@ -392,7 +425,6 @@ class ActionExecutor:
         hearts_gained = self.__update_affinity(villager_state, affinity_amount)
 
         session.hero_state.hearts_earned += hearts_gained
-        session.clock.advance(action.cost_amount)
         villager_state.mark_as_talked_to()
         affinity_message = self.__make_affinity_message_if_any(hearts_gained, villager)
 
@@ -401,6 +433,8 @@ class ActionExecutor:
             session.messages.create(text=affinity_message)
 
         villager_state.save()
+
+        session.clock.advance(action.cost_amount)
         session.save_data()
 
         return {
@@ -429,7 +463,6 @@ class ActionExecutor:
         trigger = self.__get_gift_dialogue_trigger(affinity_amount)
         dialogue = villager.get_dialogue(trigger)
 
-        session.clock.advance(action.cost_amount)
         session.inventory.item_tokens.remove(gift)
 
         valence_text = self.__get_valence_text(valence)
@@ -442,6 +475,7 @@ class ActionExecutor:
         if affinity_message:
             session.messages.create(text=affinity_message)
 
+        session.clock.advance(action.cost_amount)
         session.save_data()
 
         return {
@@ -517,14 +551,49 @@ class ActionExecutor:
             'localItemTokens': list(session.local_item_tokens.all()),
         }
 
+    def execute_put_action(self, action, session):
+        """Executes a put action, which removes an item from the hero's inventory
+        and adds it into location storage"""
+
+        item = action.target_item
+
+        session.inventory.item_tokens.remove(item)
+        session.location_state.item_tokens.add(item)
+
+        session.messages.create(text=action.log_statement)
+        session.save_data()
+
+        return {
+            'localItemTokens': list(session.local_item_tokens.all()),
+            'inventory': list(session.inventory.item_tokens.all()),
+        }
+
+    def execute_take_action(self, action, session):
+        """Executes a take action, which adds an item into the hero's inventory
+        and removes it from location storage"""
+
+        item = action.target_item
+
+        session.location_state.item_tokens.remove(item)
+        session.inventory.item_tokens.add(item)
+
+        session.messages.create(text=action.log_statement)
+        session.save_data()
+
+        return {
+            'localItemTokens': list(session.local_item_tokens.all()),
+            'inventory': list(session.inventory.item_tokens.all()),
+        }
+
     def execute_plant_action(self, action, session):
         """Executes a plant action, which moves a seed from the hero's inventory into the session contents"""
 
         session.inventory.item_tokens.remove(action.target_item)
         session.location_state.item_tokens.add(action.target_item)
 
-        session.clock.advance(action.cost_amount)
         session.messages.create(text=action.log_statement)
+
+        session.clock.advance(action.cost_amount)
         session.save_data()
 
         return {
@@ -540,9 +609,9 @@ class ActionExecutor:
         item_token.has_been_watered = True
         item_token.save()
 
-        session.clock.advance(action.cost_amount)
-
         session.messages.create(text=action.log_statement)
+
+        session.clock.advance(action.cost_amount)
         session.save_data()
 
         return {
@@ -556,9 +625,9 @@ class ActionExecutor:
         session.inventory.item_tokens.add(action.target_item)
         session.location_state.item_tokens.remove(action.target_item)
 
-        session.clock.advance(action.cost_amount)
-
         session.messages.create(text=action.log_statement)
+
+        session.clock.advance(action.cost_amount)
         session.save_data()
 
         return {
@@ -573,11 +642,11 @@ class ActionExecutor:
 
         item = self.__pull_item_from_pool(session.location)
         session.inventory.item_tokens.add(ItemToken.objects.create(session=session, item=item))
-        session.clock.advance(action.cost_amount)
 
         log_statement = action.log_statement.format(result=item.name)
         session.messages.create(text=log_statement)
 
+        session.clock.advance(action.cost_amount)
         session.save_data()
 
         return {
@@ -589,10 +658,9 @@ class ActionExecutor:
         """Executes a sleep action, which advances the clock to midnight"""
 
         session.hero_state.is_in_bed = True
-        session.clock.advance(action.cost_amount)
-
         session.messages.create(text=action.log_statement)
 
+        session.clock.advance(session.clock.minutes_to_midnight)
         session.save_data()
 
         return {

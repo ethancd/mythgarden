@@ -10,7 +10,7 @@ export default function Action (this: any, { description, emoji, displayCost, un
             className='action'
             key={uniqueDigest}
         >
-            <span className='type'>{emoji}</span>&nbsp;
+            <span className='type'>{emoji}</span>
             <span className="description">{description}</span>
             <span className="cost">{displayCost}</span>
         </li>

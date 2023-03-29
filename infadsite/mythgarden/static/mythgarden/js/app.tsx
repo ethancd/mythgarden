@@ -9,7 +9,7 @@ import EmptyItem from './emptyItem'
 import { Hero, type HeroData } from './hero'
 import { Item, type ItemProps } from './item'
 import List from './list'
-import { Location, type LocationProps } from './location'
+import {Location, type LocationData} from './location'
 import { Message, type MessageProps } from './message'
 import Section from './section'
 import { Sun, Moon } from './sky'
@@ -182,7 +182,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
                 </List>
               </Location>
 
-              {(localItemTokens?.length > 0)
+              {place.hasInventory
                 ? <List id='local-items' baseColor={colors.sandyBrown}>
                     {this.mapItemsWithEmptySlots(localItemTokens)}
                   </List>
@@ -216,7 +216,7 @@ interface AppProps {
   inventory: ItemProps[]
   localItemTokens: ItemProps[]
   messages: MessageProps[]
-  place: LocationProps
+  place: LocationData
   villagerStates: VillagerData[]
   wallet: string
   portraitUrls: string[]

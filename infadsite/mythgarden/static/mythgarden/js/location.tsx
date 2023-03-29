@@ -22,13 +22,16 @@ export default function Location ({ name, imageUrl, colorFilter, children }: Rea
   )
 }
 
-interface LocationProps {
+interface LocationData {
   name: string
   imageUrl: string
+  hasInventory: boolean
 }
+
+type LocationProps = Pick<LocationData, 'name' | 'imageUrl'>
 
 interface HasColorFilter {
   colorFilter: ColorFilter
 }
 
-export { Location, type LocationProps }
+export { Location, type LocationProps, type LocationData}

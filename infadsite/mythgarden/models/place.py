@@ -22,6 +22,7 @@ class Place(models.Model):
     }
 
     place_type = models.CharField(max_length=8, choices=PLACE_TYPES, default=TOWN)
+    has_inventory = models.BooleanField(default=False)
 
     item_pool = models.ManyToManyField('Item', blank=True, related_name='pool_locations')
 
@@ -29,12 +30,12 @@ class Place(models.Model):
 
     @classmethod
     def get_default_pk(cls):
-        place, created = cls.objects.get_or_create(name='The Farm', place_type=FARM)
+        place, created = cls.objects.get_or_create(name='The Farm', place_type=FARM, has_inventory=True)
         return place.pk
 
     @classmethod
     def get_default_shop_pk(cls):
-        place, created = cls.objects.get_or_create(name='mom and pop shop', place_type=SHOP)
+        place, created = cls.objects.get_or_create(name='mom and pop shop', place_type=SHOP, has_inventory=True)
         return place.pk
 
     def __str__(self):
@@ -45,6 +46,7 @@ class Place(models.Model):
             'name': self.name,
             'imageUrl': self.image_url,
             'id': self.id,
+            'hasInventory': self.has_inventory
         }
 
     @property
@@ -98,6 +100,7 @@ class PlaceState(models.Model):
     place = models.ForeignKey(Place, on_delete=models.CASCADE, related_name='states')
 
     item_tokens = models.ManyToManyField('ItemToken', blank=True)
+    # would be nice to have a validator that said "if placeState.place.has_inventory == False, then item_tokens has to be empty" basically
 
     def __str__(self):
         return f'{self.place} state ' + self.session.abbr_key_tag()
