@@ -287,7 +287,7 @@ ul {
         content: '';
         position: absolute;
         font-size: 2rem;
-        bottom: calc(0% - $medium-text);
+        bottom: calc(0% - 2rem);
         left: 0; }
         @media only screen and (max-width: 900px) {
           #inventory .item .type:after {
@@ -512,7 +512,7 @@ ul {
         border-color: #ccac00; }
     #villagers .villager .portrait {
       border: 2px solid #ff9ead;
-      width: calc(100% - (2 * ($small-text * 1.2)));
+      width: calc(100% - (2 * (1rem * 1.2)));
       border-radius: 25%;
       overflow: hidden; }
       #villagers .villager .portrait img {
@@ -531,7 +531,7 @@ ul {
     #villagers .villager .description {
       font-size: 0.75rem; }
     #villagers .villager .affinity-container {
-      width: calc($small-text * 1.2);
+      width: calc(1rem * 1.2);
       display: flex;
       flex-direction: column-reverse;
       gap: 0.5rem; }
@@ -549,7 +549,7 @@ ul {
       #villagers .villager .affinity-container .partial {
         opacity: .9;
         overflow: hidden;
-        width: calc($small-text * 1.2);
+        width: calc(1rem * 1.2);
         position: absolute;
         bottom: 0; }
         #villagers .villager .affinity-container .partial img {

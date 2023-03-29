@@ -450,7 +450,7 @@ $hot-red: #fd1892;
         content: '';
         position: absolute;
         font-size: $medium-text;
-        bottom: calc(0% - $medium-text);
+        bottom: calc(0% - 2rem); // 2rem == $medium-text
         left: 0;
 
         @media only screen and (max-width: 900px) {
@@ -753,7 +753,7 @@ $hot-red: #fd1892;
 
     .portrait {
       border: 2px solid darken($dusty-pink, 10%);
-      width: calc(100% - (2 * ($small-text * 1.2)));
+      width: calc(100% - (2 * (1rem * 1.2))); // 1rem == $small-text
       border-radius: $portrait-radius;
       overflow: hidden;
 
@@ -784,7 +784,7 @@ $hot-red: #fd1892;
     }
 
     .affinity-container {
-      width: calc($small-text * 1.2); // hard-coded h->w ratio of the heart image
+      width: calc(1rem * 1.2); // hard-coded h->w ratio of the heart image
       display: flex;
       flex-direction: column-reverse;
       gap: $small-gutter;
@@ -809,7 +809,7 @@ $hot-red: #fd1892;
       .partial {
         opacity: .9;
         overflow: hidden;
-        width: calc($small-text * 1.2); // hard-coded h->w ratio of the heart image
+        width: calc(1rem * 1.2); // hard-coded h->w ratio of the heart image
         position: absolute;
         bottom: 0;
 
