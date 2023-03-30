@@ -28,6 +28,8 @@ export default function TypeableName ({ name, isDefaultName }: TypeableNameProps
         value={typedName}
         maxLength={16}
         rows={1}
+        spellCheck={false}
+        tabIndex={-1}
         placeholder={isDefaultName ? name : ''}></textarea>
     </div>
   )
