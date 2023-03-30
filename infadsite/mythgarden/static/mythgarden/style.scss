@@ -169,6 +169,7 @@ $hot-red: #fd1892;
   display: flex;
   gap: $small-gutter;
   z-index: 2;
+  max-width: 50%;
 
   .portrait {
     @include rounded-portrait;
@@ -288,6 +289,7 @@ $hot-red: #fd1892;
   @include column;
   font-size: $medium-text;
   margin: $small-gutter;
+  text-align: right;
 
   @media only screen and (max-width: 900px) {
     font-size: $med-small-text;
