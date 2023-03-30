@@ -111,7 +111,7 @@ class ActionGenerator:
 
         for item_token in shop_contents:
             actions.append(self.gen_buy_action(item_token))
-            
+
         for item_token in inventory:
             actions.append(self.gen_sell_action(item_token))
 
@@ -241,6 +241,8 @@ class ActionGenerator:
             description=f'Buy {item_token.name}',
             action_type=Action.BUY,
             target_item=item_token,
+            cost_amount=item_token.price,
+            cost_unit=Action.KOIN,
             log_statement=f'You bought {item_token.name} for {item_token.price} koin.',
         )
 
