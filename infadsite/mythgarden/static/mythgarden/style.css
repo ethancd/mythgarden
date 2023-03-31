@@ -33,6 +33,10 @@ textarea {
   color: inherit;
   padding: 0; }
 
+/* development code */
+ul#djDebugPanelList {
+  display: block !important; }
+
 /* layout */
 #page {
   height: 100vh;

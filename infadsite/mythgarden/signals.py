@@ -6,6 +6,7 @@ from django.dispatch import receiver
 from .game_logic import EventOperator
 from .models._constants import MAX_ITEMS
 from .models.clock import Clock
+from .models.event import ScheduledEvent, ScheduledEventState
 from .models.hero import HeroState
 from .models.inventory import Inventory
 from .models.message import Message
@@ -45,9 +46,31 @@ def create_session_state(sender, instance, created, **kwargs):
         Wallet.objects.create(session=instance)
         Message.objects.create(session=instance, text=instance.initial_message_text)
 
+        place_states = []
+        villager_states = []
+        event_states = []
+
         for place in list(Place.objects.all()):
-            PlaceState.objects.create(session=instance, place=place)
+            place_states.append(PlaceState(session=instance, place=place))
+
+        place_state_objs = PlaceState.objects.bulk_create(place_states)
+
+        place_to_state_dict = {state.place.pk: state for state in place_state_objs}
 
         for villager in list(Villager.objects.all()):
-            VillagerState.objects.create(session=instance, villager=villager)
+            if villager.home:
+                location_state = place_to_state_dict.get(villager.home.pk, None)
+                villager_state = VillagerState(session=instance, villager=villager, location_state=location_state)
+            else:
+                villager_state = VillagerState(session=instance, villager=villager)
+
+            villager_states.append(villager_state)
+
+        villager_state_objs = VillagerState.objects.bulk_create(villager_states)
+
+        for event in list(ScheduledEvent.objects.all()):
+            event_states.append(ScheduledEventState(session=instance, event=event))
+
+        event_state_objs = ScheduledEventState.objects.bulk_create(event_states)
+
 

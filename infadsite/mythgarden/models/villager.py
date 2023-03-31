@@ -91,13 +91,6 @@ class VillagerState(models.Model):
     def __str__(self):
         return f'{self.villager} state ' + self.session.abbr_key_tag()
 
-    def save(self, *args, **kwargs):
-        if self._state.adding and not self.location_state and self.villager.home:
-            place_state, created = PlaceState.objects.get_or_create(session=self.session, place=self.villager.home)
-            self.location_state = place_state
-
-        super().save(*args, **kwargs)
-
     def serialize(self):
         return {
             'villager': self.villager.serialize(),

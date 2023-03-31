@@ -31,7 +31,7 @@ class Session(models.Model):
 
     @property
     def location_state(self):
-        return self.place_states.get_or_create(place=self.location)[0]
+        return self.place_states.get(place=self.location)
 
     def get_place_state(self, place):
         if not place:
@@ -55,17 +55,7 @@ class Session(models.Model):
 
     @property
     def event_states(self):
-        event_states = self.scheduled_event_states.all()
-
-        # ensure all events have a state
-        for event in ScheduledEvent.objects.all():
-            if event_states.filter(event=event).exists():
-                continue
-
-            event_state = self.scheduled_event_states.create(event=event)
-            event_states |= ScheduledEventState.objects.filter(pk=event_state.pk)
-
-        return event_states
+        return self.scheduled_event_states.all()
 
     def reset_session_state(self, end_of_game_message):
         key = self.key

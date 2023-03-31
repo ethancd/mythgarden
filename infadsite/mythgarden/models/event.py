@@ -63,7 +63,3 @@ class ScheduledEventState(models.Model):
 
     def __str__(self):
         return str(self.event) + ' ' + self.session.abbr_key_tag()
-
-    def mark_as_occurred(self):
-        self.has_occurred = True
-        self.save()

@@ -75,6 +75,11 @@ textarea {
   padding: 0;
 }
 
+/* development code */
+ul#djDebugPanelList {
+  display: block !important;
+}
+
 /* layout */
 
 #page {

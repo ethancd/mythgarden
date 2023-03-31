@@ -17,8 +17,9 @@ from .models import Session
 
 @ensure_csrf_cookie
 def home(request):
-    session = load_session(request)
-    home_models = get_home_models(session)
+    with transaction.atomic():
+        session = load_session(request)
+        home_models = get_home_models(session)
 
     context = {'ctx': {model_name: custom_serialize(data) for model_name, data in home_models.items()}}
 

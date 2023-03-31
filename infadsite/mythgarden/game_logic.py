@@ -2,7 +2,7 @@ import random
 import math
 
 from .models import Bridge, Action, Place, Building, Session, VillagerState, Item, ItemToken, \
-    DialogueLine, ScheduledEvent
+    DialogueLine, ScheduledEvent, ScheduledEventState, PlaceState
 from .models._constants import SEED, SPROUT, CROP, COMMON, UNCOMMON, RARE, EPIC, RARITIES, RARITY_WEIGHTS, FARM, SHOP, \
     WILD_TYPES, FOREST, MOUNTAIN, BEACH, LOVE, LIKE, NEUTRAL, DISLIKE, HATE, FIRST_DAY, DAWN, FISHING_DESCRIPTION, \
     DIGGING_DESCRIPTION, FORAGING_DESCRIPTION, SUNSET, TALK_MINUTES_PER_FRIENDLINESS, MAX_BOOST_LEVEL, \
@@ -407,7 +407,9 @@ class ActionExecutor:
         session.messages.create(text=action.log_statement)
 
         session.clock.advance(action.cost_amount)
-        session.save_data()
+
+        session.save()
+        session.clock.save()
 
         return {
             'place': session.location,
@@ -434,10 +436,11 @@ class ActionExecutor:
         if affinity_message:
             session.messages.create(text=affinity_message)
 
-        villager_state.save()
-
         session.clock.advance(action.cost_amount)
-        session.save_data()
+
+        villager_state.save()
+        session.hero_state.save()
+        session.clock.save()
 
         return {
             'hero': session.hero_state,
@@ -460,8 +463,6 @@ class ActionExecutor:
 
         session.hero_state.hearts_earned += hearts_gained
 
-        villager_state.save()
-
         trigger = self.__get_gift_dialogue_trigger(affinity_amount)
         dialogue = villager.get_dialogue(trigger)
 
@@ -478,7 +479,10 @@ class ActionExecutor:
             session.messages.create(text=affinity_message)
 
         session.clock.advance(action.cost_amount)
-        session.save_data()
+
+        session.hero_state.save()
+        villager_state.save()
+        session.clock.save()
 
         return {
             'hero': session.hero_state,
@@ -511,9 +515,11 @@ class ActionExecutor:
         session.wallet.money += action.cost_amount
         if not item.bought_from_store:
             session.hero_state.koin_earned += action.cost_amount
+            session.hero_state.save()
 
         session.messages.create(text=action.log_statement)
-        session.save_data()
+
+        session.wallet.save()
 
         return {
             'hero': session.hero_state,
@@ -545,7 +551,7 @@ class ActionExecutor:
         session.wallet.money -= action.cost_amount
 
         session.messages.create(text=action.log_statement)
-        session.save_data()
+        session.wallet.save()
 
         return {
             'wallet': session.wallet,
@@ -563,7 +569,6 @@ class ActionExecutor:
         session.location_state.item_tokens.add(item)
 
         session.messages.create(text=action.log_statement)
-        session.save_data()
 
         return {
             'localItemTokens': list(session.local_item_tokens.all()),
@@ -580,7 +585,6 @@ class ActionExecutor:
         session.inventory.item_tokens.add(item)
 
         session.messages.create(text=action.log_statement)
-        session.save_data()
 
         return {
             'localItemTokens': list(session.local_item_tokens.all()),
@@ -596,7 +600,7 @@ class ActionExecutor:
         session.messages.create(text=action.log_statement)
 
         session.clock.advance(action.cost_amount)
-        session.save_data()
+        session.clock.save()
 
         return {
             'clock': session.clock,
@@ -614,7 +618,7 @@ class ActionExecutor:
         session.messages.create(text=action.log_statement)
 
         session.clock.advance(action.cost_amount)
-        session.save_data()
+        session.clock.save()
 
         return {
             'clock': session.clock,
@@ -630,7 +634,7 @@ class ActionExecutor:
         session.messages.create(text=action.log_statement)
 
         session.clock.advance(action.cost_amount)
-        session.save_data()
+        session.clock.save()
 
         return {
             'clock': session.clock,
@@ -649,7 +653,7 @@ class ActionExecutor:
         session.messages.create(text=log_statement)
 
         session.clock.advance(action.cost_amount)
-        session.save_data()
+        session.clock.save()
 
         return {
             'inventory': list(session.inventory.item_tokens.all()),
@@ -663,7 +667,9 @@ class ActionExecutor:
         session.messages.create(text=action.log_statement)
 
         session.clock.advance(session.clock.minutes_to_midnight)
-        session.save_data()
+
+        session.hero_state.save()
+        session.clock.save()
 
         return {
             'clock': session.clock,
@@ -819,7 +825,7 @@ class EventOperator:
         # if start of the day, finish yesterday's events, run hard-coded events, run scheduled events, then sleep
         if clock.is_new_day:
             self.trigger_remaining_events_from_yesterday(clock, session)
-            self.reset_for_new_day(clock, session)
+            self.reset_for_new_day(session)
 
             self.trigger_scheduled_events_for_so_far_today(clock, session)
 
@@ -843,9 +849,22 @@ class EventOperator:
         self.trigger_events(list(events_to_trigger_queue), session)
 
     def trigger_events(self, event_states, session):
+        villager_states = VillagerState.objects.select_related('villager').filter(session=session)
+        place_states = PlaceState.objects.select_related('place').filter(session=session)
+
+        villager_results = []
+
         for event_state in event_states:
-            self.trigger_event(event_state.event, session)
-            event_state.mark_as_occurred()
+            result = self.trigger_event(event_state.event, session, villager_states, place_states)
+            if isinstance(result, VillagerState):
+                villager_results.append(result)
+
+            event_state.has_occurred = True
+
+        ScheduledEventState.objects.bulk_update(event_states, ['has_occurred'])
+
+        if len(villager_results) > 0:
+            VillagerState.objects.bulk_update(villager_results, ['location_state'])
 
     def __build_events_to_trigger_queue(self, day, event_states):
         """Build an ordered queue of events to trigger with the following properties:
@@ -862,14 +881,15 @@ class EventOperator:
 
         return events_to_trigger_queue
 
-    def trigger_event(self, event, session):
+    def trigger_event(self, event, session, villager_states, place_states):
         """Triggers the given event based on the event_type"""
         if event.event_type == ScheduledEvent.SHOP_POPULATES:
-            self.populate_shop(event.populateshopevent, session)  # django forces PopulateShopEvent into populateshopevent
-        elif event.event_type == ScheduledEvent.VILLAGER_APPEARS:
-            self.villager_appears(event.villagerappearsevent, session)
+            return self.populate_shop(event.populateshopevent, session, place_states)  # django forces PopulateShopEvent into populateshopevent
 
-    def populate_shop(self, event, session):
+        if event.event_type == ScheduledEvent.VILLAGER_APPEARS:
+            return self.villager_appears(event.villagerappearsevent, villager_states, place_states)
+
+    def populate_shop(self, event, session, place_states):
         """Fill the shop inventory for the day, which includes:
         -unlimited stock of a seed
         -limited gift (determined by items and gift quantity)
@@ -891,10 +911,8 @@ class EventOperator:
 
         ItemToken.objects.bulk_create(item_tokens)
 
-        place_state, created = session.place_states.get_or_create(place=event.shop)
+        place_state = place_states.filter(place=event.shop).first()
         place_state.item_tokens.set(item_tokens)
-
-        print(f'Populated shop with: {[i for i in item_tokens]}')
 
     def __generate_merchandise_tokens(self, merch_slots, session):
         merch_tokens = []
@@ -914,31 +932,15 @@ class EventOperator:
 
         return ItemToken(session=session, item=item, quantity=quantity)
 
-    def villager_appears(self, event, session):
-        villager_state = session.get_villager_state(event.villager)
-        place_state = session.get_place_state(event.place)
+    def villager_appears(self, event, villager_states, place_states):
+        villager_state = villager_states.filter(villager=event.villager).first()
+        place_state = place_states.filter(place=event.place).first()
+
         villager_state.location_state = place_state
-        villager_state.save()
 
-        print(f'Villager {villager_state.villager} has gone to {villager_state.location_state}')
-        if place_state:
-            print(f'So now {place_state} contains {[o.villager for o in place_state.occupants.all()]}')
+        return villager_state
 
-    def make_items_appear(self, event, session):
-        """Make items appear in the place saved on the event"""
-        item_tokens = []
-        for item in event.items.all():
-            item_tokens.append(ItemToken(session=session, item=item))
-        ItemToken.objects.bulk_create(item_tokens)
-
-        place_state, created = session.place_states.get_or_create(place=event.shop)
-
-        place_state.item_tokens.set(item_tokens)
-
-    def reset_for_new_day(self, clock, session):
-        clock.is_new_day = False
-        clock.save()
-
+    def reset_for_new_day(self, session):
         self.reset_villager_states(session.villager_states.all())
         self.reset_daily_events(session.event_states.all())
         self.grow_crops(session.place_states.get(place__place_type=FARM))
@@ -969,15 +971,15 @@ class EventOperator:
     def fall_asleep(self, clock, session):
         """Advances the clock to dawn or midday, depending on whether the hero is in bed or not,
         and returns a message"""
-
         hero_state = session.hero_state
 
         if clock.time > DAWN:
             raise Exception(f'Time on the new day should be before dawn, not {clock.time}')
 
-        if hero_state.is_in_bed:
+        if hero_state.is_in_bed or session.location.is_farmhouse:
             hero_state.is_in_bed = False
             hero_state.save()
+
             clock.advance(clock.minutes_to_dawn)
             sleep_message = "You got a good night's sleep and wake up at dawn."
             is_error = False
@@ -986,9 +988,10 @@ class EventOperator:
             sleep_message = "You passed out at midnight and overslept! You're just now waking up."
             is_error = True
 
-        clock.save()
-
         session.messages.create(text=sleep_message, is_error=is_error)
+
+        clock.is_new_day = False
+        clock.save()
 
     def trigger_game_over(self, session):
         hero_state = session.hero_state
