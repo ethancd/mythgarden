@@ -463,7 +463,7 @@ class ActionExecutor:
 
         session.hero_state.hearts_earned += hearts_gained
 
-        trigger = self.__get_gift_dialogue_trigger(affinity_amount)
+        trigger = self.__get_gift_dialogue_trigger(valence)
         dialogue = villager.get_dialogue(trigger)
 
         session.inventory.item_tokens.remove(gift)
@@ -794,21 +794,18 @@ class ActionExecutor:
         else:
             return DialogueLine.FIRST_MEETING
 
-    def __get_gift_dialogue_trigger(self, affinity):
-        """Returns a dialogue trigger based on the total affinity gained from a gift action"""
+    def __get_gift_dialogue_trigger(self, valence):
+        """Returns a trigger object for a gift action based on the valence of their reaction"""
 
-        if affinity >= 20:
-            return DialogueLine.LOVED_GIFT
-        elif affinity >= 10:
-            return DialogueLine.LIKED_GIFT
-        elif affinity > 0:
-            return DialogueLine.NEUTRAL_GIFT
-        elif affinity == 0:
-            return DialogueLine.DISLIKED_GIFT
-        elif affinity < 0:
-            return DialogueLine.HATED_GIFT
-        else:
-            raise ValueError("Gift dialogue trigger conditions have let an affinity number fall through somehow")
+        VALENCE_TO_DIALOGUE_TRIGGER_MAP = {
+            LOVE: DialogueLine.LOVED_GIFT,
+            LIKE: DialogueLine.LIKED_GIFT,
+            NEUTRAL: DialogueLine.NEUTRAL_GIFT,
+            DISLIKE: DialogueLine.DISLIKED_GIFT,
+            HATE: DialogueLine.HATED_GIFT,
+        }
+
+        return VALENCE_TO_DIALOGUE_TRIGGER_MAP[valence]
 
 class EventOperator:
     def react_to_time_passing(self, clock, session):
