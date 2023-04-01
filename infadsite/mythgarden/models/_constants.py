@@ -58,7 +58,7 @@ GIFT = 'GIFT'
 FISH = 'FISH'
 MINERAL = 'MINERAL'
 FOSSIL = 'FOSSIL'
-TECHNO = 'TECHNO'
+TECH = 'TECH'
 MAGIC = 'MAGIC'
 HERB = 'HERB'
 FLOWER = 'FLOWER'
@@ -72,7 +72,7 @@ ITEM_EMOJIS = {
     FISH: '🐟',
     MINERAL: '💎',
     FOSSIL: '🦴',
-    TECHNO: '⚙️',
+    TECH: '⚙️',
     MAGIC: '✨',
     HERB: '🌿',
     FLOWER: '🌸',
@@ -87,7 +87,7 @@ ITEM_TYPES = [
     (FISH, 'Fish'),
     (MINERAL, 'Mineral'),
     (FOSSIL, 'Fossil'),
-    (TECHNO, 'Techno'),
+    (TECH, 'Tech'),
     (MAGIC, 'Magic'),
     (HERB, 'Herb'),
     (FLOWER, 'Flower'),
@@ -140,12 +140,14 @@ MINOR = 'MINOR'
 MEDIUM = 'MEDIUM'
 MAJOR = 'MAJOR'
 GRAND = 'GRAND'
+SUPREME = 'SUPREME'
 
 MERCH_SLOT_TYPES = [
     (MINOR, 'minor'),
     (MEDIUM, 'medium'),
     (MAJOR, 'major'),
-    (GRAND, 'grand')
+    (GRAND, 'grand'),
+    (SUPREME, 'supreme'),
 ]
 
 BASIC_MERCH_TYPE_TO_RARITY_MAPPING = {
@@ -153,6 +155,7 @@ BASIC_MERCH_TYPE_TO_RARITY_MAPPING = {
     MEDIUM: UNCOMMON,
     MAJOR: RARE,
     GRAND: EPIC,
+    SUPREME: None
 }
 
 PREMIUM_MERCH_TYPE_TO_RARITY_MAPPING = {
@@ -160,13 +163,7 @@ PREMIUM_MERCH_TYPE_TO_RARITY_MAPPING = {
     MEDIUM: COMMON,
     MAJOR: UNCOMMON,
     GRAND: RARE,
-}
-
-MERCH_TYPE_TO_QUANTITY_MAPPING = {
-    MINOR: 3,
-    MEDIUM: 2,
-    MAJOR: 2,
-    GRAND: 1
+    SUPREME: EPIC
 }
 
 BASIC_ITEM_TYPES = [
@@ -179,7 +176,7 @@ BASIC_ITEM_TYPES = [
 PREMIUM_ITEM_TYPES = [
     FLOWER,
     MINERAL,
-    TECHNO,
+    TECH,
     MAGIC
 ]
 

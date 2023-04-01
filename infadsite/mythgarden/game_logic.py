@@ -1,8 +1,9 @@
 import random
 import math
+import json
 
 from .models import Bridge, Action, Place, Building, Session, VillagerState, Item, ItemToken, \
-    DialogueLine, ScheduledEvent, ScheduledEventState, PlaceState
+    DialogueLine, ScheduledEvent, ScheduledEventState, PlaceState, MerchSlot
 from .models._constants import SEED, SPROUT, CROP, COMMON, UNCOMMON, RARE, EPIC, RARITIES, RARITY_WEIGHTS, FARM, SHOP, \
     WILD_TYPES, FOREST, MOUNTAIN, BEACH, LOVE, LIKE, NEUTRAL, DISLIKE, HATE, FIRST_DAY, DAWN, FISHING_DESCRIPTION, \
     DIGGING_DESCRIPTION, FORAGING_DESCRIPTION, SUNSET, TALK_MINUTES_PER_FRIENDLINESS, MAX_BOOST_LEVEL, \
@@ -893,41 +894,41 @@ class EventOperator:
         -random merchandise (determined by merch_slots)"""
 
         item_tokens = []
+        blocked_item_types = []
 
-        if event.seed:
-            seed = ItemToken(session=session, item=event.seed)
-            item_tokens.append(seed)
+        content_configs = json.loads(event.content_config_list)
 
-        if event.merch_slots.count() > 0:
-            merchandise_tokens = self.__generate_merchandise_tokens(list(event.merch_slots.all()), session)
-            item_tokens += merchandise_tokens
+        for content_config in content_configs:
+            print(content_config)
+            item_name = content_config.get('item_name', None)
+            quantity = content_config.get('quantity', None)
+            merch_type = content_config.get('merch_type', None)
 
-        if event.gift:
-            gift = ItemToken(session=session, item=event.gift, quantity=event.gift_quantity)
-            item_tokens.append(gift)
+            if item_name:
+                item = Item.objects.get_by_natural_key(item_name)
+            elif merch_type:
+                merch_slot = MerchSlot(merch_slot_type=merch_type)
+                item = self.__pick_item_given_merch_slot(merch_slot, blocked_item_types)
+                blocked_item_types.append(item.item_type)
+            else:
+                raise ValueError('Content config should have item_name or merch_type')
+
+            item_token = ItemToken(session=session, item=item, quantity=quantity)
+            item_tokens.append(item_token)
 
         ItemToken.objects.bulk_create(item_tokens)
 
         place_state = place_states.filter(place=event.shop).first()
         place_state.item_tokens.set(item_tokens)
 
-    def __generate_merchandise_tokens(self, merch_slots, session):
-        merch_tokens = []
-
-        for merch_slot in merch_slots:
-            item_token = self.__generate_merch_token(merch_slot, session)
-            merch_tokens.append(item_token)
-
-        return merch_tokens
-
-    def __generate_merch_token(self, merch_slot, session):
-        item_type = random.choice(merch_slot.potential_item_types)
+    def __pick_item_given_merch_slot(self, merch_slot, blocked_item_types):
+        allowed_item_types = list(set(merch_slot.potential_item_types) - set(blocked_item_types))
+        item_type = random.choice(allowed_item_types)
         rarity = merch_slot.get_rarity(item_type)
-        quantity = merch_slot.quantity
 
         item = Item.objects.filter(item_type=item_type, rarity=rarity).order_by('?').first()
 
-        return ItemToken(session=session, item=item, quantity=quantity)
+        return item
 
     def villager_appears(self, event, villager_states, place_states):
         villager_state = villager_states.filter(villager=event.villager).first()

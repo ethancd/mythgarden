@@ -2,7 +2,7 @@ from django.db import models
 from django.templatetags.static import static
 
 from ._constants import PLACE_TYPES, FARM, TOWN, MOUNTAIN, FOREST, BEACH, HOME, MINERAL, FOSSIL, FISH, HERB, FLOWER, \
-    BERRY, TECHNO, MAGIC, IMAGE_PREFIX, PLACE_IMAGE_DIR, SHOP
+    BERRY, TECH, MAGIC, IMAGE_PREFIX, PLACE_IMAGE_DIR, SHOP
 from .item import Item, ItemToken
 
 
@@ -16,7 +16,7 @@ class Place(models.Model):
     image_path = models.CharField(max_length=255, default='farm-unsplash.jpeg')
 
     ITEM_POOL_TYPE_MAP = {
-        MOUNTAIN: [MINERAL, FOSSIL, TECHNO, MAGIC],
+        MOUNTAIN: [MINERAL, FOSSIL, TECH, MAGIC],
         BEACH: [FISH],
         FOREST: [HERB, FLOWER, BERRY],
     }

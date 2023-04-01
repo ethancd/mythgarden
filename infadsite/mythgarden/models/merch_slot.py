@@ -4,7 +4,7 @@ from . import _constants
 
 
 class MerchSlot(models.Model):
-    merch_slot_type = models.CharField(max_length=6, choices=_constants.MERCH_SLOT_TYPES)
+    merch_slot_type = models.CharField(max_length=7, choices=_constants.MERCH_SLOT_TYPES)
 
     def get_rarity(self, item_type):
         if item_type in _constants.BASIC_ITEM_TYPES:
@@ -18,6 +18,8 @@ class MerchSlot(models.Model):
     def potential_item_types(self):
         if self.merch_slot_type == _constants.MINOR:
             return _constants.BASIC_ITEM_TYPES
+        elif self.merch_slot_type == _constants.SUPREME:
+            return _constants.PREMIUM_ITEM_TYPES
         else:
             return _constants.BASIC_ITEM_TYPES + _constants.PREMIUM_ITEM_TYPES
 
@@ -28,10 +30,6 @@ class MerchSlot(models.Model):
     @property
     def premium_rarity(self):
         return _constants.PREMIUM_MERCH_TYPE_TO_RARITY_MAPPING[self.merch_slot_type]
-
-    @property
-    def quantity(self):
-        return _constants.MERCH_TYPE_TO_QUANTITY_MAPPING[self.merch_slot_type]
 
     @classmethod
     def get_or_create_from_string(cls, string):

@@ -27,13 +27,8 @@ class ScheduledEvent(models.Model):
 
 
 class PopulateShopEvent(ScheduledEvent):
-    seed = models.ForeignKey('Item', on_delete=models.CASCADE, null=True, blank=True, related_name='seed_shop_event')
-    gift = models.ForeignKey('Item', on_delete=models.CASCADE, null=True, blank=True, related_name='gift_shop_event')
-    gift_quantity = models.IntegerField(null=True, blank=True)
-
-    merch_slots = models.ManyToManyField('MerchSlot', blank=True)
-
     shop = models.ForeignKey('Place', on_delete=models.CASCADE, default=Place.get_default_shop_pk)
+    content_config_list = models.JSONField(default=list)
 
     def save(self, *args, **kwargs):
         if not self.event_type:
