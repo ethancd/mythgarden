@@ -6,7 +6,7 @@ from .game_logic import ActionGenerator, can_afford_action
 from .models import Session, FarmerPortrait
 
 
-def load_session(request):
+def retrieve_session(request):
     """Loads a session from the database or creates a new one if one does not exist.
     Also saves the session key to the request session."""
     
@@ -18,11 +18,28 @@ def load_session(request):
         return session
 
     try:
-        session = Session.objects.get(pk=session_key)
+        session = load_session_with_related_data(session_key)
     except Session.DoesNotExist:
         session = Session.objects.create(pk=session_key, is_first_session=True)
 
     return session
+
+
+def load_session_with_related_data(session_key):
+    one_to_one_session_relations = ['hero', 'location', 'hero_state', 'wallet', 'clock', 'inventory']
+    many_to_many_session_relations = ['villager_states', 'place_states', 'scheduled_event_states']
+
+    session_data_queryset = Session.objects.select_related(*one_to_one_session_relations)
+    session_data_queryset = session_data_queryset.prefetch_related('inventory__item_tokens__item')
+
+    # session_data_queryset = session_data_queryset.prefetch_related(*many_to_many_session_relations)
+    session_data_queryset = session_data_queryset.prefetch_related('villager_states__villager__home', 'villager_states__location_state__place')
+    session_data_queryset = session_data_queryset.prefetch_related('place_states__place', 'place_states__item_tokens', 'place_states__occupants')
+
+    # grabbing 200 events is too heavy of a query, should only have to grab the ones we're actually triggering
+    # session_data_queryset = session_data_queryset.prefetch_related('scheduled_event_states__event')
+
+    return session_data_queryset.get(pk=session_key)
 
 
 def get_home_models(session):

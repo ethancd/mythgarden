@@ -10,8 +10,6 @@ function ActionsList ({ actions, villagerCount }: ActionsListProps): JSX.Element
     const actionStemMap: Record<string, string[]> = {}
 
     actions.forEach((action) => {
-      console.log(action)
-      console.log(villagerCount)
       if (action.targetCount <= 1 || villagerCount <= 1) {
         const isInNewList = newActionsList.find(a => a.description === action.description)
 

@@ -3,14 +3,14 @@ import json
 
 from django.core.validators import ValidationError
 from django.db import transaction
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponseNotFound
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.views.decorators.csrf import ensure_csrf_cookie
 
-from .view_helpers import load_session, get_home_models, get_requested_action, get_serialized_messages, \
-    validate_action, custom_serialize, set_user_data
+from .view_helpers import retrieve_session, get_home_models, get_requested_action, get_serialized_messages, \
+    validate_action, custom_serialize, set_user_data, load_session_with_related_data
 from .game_logic import ActionGenerator, ActionExecutor, EventOperator
 from .models import Session
 
@@ -18,7 +18,7 @@ from .models import Session
 @ensure_csrf_cookie
 def home(request):
     with transaction.atomic():
-        session = load_session(request)
+        session = retrieve_session(request)
         home_models = get_home_models(session)
 
     context = {'ctx': {model_name: custom_serialize(data) for model_name, data in home_models.items()}}
@@ -33,7 +33,10 @@ def action(request):
     if not request.method == 'POST':
         return HttpResponseRedirect(reverse('mythgarden:home'))
 
-    session = get_object_or_404(Session, pk=request.session['session_key'])
+    try:
+        session = load_session_with_related_data(request.session['session_key'])
+    except Session.DoesNotExist:
+        return HttpResponseNotFound()
 
     try:
         requested_action = get_requested_action(request, session)
@@ -55,7 +58,8 @@ def action(request):
 
 
 def kys(request):
-    """A shortcut to reset the game state to the start of the week. A staple for timeloop games everywhere."""
+    """A shortcut to "kill your session" -- ie reset the game state to the start of the week.
+    A staple for timeloop games everywhere."""
     session = get_object_or_404(Session, pk=request.session['session_key'])
 
     EventOperator().trigger_kys(session)

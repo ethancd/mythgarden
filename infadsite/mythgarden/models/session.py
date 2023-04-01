@@ -19,19 +19,14 @@ class Session(models.Model):
     initial_message_text = models.CharField(max_length=255, default=WELCOME_MESSAGE)
     game_over = models.BooleanField(default=False)
 
-    def save_data(self):
-        """save model objects that the current session has a handle on –
-        so excluding place_states and villager_states"""
-
-        self.save()
-        self.hero_state.save()
-        self.wallet.save()
-        self.inventory.save()  # probably unnecessary, since inventory doesn't have any fields right now
-        self.clock.save()
-
     @property
     def location_state(self):
-        return self.place_states.get(place=self.location)
+        # session.place_states.place is prefetched
+        for place_state in self.place_states.all():
+            if place_state.place.name == self.location.name:
+                # don't worry, place names are unique.
+                # just matching by name so we don't have to grab the place object for self.location if it's a building
+                return place_state
 
     def get_place_state(self, place):
         if not place:
@@ -44,10 +39,13 @@ class Session(models.Model):
         return self.location_state.occupants.all()
 
     def get_villager_state(self, villager):
+        # session.villager_states.villager is prefetched
         if not villager:
             return None
 
-        return self.villager_states.get(villager=villager)
+        for villager_state in self.villager_states.all():
+            if villager_state.villager == villager:
+                return villager_state
 
     @property
     def local_item_tokens(self):
