@@ -1,57 +1,27 @@
 # Mythgarden
-
 Mythgarden is a time-loop farming-sim RPG that you can play in your browser. Think Stardew Valley + Groundhog Day, with a quirky vibe and an arcade feel.
-
 ## Gallery
-
-[screenshots to be added on web interface]
+<div style="display:flex;">
+<img width="500" alt="Screen Shot 2023-04-02 at 2 08 44 PM" src="https://user-images.githubusercontent.com/1863479/229380272-5368126f-9fbd-4f68-88c9-704769423ccb.png">
+<img width="500" alt="Screen Shot 2023-04-02 at 2 09 08 PM" src="https://user-images.githubusercontent.com/1863479/229380294-f6d853f0-27b3-4fa4-a5b9-cd11cd9dc3a2.png">
+<img width="500" alt="Screen Shot 2023-04-02 at 2 13 09 PM" src="https://user-images.githubusercontent.com/1863479/229380324-9ca3533c-c7a6-4e99-b38e-983a0e30c82f.png">
+<img width="500" alt="Screen Shot 2023-04-02 at 2 12 34 PM" src="https://user-images.githubusercontent.com/1863479/229380315-412aadf3-3975-4ab7-b50f-f08e1d80bbca.png">
+</div>
 
 ## Tech Stack
-
 Mythgarden was built using a Django backend and a React frontend with Typescript.
 
 ### Code flow / State machine
+- **Initial page load**
+  - [mythgarden.ashkie.com][ashkie] -> [urls.py](mythgarden/urls.py) -> [views.home](mythgarden/views.py#L19) -> [game_logic.py](mythgarden/game_logic.py#L22) -> [home.html](mythgarden/templates/mythgarden/home.html) -> [app.tsx](mythgarden/static/mythgarden/js/app.tsx)
+- **Player requests action**
+  - [action.tsx](mythgarden/js/action.tsx) -> [ajax.tsx](mythgarden/js/ajax.tsx) -> [views.action](mythgarden/views.action#L30)
+- **Server executes player action**
+  - [game_logic.py](mythgarden/game_logic.py#L387)
+- **Server fires any time-based game events**
+  - [signals.py](mythgarden/signals.py#L32) -> [game_logic.py](mythgarden/game_logic.py#L812)
+- **Server updates state in database**
+- **New state is returned to browser**
+  - [views.action](mythgarden/views.action#L57)
 
-#### initial page load:
-
-mythgarden/views.home
-- get a request
-- load user session
-- grab and marshal game data from database
-- including generating available actions in game_logic.py
-- render template
-
-mythgarden/home.html
-- pass json objects to react
-
-mythgarden/static/mythgarden/js/app.tsx
-- render components using server data
-
-#### player action:
-
-mythgarden/static/mythgarden/js/action.tsx
-- player clicks an action
-
-mythgarden/static/mythgarden/js/ajax.tsx
-- ajax call hits the server with the requested action
-
-mythgarden/views.action
-- load user session
-- validate that requested action can be completed
-- execute action
-
-mythgarden/game_logic.py
-- modify and save game state based on the requested action
-
-mythgarden/signals.py
-- if game clock ticks forward, trigger any necessary time-based events
-
-mythgarden/game_logic.py
-- run hardcoded time-based events
-- grab events from database and execute any that should fire since the last game tick
-
-mythgarden/views.action
-- return updated game models as json to the ajax call
-
-
-
+[ashkie]: https://mythgarden.ashkie.com
