@@ -34,7 +34,7 @@ def load_session_with_related_data(session_key):
 
     # session_data_queryset = session_data_queryset.prefetch_related(*many_to_many_session_relations)
     session_data_queryset = session_data_queryset.prefetch_related('villager_states__villager__home', 'villager_states__location_state__place')
-    session_data_queryset = session_data_queryset.prefetch_related('place_states__place', 'place_states__item_tokens', 'place_states__occupants')
+    session_data_queryset = session_data_queryset.prefetch_related('place_states__place', 'place_states__item_tokens__item', 'place_states__occupants')
 
     # grabbing 200 events is too heavy of a query, should only have to grab the ones we're actually triggering
     # session_data_queryset = session_data_queryset.prefetch_related('scheduled_event_states__event')

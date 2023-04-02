@@ -875,7 +875,9 @@ class EventOperator:
 
         events_to_trigger_queue = untriggered_events.filter(event__is_daily=True) | untriggered_events.filter(event__day=day)
 
-        events_to_trigger_queue.order_by('event__time', '-event__is_daily', 'event__pk')  # orders by time, then is_daily=True, then is_daily=False
+        events_to_trigger_queue = events_to_trigger_queue.order_by('event__time', '-event__is_daily', 'event__pk')  # orders by time, then is_daily=True, then is_daily=False
+
+        events_to_trigger_queue = events_to_trigger_queue.select_related('event__villagerappearsevent__villager', 'event__villagerappearsevent__place')
 
         return events_to_trigger_queue
 
@@ -941,7 +943,7 @@ class EventOperator:
     def reset_for_new_day(self, session):
         self.reset_villager_states(session.villager_states.all())
         self.reset_daily_events(session.event_states.all())
-        self.grow_crops(session.place_states.get(place__place_type=FARM))
+        self.grow_crops(session.place_states.all())
 
     def reset_villager_states(self, villager_states):
         villager_states.update(has_been_talked_to=False, has_been_given_gift=False)
@@ -949,9 +951,11 @@ class EventOperator:
     def reset_daily_events(self, event_states):
         event_states.filter(event__is_daily=True).update(has_occurred=False)
 
-    def grow_crops(self, farm_state):
+    def grow_crops(self, place_states):
         """Find all seeds/sprouts in the farm and "grow" them if they've been watered –
         ie replace them with a new item token at the next growth stage."""
+
+        farm_state = next((state for state in place_states if state.place.place_type == FARM))
         item_tokens = farm_state.item_tokens.all()
         new_contents = []
 
