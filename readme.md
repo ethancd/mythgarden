@@ -11,7 +11,7 @@ Mythgarden is a time-loop farming-sim RPG that you can play in your browser. Thi
 ## Tech Stack
 Mythgarden was built using a Django backend and a React frontend with Typescript.
 
-### Code flow / State machine
+## Code flow / State machine
 - **Initial page load**
   - [mythgarden.ashkie.com][ashkie] -> [urls.py](mythgarden/urls.py) -> [views.home](mythgarden/views.py#L19) -> [game_logic.py](mythgarden/game_logic.py#L22) -> [home.html](mythgarden/templates/mythgarden/home.html) -> [app.tsx](mythgarden/static/mythgarden/js/app.tsx)
 - **Player requests action**
