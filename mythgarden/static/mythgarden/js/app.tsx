@@ -21,8 +21,21 @@ import { isDeepEqual } from './staticUtils'
 import { FilterizeColorContext, filterFuncFactory, getColorFilterByTime } from './lightColorLogic'
 import colors from './_colors'
 import Gallery from "./gallery";
+import {postAction} from "./ajax";
 
 const MAX_ITEMS = 6
+const TALK_ACTION = 'TALK'
+const TRAVEL_ACTION = 'TRAVEL'
+
+const WATER_ACTION = 'WATER'
+const PLANT_ACTION = 'PLANT'
+const HARVEST_ACTION = 'HARVEST'
+const BUY_ACTION = 'BUY'
+const SELL_ACTION = 'SELL'
+const STOW_ACTION = 'STOW'
+const RETRIEVE_ACTION = 'RETRIEVE'
+
+const ITEM_ACTIONS = [WATER_ACTION, PLANT_ACTION, HARVEST_ACTION, BUY_ACTION, SELL_ACTION, STOW_ACTION, RETRIEVE_ACTION]
 
 class App extends React.Component<Partial<AppProps>, AppState> {
   constructor (props: AppProps) {
@@ -68,7 +81,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
   }
 
   getComponentTarget(e: React.SyntheticEvent<Element, Event>) {
-    const componentClasses = ['action', 'action-stem', 'item', 'villager', 'hero-portrait', 'gallery']
+    const componentClasses = ['action', 'action-stem', 'item', 'villager', 'building', 'hero-portrait', 'gallery', 'arrow']
     const componentClassSelector = componentClasses.map(c => '.' + c).join(', ')
     const componentDomNode = (e.target as HTMLElement).closest(componentClassSelector) as HTMLElement
 
@@ -89,6 +102,31 @@ class App extends React.Component<Partial<AppProps>, AppState> {
     }
   }
 
+  grabId(dataset: DOMStringMap): number|null {
+    const entityId = dataset.entityId == null ? null : parseInt(dataset.entityId)
+
+    return entityId
+  }
+
+  findMatchingAction(actionType: string, entityId: number): ActionProps | undefined {
+    console.log(`${actionType}-${entityId}`)
+    const matchingAction = this.state.combinedProps.actions.find(action => {
+      return action.uniqueDigest === `${actionType}-${entityId}`
+    })
+
+    return matchingAction
+  }
+
+  fireActionIfAvailable(actionType: string, target: HTMLElement) {
+    const entityId = this.grabId(target.dataset)
+    if (entityId == null) return
+
+    const matchingAction = this.findMatchingAction(actionType, entityId)
+    if (matchingAction == null) return
+
+    void postAction(matchingAction.uniqueDigest)
+  }
+
   handleClick (e: SyntheticEvent): void {
     this.clearActiveUX()
 
@@ -105,6 +143,26 @@ class App extends React.Component<Partial<AppProps>, AppState> {
       if (!this.state.showGallery) {
         this.showGallery()
       }
+    }
+
+    if (this.hasClass(target, 'villager')) {
+      this.fireActionIfAvailable(TALK_ACTION, target)
+    }
+
+    if (this.hasClass(target, 'building')) {
+      this.fireActionIfAvailable(TRAVEL_ACTION, target)
+    }
+
+    if (this.hasClass(target, 'arrow')) {
+      this.fireActionIfAvailable(TRAVEL_ACTION, target)
+    }
+
+    if (this.hasClass(target, 'item')) {
+      // relying on assumption that any item has only ONE action available at a time (excluding gift actions)
+      console.log(this.state.combinedProps.actions)
+      ITEM_ACTIONS.forEach(actionType => {
+        this.fireActionIfAvailable(actionType, target)
+      })
     }
   }
 

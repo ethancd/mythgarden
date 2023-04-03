@@ -5,7 +5,7 @@ import Color from 'color'
 import { type ColorFilter } from './lightColorLogic'
 
 const MAX_FILTER_OPACITY = 0.5;
-export default function Location ({ name, imageUrl, colorFilter, children }: React.PropsWithChildren<LocationProps & HasColorFilter>): JSX.Element {
+export default function Location ({ name, imageUrl, arrows, colorFilter, children }: React.PropsWithChildren<LocationProps & HasColorFilter>): JSX.Element {
   const backgroundColor = Color.rgb(colorFilter.rgbTemperature).darken(colorFilter.shadeBy).hex()
   const opacity = Math.min(colorFilter.shadeBy, MAX_FILTER_OPACITY)
 
@@ -17,6 +17,18 @@ export default function Location ({ name, imageUrl, colorFilter, children }: Rea
               opacity,
             }}></div>
             <img className="landscape" src={imageUrl}></img>
+            <ul className="directions">
+              {arrows.map(arrow => {
+                return (
+                  <li
+                  className={`arrow ${arrow.direction.toLowerCase()}`}
+                  key={arrow.id}
+                  data-entity-id={arrow.id}>
+                    <span>{arrow.direction}</span>
+                  </li>
+                )
+              })}
+            </ul>
             {children}
         </div>
   )
@@ -26,9 +38,15 @@ interface LocationData {
   name: string
   imageUrl: string
   hasInventory: boolean
+  arrows: Arrow[]
 }
 
-type LocationProps = Pick<LocationData, 'name' | 'imageUrl'>
+interface Arrow {
+  direction: string
+  id: number
+}
+
+type LocationProps = Pick<LocationData, 'name' | 'imageUrl' | 'arrows'>
 
 interface HasColorFilter {
   colorFilter: ColorFilter

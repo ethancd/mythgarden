@@ -15,7 +15,11 @@ export default function Villager ({ name, imageUrl, affinity, description, id, a
   }
 
   return (
-    <li className={`villager${activeGiftId != null ? ' highlighted' : ''}`} key={id} onClick={giveGift}>
+    <li
+      className={`villager${activeGiftId != null ? ' highlighted' : ''}`}
+      key={id}
+      data-entity-id={id}
+      onClick={giveGift}>
       <div className="row">
         <div className="portrait">
           <img src={imageUrl}></img>

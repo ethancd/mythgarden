@@ -4,7 +4,7 @@ import React from 'react'
 
 export default function Building ({ name, id }: BuildingProps): JSX.Element {
   return (
-        <li className="building" key={id}>
+        <li className="building" key={id} data-entity-id={id}>
             <div className='icon'>🏠</div>
             <span className="name">{name}</span>
         </li>

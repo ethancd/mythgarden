@@ -17,6 +17,7 @@ $neon-orange: #ff5f1f;
 $neon-red: #ff3131;
 $invisible: #ffffff00;
 $aqua: #05d0eb;
+$maple: #bb9351;
 
 $dark-text: #333;
 $light-text: #eee;
@@ -403,6 +404,7 @@ $hot-red: #fd1892;
     max-width: 100%;
     align-items: center;
     gap: $small-gutter;
+    cursor: pointer;
 
     &.empty-slot {
       border-color: $invisible;
@@ -566,12 +568,89 @@ $hot-red: #fd1892;
     position: absolute;
     width: 100%;
   }
+
+  .arrow {
+    position: absolute;
+    z-index: 5;
+    font-size: $medium-text;
+    font-family: "Lobster Two", "Times New Roman", serif;
+    cursor: pointer;
+
+    background-color: fade-out($maple, 0.2);
+
+    span {
+      position: absolute;
+    }
+
+    &.west {
+      left: 0;
+      clip-path: polygon(0% 50%, 100% 0%, 100% 100%);
+
+      span {
+        right: 0;
+      }
+    }
+
+    &.east {
+      right: 0;
+      clip-path: polygon(0% 0%, 0% 100%, 100% 50%);
+
+      span {
+        left: 0;
+      }
+    }
+
+    &.north {
+      top: 0;
+      clip-path: polygon(0% 100%, 50% 0%, 100% 100%);
+
+      span {
+        bottom: 0;
+      }
+    }
+
+    &.south {
+      bottom: 0;
+      clip-path: polygon(0% 0%, 50% 100%, 100% 0%);
+
+      span {
+        top: 0;
+      }
+    }
+
+    &.west, &.east {
+      top: 50%;
+      transform: translateY(-50%);
+      height: 80%;
+      width: 15%;
+      font-size: $medium-text;
+
+      span {
+        writing-mode: vertical-lr;
+        text-orientation: upright;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+    }
+
+    &.north, &.south {
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50%;
+      height: 30%;
+
+      span {
+        width: 100%;
+        text-align: center;
+      }
+    }
+  }
 }
 
 #buildings {
     bottom: 0;
     justify-content: space-between;
-  background-color: rgba($lavender-purple, 0.5);
+    background-color: rgba($lavender-purple, 0.5);
     left: 50%;
     position: absolute;
     transform: translate(-50%, 0);
@@ -581,6 +660,7 @@ $hot-red: #fd1892;
     .building {
       @include column;
       max-width: 20%;
+      cursor: pointer;
 
       .icon {
         font-size: $medium-text;
@@ -619,6 +699,7 @@ $hot-red: #fd1892;
     box-sizing: border-box;
     overflow: hidden;
     word-wrap: break-word;
+    cursor: pointer;
 
     &.empty-slot {
       border-color: beige;
@@ -744,6 +825,7 @@ $hot-red: #fd1892;
 
   .villager {
     @include column;
+    cursor: pointer;
 
     &.highlighted {
       cursor: pointer;

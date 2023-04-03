@@ -46,8 +46,22 @@ class Place(models.Model):
             'name': self.name,
             'imageUrl': self.image_url,
             'id': self.id,
-            'hasInventory': self.has_inventory
+            'hasInventory': self.has_inventory,
+            'arrows': self.get_arrows()
         }
+
+    def get_arrows(self):
+        arrows = []
+
+        for bridge in self.bridges_as_1.all():
+            new_arrow = {'direction': bridge.direction_2, 'id': bridge.place_2.id}
+            arrows.append(new_arrow)
+
+        for bridge in self.bridges_as_2.all():
+            new_arrow = {'direction': bridge.direction_1, 'id': bridge.place_1.id}
+            arrows.append(new_arrow)
+
+        return arrows
 
     @property
     def image_url(self):

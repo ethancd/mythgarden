@@ -7,6 +7,7 @@ export default function Item ({ name, emoji, id, rarity, hasBeenWatered, quantit
         <li
             className={`item ${rarity}${hasBeenWatered ? ' watered' : ''}`}
             key={id}
+            data-entity-id={id}
         >
             <span className='type'>{emoji}</span>
             {quantity != null ? <span className='quantity'>x{quantity}</span> : null}

@@ -4,8 +4,8 @@ from ._constants import DIRECTIONS
 
 
 class Bridge(models.Model):
-    place_1 = models.ForeignKey('Place', on_delete=models.CASCADE, related_name='place_1')
-    place_2 = models.ForeignKey('Place', on_delete=models.CASCADE, related_name='place_2')
+    place_1 = models.ForeignKey('Place', on_delete=models.CASCADE, related_name='bridges_as_1')
+    place_2 = models.ForeignKey('Place', on_delete=models.CASCADE, related_name='bridges_as_2')
 
     direction_1 = models.CharField(max_length=5, choices=DIRECTIONS)
     direction_2 = models.CharField(max_length=5, choices=DIRECTIONS)
