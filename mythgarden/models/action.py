@@ -13,8 +13,8 @@ class Action(models.Model):
     HARVEST = 'HARVEST'
     BUY = 'BUY'
     SELL = 'SELL'
-    PUT = 'PUT'
-    TAKE = 'TAKE'
+    STOW = 'STOW'
+    RETRIEVE = 'RETRIEVE'
     GATHER = 'GATHER'
     SLEEP = 'SLEEP'
 
@@ -38,8 +38,8 @@ class Action(models.Model):
         HARVEST: '🌾',
         BUY: '🛒',
         SELL: '💰',
-        PUT: '📦',
-        TAKE: '🎒',
+        STOW: '📦',
+        RETRIEVE: '🎒',
         GATHER: {
             FISHING: '🎣',
             DIGGING: '⛏',
@@ -57,8 +57,8 @@ class Action(models.Model):
         (HARVEST, 'Harvest'),
         (BUY, 'Buy'),
         (SELL, 'Sell'),
-        (PUT, 'Put'),
-        (TAKE, 'Take'),
+        (STOW, 'Stow'),
+        (RETRIEVE, 'Retrieve'),
         (GATHER, 'Gather'),
         (SLEEP, 'Sleep'),
     ]
@@ -79,7 +79,7 @@ class Action(models.Model):
     TIME_UNITS = [MIN, HOUR]
     MONEY_UNITS = [KOIN]
 
-    action_type = models.CharField(max_length=7, choices=ACTION_TYPES)
+    action_type = models.CharField(max_length=8, choices=ACTION_TYPES)
     description = models.CharField(max_length=255)
 
     cost_amount = models.IntegerField(default=1, null=True, blank=True)

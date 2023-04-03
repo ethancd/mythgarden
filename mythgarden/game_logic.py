@@ -194,10 +194,10 @@ class ActionGenerator:
         actions = []
 
         for item_token in inventory:
-            actions.append(self.gen_put_action(item_token))
+            actions.append(self.gen_stow_action(item_token))
 
         for item_token in storage_contents:
-            actions.append(self.gen_take_action(item_token))
+            actions.append(self.gen_retrieve_action(item_token))
 
         return actions
 
@@ -247,22 +247,22 @@ class ActionGenerator:
             log_statement=f'You bought {item_token.name} for {item_token.price} koin.',
         )
 
-    def gen_put_action(self, item_token):
+    def gen_stow_action(self, item_token):
         """Returns an action that puts given item into storage"""
         return Action(
-            description=f'Put {item_token.name} in chest',
-            action_type=Action.PUT,
+            description=f'Stow {item_token.name}',
+            action_type=Action.STOW,
             target_item=item_token,
-            log_statement=f'You put {item_token.name} away.',
+            log_statement=f'You put {item_token.name} in your chest.',
         )
 
-    def gen_take_action(self, item_token):
+    def gen_retrieve_action(self, item_token):
         """Returns an action that takes given item out of storage"""
         return Action(
-            description=f'Take {item_token.name} from chest',
-            action_type=Action.TAKE,
+            description=f'Retrieve {item_token.name}',
+            action_type=Action.RETRIEVE,
             target_item=item_token,
-            log_statement=f'You took {item_token.name} out.',
+            log_statement=f'You took {item_token.name} out of your chest.',
         )
 
     def gen_enter_action(self, building):
@@ -487,6 +487,7 @@ class ActionExecutor:
 
         return {
             'hero': session.hero_state,
+            'clock': session.clock,
             'inventory': list(session.inventory.item_tokens.all()),
             'dialogue': dialogue,
         }
@@ -560,8 +561,8 @@ class ActionExecutor:
             'localItemTokens': list(session.local_item_tokens.all()),
         }
 
-    def execute_put_action(self, action, session):
-        """Executes a put action, which removes an item from the hero's inventory
+    def execute_stow_action(self, action, session):
+        """Executes a stow action, which removes an item from the hero's inventory
         and adds it into location storage"""
 
         item = action.target_item
@@ -576,8 +577,8 @@ class ActionExecutor:
             'inventory': list(session.inventory.item_tokens.all()),
         }
 
-    def execute_take_action(self, action, session):
-        """Executes a take action, which adds an item into the hero's inventory
+    def execute_retrieve_action(self, action, session):
+        """Executes a retrieve action, which adds an item into the hero's inventory
         and removes it from location storage"""
 
         item = action.target_item
