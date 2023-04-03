@@ -48,6 +48,7 @@ class InventoryInline(admin.TabularInline):
 
 class SessionAdmin(admin.ModelAdmin):
     inlines = [HeroInline, ClockInline, WalletInline, InventoryInline]
+    list_display = ('__str__', 'high_score', 'boost_level', 'hero_name')
 
 
 class PlaceAdmin(admin.ModelAdmin):

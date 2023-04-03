@@ -55,6 +55,18 @@ class Session(models.Model):
     def event_states(self):
         return self.scheduled_event_states.all()
 
+    @property
+    def high_score(self):
+        return self.hero.high_score
+
+    @property
+    def boost_level(self):
+        return self.hero.boost_level
+
+    @property
+    def hero_name(self):
+        return self.hero.name
+
     def reset_session_state(self, end_of_game_message):
         key = self.key
         hero = self.hero
