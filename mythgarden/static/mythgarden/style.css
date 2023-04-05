@@ -47,9 +47,17 @@ ul#djDebugPanelList {
       border-color: #ddd; }
     #page.dark-mode #location .darkness-filter {
       opacity: 0.8; }
+    @media only screen and (max-width: 900px) {
+      #page.dark-mode #location h2.name {
+        font-size: 2rem;
+        background-color: #333; } }
     #page.dark-mode #location .building {
-      box-shadow: 0 0 1rem 0.125rem #fff;
+      box-shadow: 0 0 1rem 0.25rem #fff;
       border-color: #ddd; }
+    #page.dark-mode #location .arrow {
+      filter: drop-shadow(0 0 0.5rem #fff); }
+    #page.dark-mode #location .local-activity img {
+      filter: drop-shadow(0 0 0.5rem #fff); }
 
 /* general lists */
 ul {
@@ -86,7 +94,7 @@ ul {
   #hero .portrait {
     border-radius: 25%;
     overflow: hidden;
-    border: 2px solid #008f11;
+    border: 0.2rem solid #008f11;
     height: 100%;
     box-sizing: border-box;
     cursor: pointer; }
@@ -105,7 +113,7 @@ ul {
 #gallery {
   display: flex;
   flex-direction: row;
-  border: 5px solid transparent;
+  border: 0.3rem solid transparent;
   border-image: linear-gradient(to bottom right, #b827fc 0%, #2c90fc 25%, #b8fd33 50%, #fec837 75%, #fd1892 100%);
   border-image-slice: 1;
   position: absolute;
@@ -125,13 +133,13 @@ ul {
   #gallery .portrait {
     border-radius: 25%;
     overflow: hidden;
-    border: 1px solid black;
+    border: 0.1rem solid black;
     height: 40vh;
     cursor: pointer;
     box-sizing: border-box; }
     #gallery .portrait.current {
-      border: 3px solid #b827fc;
-      box-shadow: 0 0 5px 5px #b827fc; }
+      border: 0.2rem solid #b827fc;
+      box-shadow: 0 0 2rem 2rem #b827fc; }
     #gallery .portrait img {
       height: 100%;
       width: auto; }
@@ -214,7 +222,7 @@ ul {
     border-radius: 50%;
     background-color: #fff5e5;
     box-shadow: 0 0 1rem 0.25rem #fff5e5;
-    border: 1px solid white;
+    border: 0.1rem solid white;
     overflow: hidden; }
     #sky-container #moon #darkside {
       position: absolute;
@@ -254,7 +262,7 @@ ul {
   #inventory .item {
     display: flex;
     flex-direction: row;
-    border: 2px solid;
+    border: 0.2rem solid;
     overflow: hidden;
     flex-grow: 1;
     word-wrap: break-word;
@@ -373,7 +381,13 @@ ul {
     margin: 0.125rem;
     padding: 0.5rem;
     z-index: 10;
-    border-radius: 0.5rem; }
+    border-radius: 0.5rem;
+    opacity: 0.8;
+    white-space: nowrap; }
+    @media only screen and (max-width: 900px) {
+      #location h2.name {
+        font-size: 2rem;
+        background-color: #fff; } }
   #location .landscape-filter, #location .darkness-filter {
     top: 0;
     height: 100%;
@@ -387,58 +401,48 @@ ul {
     opacity: 0; }
   #location .landscape {
     width: 100%;
-    height: auto; }
+    height: auto;
+    filter: grayscale(50%); }
   #location .arrow {
     position: absolute;
     z-index: 2;
     font-size: 2rem;
     font-family: "Lobster Two", "Times New Roman", serif;
     cursor: pointer;
-    background-color: rgba(187, 147, 81, 0.8); }
-    #location .arrow span {
-      position: absolute; }
+    filter: drop-shadow(0.5rem 0.5rem 0.25rem #000); }
+    #location .arrow .inner-triangle {
+      background-color: #edc078;
+      height: 100%;
+      width: 100%; }
     #location .arrow.west {
-      left: 2%;
-      clip-path: polygon(0% 50%, 100% 0%, 100% 100%); }
-      #location .arrow.west span {
-        right: 0; }
+      left: 2%; }
+      #location .arrow.west .inner-triangle {
+        clip-path: polygon(0% 50%, 100% 0%, 100% 100%); }
     #location .arrow.east {
-      right: 2%;
-      clip-path: polygon(0% 0%, 0% 100%, 100% 50%); }
-      #location .arrow.east span {
-        left: 0; }
+      right: 2%; }
+      #location .arrow.east .inner-triangle {
+        clip-path: polygon(0% 0%, 0% 100%, 100% 50%); }
     #location .arrow.north {
-      top: 2%;
-      clip-path: polygon(0% 100%, 50% 0%, 100% 100%); }
-      #location .arrow.north span {
-        bottom: 0; }
+      top: 2%; }
+      #location .arrow.north .inner-triangle {
+        clip-path: polygon(0% 100%, 50% 0%, 100% 100%); }
     #location .arrow.south {
-      bottom: 2%;
-      clip-path: polygon(0% 0%, 50% 100%, 100% 0%); }
-      #location .arrow.south span {
-        top: 0; }
+      bottom: 2%; }
+      #location .arrow.south .inner-triangle {
+        clip-path: polygon(0% 0%, 50% 100%, 100% 0%); }
     #location .arrow.west, #location .arrow.east {
       top: 50%;
       transform: translateY(-50%);
       height: 60%;
-      width: 10%;
-      font-size: 2rem; }
-      #location .arrow.west span, #location .arrow.east span {
-        writing-mode: vertical-lr;
-        text-orientation: upright;
-        top: 50%;
-        transform: translateY(-50%); }
+      width: 10%; }
     #location .arrow.north, #location .arrow.south {
       left: 50%;
       transform: translateX(-50%);
       width: 30%;
       height: 20%; }
-      #location .arrow.north span, #location .arrow.south span {
-        width: 100%;
-        text-align: center; }
   #location .local-activity {
     position: absolute;
-    z-index: 10;
+    z-index: 4;
     cursor: pointer;
     width: 40%;
     height: 40%; }
@@ -447,21 +451,22 @@ ul {
       top: 50%;
       transform: translate(-50%, -50%); }
     #location .local-activity.travel, #location .local-activity.sleep {
-      bottom: 0;
+      bottom: 2%;
       height: 50%; }
       #location .local-activity.travel img, #location .local-activity.sleep img {
         margin: 0; }
     #location .local-activity.travel {
-      left: 0; }
+      left: 2%; }
     #location .local-activity.sleep {
-      right: 0; }
+      right: 2%; }
       #location .local-activity.sleep img {
         float: right; }
     #location .local-activity img {
       display: block;
       width: auto;
       height: 100%;
-      margin: auto; }
+      margin: auto;
+      filter: drop-shadow(0.5rem 0.5rem 0.25rem #000); }
 
 #buildings .building {
   display: flex;
@@ -471,10 +476,10 @@ ul {
   cursor: pointer;
   width: 30%;
   border-radius: 0.5rem;
-  border: 1px solid #333;
+  border: 0.1rem solid #333;
   box-sizing: border-box;
   overflow: hidden;
-  box-shadow: 0 0 1rem 0.125rem black; }
+  box-shadow: 0 0 1rem 0.25rem black; }
   #buildings .building.over-1 {
     left: 2%; }
   #buildings .building.over-2 {
@@ -542,7 +547,7 @@ ul {
       right: 0.5rem;
       top: 0.5rem; }
     #local-items .item.watered {
-      border: 1px dashed #05d0eb;
+      border: 0.1rem dashed #05d0eb;
       background-color: rgba(5, 208, 235, 0.5); }
 
 #footer {
@@ -585,7 +590,8 @@ ul {
     flex-direction: column;
     gap: 0.5rem; }
   #dialogue .portrait {
-    border: 2px solid #ffd1d8;
+    border: 0.2rem solid #ffd1d8;
+    border-radius: 25%;
     height: 5rem;
     width: 5rem; }
     #dialogue .portrait img {
@@ -620,7 +626,7 @@ ul {
     #villagers .villager.highlighted {
       cursor: pointer;
       background-color: #ffffffaa;
-      border: 2px solid gold;
+      border: 0.2rem solid gold;
       box-shadow: 0 0 0.5rem 0 gold; }
       #villagers .villager.highlighted:hover {
         background-color: #00000044;

@@ -18,7 +18,7 @@ $neon-orange: #ff5f1f;
 $neon-red: #ff3131;
 $invisible: #ffffff00;
 $aqua: #05d0eb;
-$maple: #bb9351;
+$maple: #edc078;
 $candle-light: #e09d37;
 
 $dark-text: #333;
@@ -33,12 +33,28 @@ $medium-text: 2rem;
 $med-large-text: 3rem;
 $large-text: 4rem;
 
+$pencil-thin: 0.1rem;
+$pen-thinnish: 0.2rem;
+$marker-thick: 0.3rem;
+
 $fine-gutter: 0.125rem;
 $small-gutter: 0.5rem;
 $medium-gutter: 1rem;
 
-$villager-portrait-size: calc($small-text * 5 + $fine-gutter * 4);
+$small-curve: 0.5rem;
 $portrait-radius: 25%;
+
+$very-fine-shadow-distance: 0.25rem;
+$fine-shadow-distance: 0.5rem;
+$small-shadow-distance: 1rem;
+$med-small-shadow-distance: 2rem;
+$medium-shadow-distance: 3rem;
+$med-large-shadow-distance: 4rem;
+$large-shadow-distance: 5rem;
+$huge-shadow-distance: 10rem;
+
+
+$villager-portrait-size: calc($small-text * 5 + $fine-gutter * 4);
 $edge-distance: 2%;
 
 
@@ -88,7 +104,11 @@ ul#djDebugPanelList {
 /* layout */
 
 @mixin building-box-shadow($color) {
-  box-shadow: 0 0 $medium-gutter $fine-gutter $color;
+  box-shadow: 0 0 $small-shadow-distance $very-fine-shadow-distance $color;
+}
+
+@mixin icon-drop-shadow-dark-mode() {
+  filter: drop-shadow(0 0 $fine-shadow-distance #fff)
 }
 
 #page {
@@ -109,9 +129,26 @@ ul#djDebugPanelList {
         opacity: 0.8;
       }
 
+      h2.name {
+        @media only screen and (max-width: 900px) {
+          font-size: $medium-text;
+          background-color: #333;
+        }
+      }
+
       .building {
         @include building-box-shadow(#fff);
         border-color: #ddd;
+      }
+
+      .arrow {
+        @include icon-drop-shadow-dark-mode;
+      }
+
+      .local-activity {
+        img {
+          @include icon-drop-shadow-dark-mode;
+        }
       }
     }
   }
@@ -162,7 +199,7 @@ $hot-red: #fd1892;
 
 
 @mixin rainbow-border {
-  border: 5px solid transparent;
+  border: $marker-thick solid transparent;
   border-image: linear-gradient(to bottom right,
     $fuschia 0%,
     $electric-blue 25%,
@@ -172,6 +209,12 @@ $hot-red: #fd1892;
   border-image-slice: 1;
 }
 /* top-bar HUD elements */
+
+
+@mixin icon-drop-shadow {
+  filter: drop-shadow($fine-shadow-distance $fine-shadow-distance $very-fine-shadow-distance #000)
+
+}
 
 #top-bar {
   background-color: $sky-blue;
@@ -192,7 +235,7 @@ $hot-red: #fd1892;
 
   .portrait {
     @include rounded-portrait;
-    border: 2px solid #008f11;
+    border: $pen-thinnish solid #008f11;
     height: 100%;
     box-sizing: border-box;
     cursor: pointer;
@@ -237,18 +280,18 @@ $hot-red: #fd1892;
   height: 95vh;
   box-sizing: border-box;
   gap: $medium-gutter;
-  box-shadow: 0 0 10rem 5rem $off-black-gray;
+  box-shadow: 0 0 $huge-shadow-distance $large-shadow-distance $off-black-gray;
 
   .portrait {
     @include rounded-portrait;
-    border: 1px solid black;
+    border: $pencil-thin solid black;
     height: 40vh;
     cursor: pointer;
     box-sizing: border-box;
 
     &.current {
-      border: 3px solid $fuschia;
-      box-shadow: 0 0 5px 5px $fuschia;
+      border: $pen-thinnish solid $fuschia;
+      box-shadow: 0 0 $med-small-shadow-distance $med-small-shadow-distance $fuschia;
     }
 
     img {
@@ -354,14 +397,14 @@ $hot-red: #fd1892;
   #sun {
     @include heavenly-body;
     background-color: yellow;
-    box-shadow: 0 0 4rem 1rem yellow;
+    box-shadow: 0 0 $med-large-shadow-distance $small-shadow-distance yellow;
   }
 
   #moon {
     @include heavenly-body;
     background-color: $white-yellow;
-    box-shadow: 0 0 1rem .25rem $white-yellow;
-    border: 1px solid white;
+    box-shadow: 0 0 $small-shadow-distance $very-fine-shadow-distance $white-yellow;
+    border: $pencil-thin solid white;
     overflow: hidden;
 
     #darkside {
@@ -410,7 +453,7 @@ $hot-red: #fd1892;
 
   .item {
     @include row;
-    border: 2px solid;
+    border: $pen-thinnish solid;
     overflow: hidden;
     flex-grow: 1;
     word-wrap: break-word;
@@ -441,7 +484,7 @@ $hot-red: #fd1892;
     &.rare {
       border-color: dodgerblue;
       background-color: fade-out(dodgerblue, 0.5);
-      box-shadow: 0 0 0.1rem 0 dodgerblue;
+      box-shadow: 0 0 $pencil-thin 0 dodgerblue;
 
       .type:after {
         content: '**';
@@ -452,7 +495,7 @@ $hot-red: #fd1892;
     &.epic {
       border-color: rebeccapurple;
       background-color: fade-out(rebeccapurple, 0.5);
-      box-shadow: 0 0 0.25rem 0 rebeccapurple;
+      box-shadow: 0 0 $very-fine-shadow-distance 0 rebeccapurple;
 
       .type:after {
         content: '***';
@@ -573,8 +616,14 @@ $hot-red: #fd1892;
     margin: $fine-gutter;
     padding: $small-gutter;
     z-index: 10;
-    //background-color: #fff;
-    border-radius: $small-gutter;
+    border-radius: $small-curve;
+    opacity: 0.8;
+    white-space: nowrap;
+
+    @media only screen and (max-width: 900px) {
+      font-size: $medium-text;
+      background-color: #fff;
+    }
   }
 
   .landscape-filter {
@@ -596,6 +645,7 @@ $hot-red: #fd1892;
   .landscape {
     width: 100%;
     height: auto;
+    filter: grayscale(50%);
   }
 
   .arrow {
@@ -605,45 +655,43 @@ $hot-red: #fd1892;
     font-family: "Lobster Two", "Times New Roman", serif;
     cursor: pointer;
 
-    background-color: fade-out($maple, 0.2);
+    @include icon-drop-shadow;
 
-    span {
-      position: absolute;
+    .inner-triangle {
+      background-color: $maple;
+      height: 100%;
+      width: 100%;
     }
 
     &.west {
       left: $edge-distance;
-      clip-path: polygon(0% 50%, 100% 0%, 100% 100%);
 
-      span {
-        right: 0;
+      .inner-triangle {
+        clip-path: polygon(0% 50%, 100% 0%, 100% 100%);
       }
     }
 
     &.east {
       right: $edge-distance;
-      clip-path: polygon(0% 0%, 0% 100%, 100% 50%);
 
-      span {
-        left: 0;
+      .inner-triangle {
+        clip-path: polygon(0% 0%, 0% 100%, 100% 50%);
       }
     }
 
     &.north {
       top: $edge-distance;
-      clip-path: polygon(0% 100%, 50% 0%, 100% 100%);
 
-      span {
-        bottom: 0;
+      .inner-triangle {
+        clip-path: polygon(0% 100%, 50% 0%, 100% 100%);
       }
     }
 
     &.south {
       bottom: $edge-distance;
-      clip-path: polygon(0% 0%, 50% 100%, 100% 0%);
 
-      span {
-        top: 0;
+      .inner-triangle {
+        clip-path: polygon(0% 0%, 50% 100%, 100% 0%);
       }
     }
 
@@ -652,14 +700,6 @@ $hot-red: #fd1892;
       transform: translateY(-50%);
       height: 60%;
       width: 10%;
-      font-size: $medium-text;
-
-      span {
-        writing-mode: vertical-lr;
-        text-orientation: upright;
-        top: 50%;
-        transform: translateY(-50%);
-      }
     }
 
     &.north, &.south {
@@ -667,18 +707,13 @@ $hot-red: #fd1892;
       transform: translateX(-50%);
       width: 30%;
       height: 20%;
-
-      span {
-        width: 100%;
-        text-align: center;
-      }
     }
   }
 
   .local-activity {
     position: absolute;
 
-    z-index: 10;
+    z-index: 4;
     cursor: pointer;
     width: 40%;
     height: 40%;
@@ -690,7 +725,7 @@ $hot-red: #fd1892;
     }
 
     &.travel, &.sleep {
-      bottom: 0;
+      bottom: $edge-distance;
       height: 50%;
 
       img {
@@ -699,11 +734,11 @@ $hot-red: #fd1892;
     }
 
     &.travel {
-      left: 0;
+      left: $edge-distance;
     }
 
     &.sleep {
-      right: 0;
+      right: $edge-distance;
       img {
         float: right;
       }
@@ -715,6 +750,7 @@ $hot-red: #fd1892;
       width: auto;
       height: 100%;
       margin: auto;
+      @include icon-drop-shadow;
     }
   }
 }
@@ -726,8 +762,8 @@ $hot-red: #fd1892;
       z-index: 3;
       cursor: pointer;
       width: 30%;
-      border-radius: $small-gutter;
-      border: 1px solid #333;
+      border-radius: $small-curve;
+      border: $pencil-thin solid #333;
       box-sizing: border-box;
       overflow: hidden;
 
@@ -830,7 +866,7 @@ $hot-red: #fd1892;
     }
 
     &.watered {
-      border: 1px dashed $aqua;
+      border: $pencil-thin dashed $aqua;
       background-color: fade-out($aqua, 0.5);
     }
   }
@@ -887,7 +923,8 @@ $hot-red: #fd1892;
   }
 
   .portrait {
-    border: 2px solid $dusty-pink;
+    border: $pen-thinnish solid $dusty-pink;
+    border-radius: $portrait-radius;
     height: 5rem;
     width: 5rem;
 
@@ -933,12 +970,12 @@ $hot-red: #fd1892;
     &.highlighted {
       cursor: pointer;
       background-color: #ffffffaa;
-      border: 2px solid gold;
-      box-shadow: 0 0 0.5rem 0 gold;
+      border: $pen-thinnish solid gold;
+      box-shadow: 0 0 $fine-shadow-distance 0 gold;
 
       &:hover {
         background-color: #00000044;
-        box-shadow: 0 0 0.5rem 0 darken(gold, 10%);
+        box-shadow: 0 0 $fine-shadow-distance 0 darken(gold, 10%);
         border-color: darken(gold, 10%);
       }
     }

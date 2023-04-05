@@ -40,7 +40,10 @@ export default function Location ({ name, imageUrl, arrows, activities, colorFil
                   className={`arrow ${arrow.direction.toLowerCase()}`}
                   key={arrow.id}
                   data-entity-id={arrow.id}>
-                    <span>{arrow.direction}</span>
+                    <div
+                      className='inner-triangle'
+                      style={{backgroundImage: `url("/static/mythgarden/images/dark-wood-texture.png")`}}>
+                    </div>
                   </li>
                 )
               })}
