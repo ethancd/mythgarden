@@ -210,9 +210,9 @@ DEFAULT_PORTRAIT = 'default.png'
 
 ACTIVITY_ICON_PATHS = {
     'BASKET': 'basket-placeholder.png',
-    'FISHING_ROD': 'fishing-rod-placeholder.webp',
+    'FISHING_ROD': 'fishing-rod-placeholder.png',
     'PICKAXE': 'pickaxe-placeholder.png',
-    'BED': 'bed-placeholder.webp',
+    'BED': 'bed-placeholder.png',
     'DOOR': 'door-placeholder.png'
 }
 

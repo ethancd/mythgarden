@@ -13,6 +13,9 @@ body, html {
   padding: 0;
   -webkit-user-select: none; }
 
+* {
+  transition: background-color 1s linear; }
+
 /* reset */
 h1, h2, h3 {
   border: 0;
@@ -38,31 +41,6 @@ textarea {
 ul#djDebugPanelList {
   display: block !important; }
 
-/* layout */
-* {
-  transition: background-color 1s linear; }
-
-#page {
-  height: 100vh;
-  background-color: #fff5e5; }
-  #page.dark-mode {
-    color: #eee; }
-    #page.dark-mode #actions .action {
-      border-color: #ddd; }
-    #page.dark-mode #location .darkness-filter {
-      opacity: 0.8; }
-    @media only screen and (max-width: 900px) {
-      #page.dark-mode #location h2.name {
-        font-size: 2rem;
-        background-color: #333; } }
-    #page.dark-mode #location .building {
-      box-shadow: 0 0 1rem 0.25rem #fff;
-      border-color: #ddd; }
-    #page.dark-mode #location .arrow {
-      filter: drop-shadow(0 0 0.5rem #fff); }
-    #page.dark-mode #location .local-activity img {
-      filter: drop-shadow(0 0 0.5rem #fff); }
-
 /* general lists */
 ul {
   display: flex;
@@ -78,6 +56,30 @@ ul {
 .column {
   display: flex;
   flex-direction: column; }
+
+#page {
+  height: 100vh;
+  background-color: #fff5e5;
+  overflow: hidden; }
+  #page.dark-mode {
+    color: #eee; }
+    #page.dark-mode #actions .action {
+      border-color: #ddd; }
+    #page.dark-mode #location .darkness-filter {
+      opacity: 0.8; }
+    @media only screen and (max-width: 900px) {
+      #page.dark-mode #location h2.name {
+        font-size: 2rem;
+        background-color: #333; } }
+    #page.dark-mode #location .building, #page.dark-mode #location .arrow, #page.dark-mode #location .local-activity img {
+      cursor: pointer;
+      filter: brightness(100%) drop-shadow(0 0 0.5rem #fff); }
+      #page.dark-mode #location .building:hover, #page.dark-mode #location .arrow:hover, #page.dark-mode #location .local-activity img:hover {
+        filter: brightness(90%) drop-shadow(0 0 0.5rem #fff); }
+      #page.dark-mode #location .building:active, #page.dark-mode #location .arrow:active, #page.dark-mode #location .local-activity img:active {
+        filter: brightness(50%) drop-shadow(0 0 0.5rem #fff); }
+    #page.dark-mode #location .building {
+      border-color: #ddd; }
 
 /* top-bar HUD elements */
 #top-bar {
@@ -96,12 +98,16 @@ ul {
   z-index: 2;
   max-width: 50%; }
   #hero .portrait {
+    cursor: pointer;
     border-radius: 25%;
     overflow: hidden;
     border: 0.2rem solid #008f11;
     height: 100%;
-    box-sizing: border-box;
-    cursor: pointer; }
+    box-sizing: border-box; }
+    #hero .portrait:hover {
+      filter: brightness(90%); }
+    #hero .portrait:active {
+      filter: brightness(50%); }
     #hero .portrait img {
       height: 100%;
       width: auto; }
@@ -135,12 +141,16 @@ ul {
   gap: 1rem;
   box-shadow: 0 0 10rem 5rem #333; }
   #gallery .portrait {
+    cursor: pointer;
     border-radius: 25%;
     overflow: hidden;
     border: 0.1rem solid black;
     height: 40vh;
-    cursor: pointer;
     box-sizing: border-box; }
+    #gallery .portrait:hover {
+      filter: brightness(90%); }
+    #gallery .portrait:active {
+      filter: brightness(50%); }
     #gallery .portrait.current {
       border: 0.2rem solid #b827fc;
       box-shadow: 0 0 2rem 2rem #b827fc; }
@@ -264,21 +274,28 @@ ul {
   justify-content: space-between;
   width: 100%; }
   #inventory .item {
+    cursor: pointer;
     display: flex;
     flex-direction: row;
-    border: 0.2rem solid;
+    border: 0.2rem solid #c68e1e;
+    border-radius: 0.2rem;
     overflow: hidden;
     flex-grow: 1;
     word-wrap: break-word;
     max-width: 100%;
     align-items: center;
-    gap: 0.5rem;
-    cursor: pointer; }
+    gap: 0.5rem; }
+    #inventory .item:hover {
+      filter: brightness(90%); }
+    #inventory .item:active {
+      filter: brightness(50%); }
     #inventory .item.empty-slot {
-      border-color: #ffffff00;
+      cursor: default;
       opacity: 0.5; }
+      #inventory .item.empty-slot:hover, #inventory .item.empty-slot:active {
+        filter: none; }
     #inventory .item.common {
-      border-color: #ffffff00; }
+      background-color: #e1a836; }
     #inventory .item.uncommon {
       border-color: limegreen;
       background-color: rgba(50, 205, 50, 0.5); }
@@ -341,13 +358,17 @@ ul {
   width: 20%;
   overflow-y: auto; }
   #actions .action {
-    border-bottom: 1px solid #333;
     cursor: pointer;
+    border-bottom: 1px solid #333;
     display: flex;
     font-size: 1rem;
     justify-content: flex-start;
     padding: 0.5rem 0;
     width: 100%; }
+    #actions .action:hover {
+      filter: brightness(90%); }
+    #actions .action:active {
+      filter: brightness(50%); }
     #actions .action span {
       display: inline-block; }
     #actions .action .type {
@@ -410,12 +431,16 @@ ul {
     height: auto;
     filter: grayscale(50%); }
   #location .arrow {
+    cursor: pointer;
+    filter: brightness(100%) drop-shadow(0.5rem 0.5rem 0.25rem #000);
     position: absolute;
     z-index: 2;
     font-size: 2rem;
-    font-family: "Lobster Two", "Times New Roman", serif;
-    cursor: pointer;
-    filter: drop-shadow(0.5rem 0.5rem 0.25rem #000); }
+    font-family: "Lobster Two", "Times New Roman", serif; }
+    #location .arrow:hover {
+      filter: brightness(90%) drop-shadow(0.5rem 0.5rem 0.25rem #000); }
+    #location .arrow:active {
+      filter: brightness(50%) drop-shadow(0.5rem 0.5rem 0.25rem #000); }
     #location .arrow .inner-triangle {
       background-color: #edc078;
       height: 100%;
@@ -449,7 +474,6 @@ ul {
   #location .local-activity {
     position: absolute;
     z-index: 4;
-    cursor: pointer;
     width: 40%;
     height: 40%; }
     #location .local-activity.gather {
@@ -468,24 +492,33 @@ ul {
       #location .local-activity.sleep img {
         float: right; }
     #location .local-activity img {
+      cursor: pointer;
+      filter: brightness(100%) drop-shadow(0.5rem 0.5rem 0.25rem #000);
       display: block;
       width: auto;
       height: 100%;
-      margin: auto;
-      filter: drop-shadow(0.5rem 0.5rem 0.25rem #000); }
+      margin: auto; }
+      #location .local-activity img:hover {
+        filter: brightness(90%) drop-shadow(0.5rem 0.5rem 0.25rem #000); }
+      #location .local-activity img:active {
+        filter: brightness(50%) drop-shadow(0.5rem 0.5rem 0.25rem #000); }
 
 #buildings .building {
+  cursor: pointer;
+  filter: brightness(100%) drop-shadow(0.5rem 0.5rem 0.25rem #000);
   display: flex;
   flex-direction: column;
   position: absolute;
   z-index: 3;
-  cursor: pointer;
   width: 30%;
   border-radius: 0.5rem;
   border: 0.1rem solid #333;
   box-sizing: border-box;
-  overflow: hidden;
-  box-shadow: 0 0 1rem 0.25rem black; }
+  overflow: hidden; }
+  #buildings .building:hover {
+    filter: brightness(90%) drop-shadow(0.5rem 0.5rem 0.25rem #000); }
+  #buildings .building:active {
+    filter: brightness(50%) drop-shadow(0.5rem 0.5rem 0.25rem #000); }
   #buildings .building.over-1 {
     left: 2%; }
   #buildings .building.over-2 {
@@ -528,17 +561,24 @@ ul {
   width: 100%;
   position: relative; }
   #local-items .item {
+    cursor: pointer;
     position: relative;
     display: flex;
     flex-direction: column;
     width: 15%;
     box-sizing: border-box;
     overflow: hidden;
-    word-wrap: break-word;
-    cursor: pointer; }
+    word-wrap: break-word; }
+    #local-items .item:hover {
+      filter: brightness(90%); }
+    #local-items .item:active {
+      filter: brightness(50%); }
     #local-items .item.empty-slot {
+      cursor: default;
       border-color: beige;
       opacity: 0.5; }
+      #local-items .item.empty-slot:hover, #local-items .item.empty-slot:active {
+        filter: none; }
     #local-items .item .type {
       font-size: 1.5rem;
       text-align: center; }
@@ -553,8 +593,11 @@ ul {
       right: 0.5rem;
       top: 0.5rem; }
     #local-items .item.watered {
+      cursor: default;
       border: 0.1rem dashed #05d0eb;
       background-color: rgba(5, 208, 235, 0.5); }
+      #local-items .item.watered:hover, #local-items .item.watered:active {
+        filter: none; }
 
 #footer {
   height: 10%;
@@ -626,11 +669,14 @@ ul {
   overflow-x: hidden;
   width: 15%; }
   #villagers .villager {
+    cursor: pointer;
     display: flex;
-    flex-direction: column;
-    cursor: pointer; }
+    flex-direction: column; }
+    #villagers .villager:hover {
+      filter: brightness(90%); }
+    #villagers .villager:active {
+      filter: brightness(50%); }
     #villagers .villager.highlighted {
-      cursor: pointer;
       background-color: #ffffffaa;
       border: 0.2rem solid gold;
       box-shadow: 0 0 0.5rem 0 gold; }

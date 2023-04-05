@@ -60,11 +60,13 @@ $edge-distance: 2%;
 /* degrees */
 
 $meta-element-opacity: 0.6;
-
+$hovered-brightness: 90%;
+$pressed-brightness: 50%;
 
 /* timing */
 
 $transition-time: 1s;
+
 /* site-wide */
 
 body, html {
@@ -74,6 +76,10 @@ body, html {
   margin: 0;
   padding: 0;
   -webkit-user-select: none;
+}
+
+* {
+  transition: background-color $transition-time linear;
 }
 
 /* reset */
@@ -102,63 +108,6 @@ textarea {
 /* development code */
 ul#djDebugPanelList {
   display: block !important;
-}
-
-/* layout */
-
-@mixin building-box-shadow($color) {
-  box-shadow: 0 0 $small-shadow-distance $very-fine-shadow-distance $color;
-}
-
-@mixin icon-drop-shadow-dark-mode() {
-  filter: drop-shadow(0 0 $fine-shadow-distance #fff)
-}
-
-* {
-  transition: background-color $transition-time linear;
-}
-
-#page {
-  height: 100vh;
-  background-color: $white-yellow;
-
-  &.dark-mode {
-    color: $light-text;
-
-    #actions {
-      .action {
-        border-color: $off-white-gray;
-      }
-    }
-
-    #location {
-      .darkness-filter {
-        opacity: 0.8;
-      }
-
-      h2.name {
-        @media only screen and (max-width: 900px) {
-          font-size: $medium-text;
-          background-color: #333;
-        }
-      }
-
-      .building {
-        @include building-box-shadow(#fff);
-        border-color: #ddd;
-      }
-
-      .arrow {
-        @include icon-drop-shadow-dark-mode;
-      }
-
-      .local-activity {
-        img {
-          @include icon-drop-shadow-dark-mode;
-        }
-      }
-    }
-  }
 }
 
 /* general lists */
@@ -215,19 +164,94 @@ $hot-red: #fd1892;
     $hot-red 100%);
   border-image-slice: 1;
 }
-/* top-bar HUD elements */
 
 
-@mixin icon-drop-shadow {
-  filter: drop-shadow($fine-shadow-distance $fine-shadow-distance $very-fine-shadow-distance #000);
+@mixin filter-brightness($percent) {
+  filter: brightness($percent);
+}
+
+$icon-drop-shadow-expression: drop-shadow($fine-shadow-distance $fine-shadow-distance $very-fine-shadow-distance #000);
+$icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #fff);
+
+@mixin filter-brightness-plus-drop-shadow($percent, $drop-shadow-expression) {
+  filter: brightness($percent) $drop-shadow-expression;
 }
 
 @mixin clickable {
   cursor: pointer;
 
+  &:hover {
+    @include filter-brightness($hovered-brightness);
+  }
+
   &:active {
+    @include filter-brightness($pressed-brightness);
   }
 }
+
+@mixin non-clickable {
+  cursor: default;
+
+  &:hover, &:active {
+    filter: none;
+  }
+}
+
+@mixin clickable-drop-shadow($drop-shadow-expression) {
+  cursor: pointer;
+  @include filter-brightness-plus-drop-shadow(100%, $drop-shadow-expression);
+
+  &:hover {
+    @include filter-brightness-plus-drop-shadow($hovered-brightness, $drop-shadow-expression);
+  }
+
+  &:active {
+    @include filter-brightness-plus-drop-shadow($pressed-brightness, $drop-shadow-expression);
+  }
+}
+
+@mixin clickable-icon-drop-shadow {
+  @include clickable-drop-shadow($icon-drop-shadow-expression);
+}
+
+#page {
+  height: 100vh;
+  background-color: $white-yellow;
+  overflow: hidden;
+
+  &.dark-mode {
+    color: $light-text;
+
+    #actions {
+      .action {
+        border-color: $off-white-gray;
+      }
+    }
+
+    #location {
+      .darkness-filter {
+        opacity: 0.8;
+      }
+
+      h2.name {
+        @media only screen and (max-width: 900px) {
+          font-size: $medium-text;
+          background-color: #333;
+        }
+      }
+
+      .building, .arrow, .local-activity img {
+        @include clickable-drop-shadow($icon-dark-mode-drop-shadow-expression);
+      }
+
+      .building {
+        border-color: #ddd;
+      }
+    }
+  }
+}
+
+/* top-bar HUD elements */
 
 #top-bar {
   background-color: $sky-blue;
@@ -247,12 +271,11 @@ $hot-red: #fd1892;
   max-width: 50%;
 
   .portrait {
+    @include clickable;
     @include rounded-portrait;
     border: $pen-thinnish solid #008f11;
     height: 100%;
     box-sizing: border-box;
-    cursor: pointer;
-
 
     img {
       height: 100%;
@@ -296,10 +319,10 @@ $hot-red: #fd1892;
   box-shadow: 0 0 $huge-shadow-distance $large-shadow-distance $off-black-gray;
 
   .portrait {
+    @include clickable;
     @include rounded-portrait;
     border: $pencil-thin solid black;
     height: 40vh;
-    cursor: pointer;
     box-sizing: border-box;
 
     &.current {
@@ -467,23 +490,24 @@ $hot-red: #fd1892;
   width: 100%;
 
   .item {
+    @include clickable;
     @include row;
-    border: $pen-thinnish solid;
+    border: $pen-thinnish solid darken($yellow-leather, 10%);
+    border-radius: $pen-thinnish;
     overflow: hidden;
     flex-grow: 1;
     word-wrap: break-word;
     max-width: 100%;
     align-items: center;
     gap: $small-gutter;
-    cursor: pointer;
 
     &.empty-slot {
-      border-color: $invisible;
+      @include non-clickable;
       opacity: 0.5;
     }
 
     &.common {
-      border-color: $invisible;
+      background-color: $yellow-leather;
     }
 
     &.uncommon {
@@ -574,8 +598,8 @@ $hot-red: #fd1892;
   overflow-y: auto;
 
   .action {
+    @include clickable;
     border-bottom: 1px solid $off-black-gray;
-    cursor: pointer;
     display: flex;
     font-size: $small-text;
     justify-content: flex-start;
@@ -667,13 +691,11 @@ $hot-red: #fd1892;
   }
 
   .arrow {
+    @include clickable-icon-drop-shadow;
     position: absolute;
     z-index: 2;
     font-size: $medium-text;
     font-family: "Lobster Two", "Times New Roman", serif;
-    cursor: pointer;
-
-    @include icon-drop-shadow;
 
     .inner-triangle {
       background-color: $maple;
@@ -730,9 +752,7 @@ $hot-red: #fd1892;
 
   .local-activity {
     position: absolute;
-
     z-index: 4;
-    cursor: pointer;
     width: 40%;
     height: 40%;
 
@@ -764,79 +784,77 @@ $hot-red: #fd1892;
 
 
     img {
+    @include clickable-icon-drop-shadow;
       display: block;
       width: auto;
       height: 100%;
       margin: auto;
-      @include icon-drop-shadow;
     }
   }
 }
 
 #buildings {
-    .building {
-      @include column;
-      position: absolute;
-      z-index: 3;
-      cursor: pointer;
-      width: 30%;
-      border-radius: $small-curve;
-      border: $pencil-thin solid #333;
-      box-sizing: border-box;
-      overflow: hidden;
+  .building {
+    @include clickable-icon-drop-shadow;
+    @include column;
+    position: absolute;
+    z-index: 3;
+    width: 30%;
+    border-radius: $small-curve;
+    border: $pencil-thin solid #333;
+    box-sizing: border-box;
+    overflow: hidden;
 
-      @include building-box-shadow(black);
+    &.over-1 {
+      left: $edge-distance;
+    }
+    &.over-2 {
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    &.over-3 {
+      right: $edge-distance;
+    }
 
-      &.over-1 {
-        left: $edge-distance;
-      }
-      &.over-2 {
-        left: 50%;
-        transform: translateX(-50%);
-      }
-      &.over-3 {
-        right: $edge-distance;
-      }
+    &.down-1 {
+      top: $edge-distance;
+    }
+    &.down-2 {
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    &.down-3 {
+      bottom: $edge-distance;
+    }
 
-      &.down-1 {
-        top: $edge-distance;
-      }
-      &.down-2 {
-        top: 50%;
-        transform: translateY(-50%);
-      }
-      &.down-3 {
-        bottom: $edge-distance;
-      }
+    &.over-2.down-2 {
+      transform: translate(-50%, -50%)
+    }
 
-      &.over-2.down-2 {
-        transform: translate(-50%, -50%)
+    img {
+      width: 100%;
+      height: auto;
+    }
+
+    .icon {
+      font-size: $med-large-text;
+      text-align: center;
+
+      @media only screen and (max-width: 900px) {
+        font-size: $medium-text;
       }
+    }
 
-      img {
-        width: 100%;
-        height: auto;
-      }
+    .name {
+      text-align: center;
+      font-size: $med-small-text;
 
-      .icon {
-        font-size: $med-large-text;
-        text-align: center;
-
-        @media only screen and (max-width: 900px) {
-          font-size: $medium-text;
-        }
-      }
-
-      .name {
-        text-align: center;
-        font-size: $med-small-text;
-
-        @media only screen and (max-width: 900px) {
-          font-size: $fine-text;
-        }
+      @media only screen and (max-width: 900px) {
+        font-size: $fine-text;
       }
     }
   }
+}
 
 
 #local-items {
@@ -849,6 +867,7 @@ $hot-red: #fd1892;
   position: relative;
 
   .item {
+    @include clickable;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -856,9 +875,9 @@ $hot-red: #fd1892;
     box-sizing: border-box;
     overflow: hidden;
     word-wrap: break-word;
-    cursor: pointer;
 
     &.empty-slot {
+      @include non-clickable;
       border-color: beige;
       opacity: 0.5;
     }
@@ -884,6 +903,7 @@ $hot-red: #fd1892;
     }
 
     &.watered {
+      @include non-clickable;
       border: $pencil-thin dashed $aqua;
       background-color: fade-out($aqua, 0.5);
     }
@@ -982,11 +1002,10 @@ $hot-red: #fd1892;
   width: 15%;
 
   .villager {
+    @include clickable;
     @include column;
-    cursor: pointer;
 
     &.highlighted {
-      cursor: pointer;
       background-color: #ffffffaa;
       border: $pen-thinnish solid gold;
       box-shadow: 0 0 $fine-shadow-distance 0 gold;
