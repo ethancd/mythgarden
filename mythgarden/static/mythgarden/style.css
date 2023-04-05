@@ -3,6 +3,7 @@
 /* colors */
 /* sizes */
 /* degrees */
+/* timing */
 /* site-wide */
 body, html {
   color: #333;
@@ -38,6 +39,9 @@ ul#djDebugPanelList {
   display: block !important; }
 
 /* layout */
+* {
+  transition: background-color 1s linear; }
+
 #page {
   height: 100vh;
   background-color: #fff5e5; }
@@ -394,11 +398,13 @@ ul {
     position: absolute;
     width: 100%;
     z-index: 5;
-    pointer-events: none; }
+    pointer-events: none;
+    transition: background-color 1s linear, opacity 1s linear; }
   #location .darkness-filter {
     z-index: 1;
     background-color: black;
-    opacity: 0; }
+    opacity: 0;
+    transition: opacity 1s linear; }
   #location .landscape {
     width: 100%;
     height: auto;

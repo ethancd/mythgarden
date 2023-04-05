@@ -53,7 +53,6 @@ $med-large-shadow-distance: 4rem;
 $large-shadow-distance: 5rem;
 $huge-shadow-distance: 10rem;
 
-
 $villager-portrait-size: calc($small-text * 5 + $fine-gutter * 4);
 $edge-distance: 2%;
 
@@ -62,6 +61,10 @@ $edge-distance: 2%;
 
 $meta-element-opacity: 0.6;
 
+
+/* timing */
+
+$transition-time: 1s;
 /* site-wide */
 
 body, html {
@@ -109,6 +112,10 @@ ul#djDebugPanelList {
 
 @mixin icon-drop-shadow-dark-mode() {
   filter: drop-shadow(0 0 $fine-shadow-distance #fff)
+}
+
+* {
+  transition: background-color $transition-time linear;
 }
 
 #page {
@@ -212,8 +219,14 @@ $hot-red: #fd1892;
 
 
 @mixin icon-drop-shadow {
-  filter: drop-shadow($fine-shadow-distance $fine-shadow-distance $very-fine-shadow-distance #000)
+  filter: drop-shadow($fine-shadow-distance $fine-shadow-distance $very-fine-shadow-distance #000);
+}
 
+@mixin clickable {
+  cursor: pointer;
+
+  &:active {
+  }
 }
 
 #top-bar {
@@ -392,6 +405,8 @@ $hot-red: #fd1892;
     width: 4rem;
     height: 4rem;
     border-radius: 50%;
+
+    //transition: left $transition-time linear, bottom $transition-time cubic-bezier(.1, .6, .5, .9);
   }
 
   #sun {
@@ -633,6 +648,8 @@ $hot-red: #fd1892;
     width: 100%;
     z-index: 5;
     pointer-events: none;
+    transition: background-color $transition-time linear,
+                opacity $transition-time linear;
   }
 
   .darkness-filter {
@@ -640,6 +657,7 @@ $hot-red: #fd1892;
     z-index: 1;
     background-color: black;
     opacity: 0;
+    transition: opacity $transition-time linear;
   }
 
   .landscape {
