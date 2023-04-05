@@ -81,7 +81,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
   }
 
   getComponentTarget(e: React.SyntheticEvent<Element, Event>) {
-    const componentClasses = ['action', 'action-stem', 'item', 'villager', 'building', 'hero-portrait', 'gallery', 'arrow']
+    const componentClasses = ['action', 'action-stem', 'local-activity', 'item', 'villager', 'building', 'hero-portrait', 'gallery', 'arrow']
     const componentClassSelector = componentClasses.map(c => '.' + c).join(', ')
     const componentDomNode = (e.target as HTMLElement).closest(componentClassSelector) as HTMLElement
 
@@ -102,6 +102,16 @@ class App extends React.Component<Partial<AppProps>, AppState> {
     }
   }
 
+  marshalActivityClickData(dataset: DOMStringMap) {
+    const entityId = this.grabId(dataset) || ''
+    const actionType = dataset.actionType == null ? null : dataset.actionType
+
+    return {
+      entityId,
+      actionType
+    }
+  }
+
   grabId(dataset: DOMStringMap): number|null {
     const entityId = dataset.entityId == null ? null : parseInt(dataset.entityId)
 
@@ -109,7 +119,6 @@ class App extends React.Component<Partial<AppProps>, AppState> {
   }
 
   findMatchingAction(actionType: string, entityId: number): ActionProps | undefined {
-    console.log(`${actionType}-${entityId}`)
     const matchingAction = this.state.combinedProps.actions.find(action => {
       return action.uniqueDigest === `${actionType}-${entityId}`
     })
@@ -122,6 +131,16 @@ class App extends React.Component<Partial<AppProps>, AppState> {
     if (entityId == null) return
 
     const matchingAction = this.findMatchingAction(actionType, entityId)
+    if (matchingAction == null) return
+
+    void postAction(matchingAction.uniqueDigest)
+  }
+
+  fireActionWithEmptyIdIfAvailable(actionType: string) {
+    const matchingAction = this.state.combinedProps.actions.find(action => {
+      console.log(action.uniqueDigest)
+      return action.uniqueDigest === `${actionType}-`  // load-bearing hyphen at the end there
+    })
     if (matchingAction == null) return
 
     void postAction(matchingAction.uniqueDigest)
@@ -155,6 +174,22 @@ class App extends React.Component<Partial<AppProps>, AppState> {
 
     if (this.hasClass(target, 'arrow')) {
       this.fireActionIfAvailable(TRAVEL_ACTION, target)
+    }
+
+    if (this.hasClass(target, 'local-activity')) {
+      const { actionType, entityId} = this.marshalActivityClickData(target.dataset)
+
+      console.log(`${actionType}-${entityId}`)
+      console.log(this.state.combinedProps.actions)
+
+      if (actionType == null || entityId == null) return
+
+      if (entityId == '') {  // expect these location activities to often have no entity id
+        console.log('empty id here!')
+        this.fireActionWithEmptyIdIfAvailable(actionType)
+      } else {
+        this.fireActionIfAvailable(actionType, target)
+      }
     }
 
     if (this.hasClass(target, 'item')) {

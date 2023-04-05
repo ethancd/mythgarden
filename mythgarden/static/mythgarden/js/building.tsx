@@ -2,11 +2,14 @@
 
 import React from 'react'
 
-export default function Building ({ name, id }: BuildingProps): JSX.Element {
+export default function Building ({ name, id, imageUrl, coords }: BuildingProps): JSX.Element {
+  console.log(imageUrl)
   return (
-        <li className="building" key={id} data-entity-id={id}>
-            <div className='icon'>🏠</div>
-            <span className="name">{name}</span>
+        <li
+          className={`building over-${coords.over} down-${coords.down}`}
+          key={id}
+          data-entity-id={id}>
+          <img src={imageUrl}></img>
         </li>
   )
 }
@@ -14,6 +17,11 @@ export default function Building ({ name, id }: BuildingProps): JSX.Element {
 interface BuildingProps {
   name: string
   id: number
+  imageUrl: string
+  coords: {
+    over: number
+    down: number
+  }
 }
 
 export { Building, type BuildingProps }

@@ -208,6 +208,14 @@ VILLAGER_PORTRAIT_DIR = 'portraits/villager'
 
 DEFAULT_PORTRAIT = 'default.png'
 
+ACTIVITY_ICON_PATHS = {
+    'BASKET': 'basket-placeholder.png',
+    'FISHING_ROD': 'fishing-rod-placeholder.webp',
+    'PICKAXE': 'pickaxe-placeholder.png',
+    'BED': 'bed-placeholder.webp',
+    'DOOR': 'door-placeholder.png'
+}
+
 FISHING_DESCRIPTION = 'Go fishing'
 DIGGING_DESCRIPTION = 'Dig for something interesting'
 FORAGING_DESCRIPTION = 'Forage for plants'

@@ -4,6 +4,7 @@
 $sky-blue: #87ceeb;
 $yellow-leather: #e1a836;
 $dollar-bill-green: #85bb65;
+$deep-grass-green: #59b300;
 $sandy-brown: #f9cca4;
 $lavender-purple: #b09cc9;
 $parchment: #fcf5ef;
@@ -18,6 +19,7 @@ $neon-red: #ff3131;
 $invisible: #ffffff00;
 $aqua: #05d0eb;
 $maple: #bb9351;
+$candle-light: #e09d37;
 
 $dark-text: #333;
 $light-text: #eee;
@@ -37,6 +39,8 @@ $medium-gutter: 1rem;
 
 $villager-portrait-size: calc($small-text * 5 + $fine-gutter * 4);
 $portrait-radius: 25%;
+$edge-distance: 2%;
+
 
 /* degrees */
 
@@ -83,6 +87,10 @@ ul#djDebugPanelList {
 
 /* layout */
 
+@mixin building-box-shadow($color) {
+  box-shadow: 0 0 $medium-gutter $fine-gutter $color;
+}
+
 #page {
   height: 100vh;
   background-color: $white-yellow;
@@ -97,8 +105,13 @@ ul#djDebugPanelList {
     }
 
     #location {
-      h2.name {
-        background-color: #000000aa;
+      .darkness-filter {
+        opacity: 0.8;
+      }
+
+      .building {
+        @include building-box-shadow(#fff);
+        border-color: #ddd;
       }
     }
   }
@@ -254,8 +267,8 @@ $hot-red: #fd1892;
   opacity: 75%;
   position: absolute;
   text-transform: uppercase;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  top: 0;
+  transform: translateX(-50%);
 }
 
 @keyframes sinewave {
@@ -385,7 +398,7 @@ $hot-red: #fd1892;
 #sidebar {
   @include column;
   justify-content: space-between;
-  width: 20%;
+  width: 15%;
 }
 
 #inventory {
@@ -496,6 +509,7 @@ $hot-red: #fd1892;
 // will be deleted after "action chip" feature is implemented
 
 #actions {
+  display: none !important; // under development
   @include column;
   background-color: pink;
   width: 20%;
@@ -535,24 +549,32 @@ $hot-red: #fd1892;
 #center-col {
   @include column;
   height: 100%;
-  overflow: hidden;
-  width: 60%;
+  //overflow: hidden;
+  width: 70%;
   justify-content: space-between;
 }
 
 #location {
-  height: 50%;
+  height: 70%;
   position: relative;
   width: 100%;
   flex-grow: 0;
 
   h2.name {
-    font-size: $medium-text;
+    font-size: $med-large-text;
+    font-family: "Lobster Two", "Times New Roman", serif;
     font-weight: bold;
+    display: inline-block;
     text-align: center;
-    position: relative;
+    position: absolute;
+    left: 50%;
+    top: -$small-gutter;
+    transform: translate(-50%, -100%);
+    margin: $fine-gutter;
+    padding: $small-gutter;
     z-index: 10;
-    background-color: #ffffffaa;
+    //background-color: #fff;
+    border-radius: $small-gutter;
   }
 
   .landscape-filter {
@@ -560,18 +582,25 @@ $hot-red: #fd1892;
     height: 100%;
     position: absolute;
     width: 100%;
-    z-index: 2;
+    z-index: 5;
+    pointer-events: none;
+  }
+
+  .darkness-filter {
+    @extend .landscape-filter;
+    z-index: 1;
+    background-color: black;
+    opacity: 0;
   }
 
   .landscape {
-    bottom: 0;
-    position: absolute;
     width: 100%;
+    height: auto;
   }
 
   .arrow {
     position: absolute;
-    z-index: 5;
+    z-index: 2;
     font-size: $medium-text;
     font-family: "Lobster Two", "Times New Roman", serif;
     cursor: pointer;
@@ -583,7 +612,7 @@ $hot-red: #fd1892;
     }
 
     &.west {
-      left: 0;
+      left: $edge-distance;
       clip-path: polygon(0% 50%, 100% 0%, 100% 100%);
 
       span {
@@ -592,7 +621,7 @@ $hot-red: #fd1892;
     }
 
     &.east {
-      right: 0;
+      right: $edge-distance;
       clip-path: polygon(0% 0%, 0% 100%, 100% 50%);
 
       span {
@@ -601,7 +630,7 @@ $hot-red: #fd1892;
     }
 
     &.north {
-      top: 0;
+      top: $edge-distance;
       clip-path: polygon(0% 100%, 50% 0%, 100% 100%);
 
       span {
@@ -610,7 +639,7 @@ $hot-red: #fd1892;
     }
 
     &.south {
-      bottom: 0;
+      bottom: $edge-distance;
       clip-path: polygon(0% 0%, 50% 100%, 100% 0%);
 
       span {
@@ -621,8 +650,8 @@ $hot-red: #fd1892;
     &.west, &.east {
       top: 50%;
       transform: translateY(-50%);
-      height: 80%;
-      width: 15%;
+      height: 60%;
+      width: 10%;
       font-size: $medium-text;
 
       span {
@@ -636,8 +665,8 @@ $hot-red: #fd1892;
     &.north, &.south {
       left: 50%;
       transform: translateX(-50%);
-      width: 50%;
-      height: 30%;
+      width: 30%;
+      height: 20%;
 
       span {
         width: 100%;
@@ -645,29 +674,102 @@ $hot-red: #fd1892;
       }
     }
   }
+
+  .local-activity {
+    position: absolute;
+
+    z-index: 10;
+    cursor: pointer;
+    width: 40%;
+    height: 40%;
+
+    &.gather {
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    &.travel, &.sleep {
+      bottom: 0;
+      height: 50%;
+
+      img {
+        margin: 0;
+      }
+    }
+
+    &.travel {
+      left: 0;
+    }
+
+    &.sleep {
+      right: 0;
+      img {
+        float: right;
+      }
+    }
+
+
+    img {
+      display: block;
+      width: auto;
+      height: 100%;
+      margin: auto;
+    }
+  }
 }
 
 #buildings {
-    bottom: 0;
-    justify-content: space-between;
-    background-color: rgba($lavender-purple, 0.5);
-    left: 50%;
-    position: absolute;
-    transform: translate(-50%, 0);
-    width: 100%;
-    z-index: 5;
-
     .building {
       @include column;
-      max-width: 20%;
+      position: absolute;
+      z-index: 3;
       cursor: pointer;
+      width: 30%;
+      border-radius: $small-gutter;
+      border: 1px solid #333;
+      box-sizing: border-box;
+      overflow: hidden;
+
+      @include building-box-shadow(black);
+
+      &.over-1 {
+        left: $edge-distance;
+      }
+      &.over-2 {
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      &.over-3 {
+        right: $edge-distance;
+      }
+
+      &.down-1 {
+        top: $edge-distance;
+      }
+      &.down-2 {
+        top: 50%;
+        transform: translateY(-50%);
+      }
+      &.down-3 {
+        bottom: $edge-distance;
+      }
+
+      &.over-2.down-2 {
+        transform: translate(-50%, -50%)
+      }
+
+      img {
+        width: 100%;
+        height: auto;
+      }
 
       .icon {
-        font-size: $medium-text;
+        font-size: $med-large-text;
         text-align: center;
 
         @media only screen and (max-width: 900px) {
-          font-size: $smallish-text;
+          font-size: $medium-text;
         }
       }
 
@@ -690,6 +792,7 @@ $hot-red: #fd1892;
   justify-content: space-between;
   overflow: hidden;
   width: 100%;
+  position: relative;
 
   .item {
     position: relative;
@@ -735,7 +838,7 @@ $hot-red: #fd1892;
 
 
 #footer {
-  height: 30%;
+  height: 10%;
   flex-grow: 1;
   width: 100%;
   position: relative;
@@ -821,7 +924,7 @@ $hot-red: #fd1892;
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
-  width: 20%;
+  width: 15%;
 
   .villager {
     @include column;

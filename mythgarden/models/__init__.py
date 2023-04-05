@@ -14,7 +14,7 @@ from .wallet import Wallet
 # imports from just .farmer_portrait
 from .hero import Hero, HeroState
 
-# imports from just .item
+# imports from .action and .item
 from .place import Place, PlaceState, Building
 
 # imports from just .place

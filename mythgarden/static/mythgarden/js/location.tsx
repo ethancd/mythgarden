@@ -5,7 +5,7 @@ import Color from 'color'
 import { type ColorFilter } from './lightColorLogic'
 
 const MAX_FILTER_OPACITY = 0.5;
-export default function Location ({ name, imageUrl, arrows, colorFilter, children }: React.PropsWithChildren<LocationProps & HasColorFilter>): JSX.Element {
+export default function Location ({ name, imageUrl, arrows, activities, colorFilter, children }: React.PropsWithChildren<LocationProps & HasColorFilter>): JSX.Element {
   const backgroundColor = Color.rgb(colorFilter.rgbTemperature).darken(colorFilter.shadeBy).hex()
   const opacity = Math.min(colorFilter.shadeBy, MAX_FILTER_OPACITY)
 
@@ -16,7 +16,23 @@ export default function Location ({ name, imageUrl, arrows, colorFilter, childre
               backgroundColor,
               opacity,
             }}></div>
+            <div className='darkness-filter'></div>
             <img className="landscape" src={imageUrl}></img>
+
+            <ul className='activities'>
+              {activities.map(activity => {
+                return (
+                  <li
+                  className={`local-activity ${activity.actionType.toLowerCase()}`}
+                  key={activity.actionType}
+                  data-entity-id={activity.id}
+                  data-action-type={activity.actionType}>
+                    <img src={activity.imageUrl}></img>
+                  </li>
+                )
+              })}
+            </ul>
+
             <ul className="directions">
               {arrows.map(arrow => {
                 return (
@@ -39,6 +55,7 @@ interface LocationData {
   imageUrl: string
   hasInventory: boolean
   arrows: Arrow[]
+  activities: Activity[]
 }
 
 interface Arrow {
@@ -46,7 +63,13 @@ interface Arrow {
   id: number
 }
 
-type LocationProps = Pick<LocationData, 'name' | 'imageUrl' | 'arrows'>
+interface Activity {
+  actionType: string
+  id?: number
+  imageUrl: string
+}
+
+type LocationProps = Omit<LocationData, 'hasInventory'>
 
 interface HasColorFilter {
   colorFilter: ColorFilter
