@@ -1,13 +1,10 @@
 import React, {SyntheticEvent} from 'react'
-import { Action, type ActionProps } from './action'
-import { ActionsList } from './actionsList'
-import { type ActionClickData } from './actionStem'
-import { Building, type BuildingProps } from './building'
+import {type ActionData, ActionPillProps} from './action'
+import {Building, type BuildingData} from './building'
 import { Clock, type ClockData } from './clock'
 import { Dialogue, type DialogueData} from './dialogue'
-import EmptyItem from './emptyItem'
 import { Hero, type HeroData } from './hero'
-import { Item, type ItemProps } from './item'
+import { Item, type ItemData } from './item'
 import List from './list'
 import {Location, type LocationData} from './location'
 import { Message, type MessageProps } from './message'
@@ -22,8 +19,11 @@ import { FilterizeColorContext, filterFuncFactory, getColorFilterByTime } from '
 import colors from './_colors'
 import Gallery from "./gallery";
 import {postAction} from "./ajax";
+import {ItemsList} from "./itemsList";
+import {BuildingsList} from "./buildingsList";
+import {ArrowsList} from "./arrowsList";
+import {ActivitiesList} from "./activitiesList";
 
-const MAX_ITEMS = 6
 const TALK_ACTION = 'TALK'
 const TRAVEL_ACTION = 'TRAVEL'
 
@@ -42,8 +42,6 @@ class App extends React.Component<Partial<AppProps>, AppState> {
     super(props)
     this.state = {
       combinedProps: props,
-      activeGiftId: null,
-      activeVillagerNames: [],
       showGallery: false,
     }
   }
@@ -73,15 +71,21 @@ class App extends React.Component<Partial<AppProps>, AppState> {
     messageContainer.scrollTop = messageContainer.scrollHeight
   }
 
-  // might be nice to move this to an ItemsList component
-  mapItemsWithEmptySlots (items: ItemProps[]): JSX.Element[] {
-    const paddedItems = items.concat(Array(MAX_ITEMS - items.length).fill(null))
+  marshalActionDictionary (actions: ActionData[]): Record<string, ActionPillProps> {
+    const actionDictionary = {} as Record<string, ActionPillProps>
 
-    return paddedItems.map((item, n) => item != null ? Item(item) : EmptyItem({ slotNumber: n }))
+    actions.forEach(action => {
+      const hasEntity = action.entityType != null && action.entityId != null
+      const key = hasEntity ? `${action.entityType}-${action.entityId}` : 'no-entity'
+      const {emoji, costAmount, costType, waitClass} = action
+      actionDictionary[key] = {emoji, costAmount, costType, waitClass}
+    })
+
+    return actionDictionary;
   }
 
-  getComponentTarget(e: React.SyntheticEvent<Element, Event>) {
-    const componentClasses = ['action', 'action-stem', 'local-activity', 'item', 'villager', 'building', 'hero-portrait', 'gallery', 'arrow']
+  getComponentTarget(e: React.SyntheticEvent) {
+    const componentClasses = ['action', 'local-activity', 'item', 'villager', 'building', 'hero-portrait', 'gallery', 'arrow']
     const componentClassSelector = componentClasses.map(c => '.' + c).join(', ')
     const componentDomNode = (e.target as HTMLElement).closest(componentClassSelector) as HTMLElement
 
@@ -90,16 +94,6 @@ class App extends React.Component<Partial<AppProps>, AppState> {
 
   hasClass(element: HTMLElement, className: string) {
     return element.classList.contains(className);
-  }
-
-  marshalActionClickData(dataset: DOMStringMap): ActionClickData {
-    const giftId = dataset.giftId == null ? null : parseInt(dataset.giftId)
-    const villagerNames = dataset.villagerNames == null ? [] : dataset.villagerNames.split(',')
-
-    return {
-      giftId,
-      villagerNames
-    }
   }
 
   marshalActivityClickData(dataset: DOMStringMap) {
@@ -118,7 +112,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
     return entityId
   }
 
-  findMatchingAction(actionType: string, entityId: number): ActionProps | undefined {
+  findMatchingAction(actionType: string, entityId: number): ActionData | undefined {
     const matchingAction = this.state.combinedProps.actions.find(action => {
       return action.uniqueDigest === `${actionType}-${entityId}`
     })
@@ -138,7 +132,6 @@ class App extends React.Component<Partial<AppProps>, AppState> {
 
   fireActionWithEmptyIdIfAvailable(actionType: string) {
     const matchingAction = this.state.combinedProps.actions.find(action => {
-      console.log(action.uniqueDigest)
       return action.uniqueDigest === `${actionType}-`  // load-bearing hyphen at the end there
     })
     if (matchingAction == null) return
@@ -151,11 +144,6 @@ class App extends React.Component<Partial<AppProps>, AppState> {
 
     const target = this.getComponentTarget(e)
     if (target == null) return
-
-    if (this.hasClass(target, 'action-stem')) {
-      const actionClickData = this.marshalActionClickData(target.dataset)
-      this.highlightTargetVillagers(actionClickData)
-    }
 
     if (this.hasClass(target, 'hero-portrait')) {
       // click hero-portrait = toggle gallery open/closed
@@ -179,13 +167,9 @@ class App extends React.Component<Partial<AppProps>, AppState> {
     if (this.hasClass(target, 'local-activity')) {
       const { actionType, entityId} = this.marshalActivityClickData(target.dataset)
 
-      console.log(`${actionType}-${entityId}`)
-      console.log(this.state.combinedProps.actions)
-
       if (actionType == null || entityId == null) return
 
       if (entityId == '') {  // expect these location activities to often have no entity id
-        console.log('empty id here!')
         this.fireActionWithEmptyIdIfAvailable(actionType)
       } else {
         this.fireActionIfAvailable(actionType, target)
@@ -194,22 +178,10 @@ class App extends React.Component<Partial<AppProps>, AppState> {
 
     if (this.hasClass(target, 'item')) {
       // relying on assumption that any item has only ONE action available at a time (excluding gift actions)
-      console.log(this.state.combinedProps.actions)
       ITEM_ACTIONS.forEach(actionType => {
         this.fireActionIfAvailable(actionType, target)
       })
     }
-  }
-
-  highlightTargetVillagers (actionClickData: ActionClickData): void {
-    const {
-      giftId,
-      villagerNames
-    } = actionClickData
-
-    console.log('setting!')
-
-    this.setState({ activeGiftId: giftId, activeVillagerNames: villagerNames })
   }
 
   showGallery (): void {
@@ -217,7 +189,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
   }
 
   clearActiveUX (): void {
-    this.setState({ activeGiftId: null, activeVillagerNames: [], showGallery: false })
+    this.setState({ showGallery: false })
   }
 
   render (): JSX.Element {
@@ -236,10 +208,12 @@ class App extends React.Component<Partial<AppProps>, AppState> {
       dialogue
     } = this.state.combinedProps
 
-    const { activeGiftId, activeVillagerNames, showGallery } = this.state
+    const { showGallery } = this.state
 
     const colorFilter = getColorFilterByTime(clock.time)
     const filterFn = filterFuncFactory(colorFilter)
+
+    const actionDictionary = this.marshalActionDictionary(actions)
 
     return (
       <FilterizeColorContext.Provider value={ filterFn }>
@@ -258,27 +232,39 @@ class App extends React.Component<Partial<AppProps>, AppState> {
 
           <div id="main-area">
             <section id="sidebar">
-              <List id='inventory' baseColor={colors.yellowLeather}>
-                {(inventory != null) ? this.mapItemsWithEmptySlots(inventory) : null}
-              </List>
+              <ItemsList
+                id='inventory'
+                baseColor={colors.yellowLeather}
+                items={inventory}
+                actionDictionary={actionDictionary}
+              ></ItemsList>
 
               <Wallet value={wallet}></Wallet>
             </section>
 
-            <ActionsList actions={actions} villagerCount={villagerStates.length}></ActionsList>
-
             <section id="center-col">
-              <Location {...{...place, colorFilter}}>
-                {/* might be nice to have a BuildingsList component so we can give individual buildings a filterable bg color */}
-                <List id='buildings' baseColor={colors.lavenderPurpleTranslucent}>
-                  {buildings?.map(building => Building(building))}
-                </List>
+              <Location {...{...place, colorFilter, actionDictionary}}>
+                <ActivitiesList activities={place.activities}
+                                actionDictionary={actionDictionary}
+                ></ActivitiesList>
+
+                <ArrowsList arrows={place.arrows}
+                actionDictionary={actionDictionary}
+                ></ArrowsList>
+
+                <BuildingsList
+                  buildings={buildings}
+                  actionDictionary={actionDictionary}
+                ></BuildingsList>
               </Location>
 
               {place.hasInventory
-                ? <List id='local-items' baseColor={colors.sandyBrown}>
-                    {this.mapItemsWithEmptySlots(localItemTokens)}
-                  </List>
+                ? <ItemsList
+                  id='local-items'
+                  baseColor={colors.sandyBrown}
+                  items={localItemTokens}
+                  actionDictionary={actionDictionary}
+                ></ItemsList>
                 : null
               }
 
@@ -286,13 +272,14 @@ class App extends React.Component<Partial<AppProps>, AppState> {
                 <List id='message-log' baseColor={colors.parchment}>
                   {messages?.map(message => Message({ ...message }))}
                 </List>
+
                 {(dialogue != null ? <Dialogue {...dialogue} key={dialogue.id}></Dialogue> : null)}
               </section>
             </section>
 
             <VillagersList villagers={villagerStates}
-                           activeGiftId={activeGiftId}
-                           activeVillagerNames={activeVillagerNames}></VillagersList>
+                           actionDictionary={actionDictionary}
+            ></VillagersList>
           </div>
         </Section>
       </FilterizeColorContext.Provider>
@@ -301,13 +288,13 @@ class App extends React.Component<Partial<AppProps>, AppState> {
 }
 
 interface AppProps {
-  actions: ActionProps[]
-  buildings: BuildingProps[]
+  actions: ActionData[]
+  buildings: BuildingData[]
   clock: ClockData
   dialogue: DialogueData | null
   hero: HeroData
-  inventory: ItemProps[]
-  localItemTokens: ItemProps[]
+  inventory: ItemData[]
+  localItemTokens: ItemData[]
   messages: MessageProps[]
   place: LocationData
   villagerStates: VillagerData[]
@@ -317,8 +304,6 @@ interface AppProps {
 
 interface AppState {
   combinedProps: AppProps
-  activeGiftId: number|null
-  activeVillagerNames: string[]
   showGallery: boolean
 }
 

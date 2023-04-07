@@ -251,6 +251,69 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
   }
 }
 
+.action-pill {
+  @include row;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  font-size: $med-small-text;
+  border-radius: $small-curve;
+  background-color: #4682b4;
+  gap: $small-gutter;
+  align-items: baseline;
+  height: 2rem;
+  border: $pen-thinnish solid darken(#4682b4, 20%);
+  min-width: 4rem;
+  justify-content: center;
+  opacity: 0.9;
+  z-index: 10;
+
+  .cost {
+    display: flex;
+    align-items: center;
+    height: 100%;
+  }
+}
+
+.duration {
+  .dial {
+    border: $pencil-thin solid black;
+    border-radius: 50%;
+    background-color: white;
+    position: relative;
+    width: 20px;
+    height: 20px;
+
+    .hand {
+      background-color: #000;
+      position: absolute;
+      height: 50%;
+      width: 2px;
+      left: calc(50% - 1px);
+      border-radius: 1px;
+
+      &.hour {
+        top: 0;
+      }
+
+      &.minute {
+        top: 50%;
+        transform-origin: center 0;
+      }
+    }
+
+    .center-arbor {
+      background-color: #000;
+      position: absolute;
+      height: 2px;
+      width: 2px;
+      border-radius: 50%;
+      left: calc(50% - 1px);
+      top: calc(50% - 1px);
+    }
+  }
+}
+
 /* top-bar HUD elements */
 
 #top-bar {
@@ -494,12 +557,14 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
     @include row;
     border: $pen-thinnish solid darken($yellow-leather, 10%);
     border-radius: $pen-thinnish;
-    overflow: hidden;
+    //overflow: hidden;
     flex-grow: 1;
     word-wrap: break-word;
     max-width: 100%;
-    align-items: center;
+    align-items: flex-start;
     gap: $small-gutter;
+    position: relative;
+    z-index: 10;
 
     &.empty-slot {
       @include non-clickable;
@@ -507,7 +572,7 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
     }
 
     &.common {
-      background-color: $yellow-leather;
+      background-color: fade-out($yellow-leather, 0.5);
     }
 
     &.uncommon {
@@ -587,51 +652,11 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
   }
 }
 
-/* column between left-sidebar and center-col */
-// will be deleted after "action chip" feature is implemented
-
-#actions {
-  display: none !important; // under development
-  @include column;
-  background-color: pink;
-  width: 20%;
-  overflow-y: auto;
-
-  .action {
-    @include clickable;
-    border-bottom: 1px solid $off-black-gray;
-    display: flex;
-    font-size: $small-text;
-    justify-content: flex-start;
-    padding: $small-gutter 0;
-    width: 100%;
-
-    span {
-      display: inline-block;
-    }
-
-    .type {
-      min-width: 2.5rem;
-    }
-
-    .description {
-      text-align: center;
-      flex-grow: 1;
-    }
-
-    .cost {
-      min-width: 2.5rem;
-      text-align: right;
-    }
-  }
-}
-
 /* center-col elements */
 
 #center-col {
   @include column;
   height: 100%;
-  //overflow: hidden;
   width: 70%;
   justify-content: space-between;
 }
@@ -690,6 +715,17 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
     filter: grayscale(50%);
   }
 
+}
+
+#directions {
+  .action-pill {
+    right: unset;
+    bottom: unset;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
   .arrow {
     @include clickable-icon-drop-shadow;
     position: absolute;
@@ -709,6 +745,10 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
       .inner-triangle {
         clip-path: polygon(0% 50%, 100% 0%, 100% 100%);
       }
+
+      .action-pill {
+        transform: translate(-40%, -50%);
+      }
     }
 
     &.east {
@@ -716,6 +756,10 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
 
       .inner-triangle {
         clip-path: polygon(0% 0%, 0% 100%, 100% 50%);
+      }
+
+      .action-pill {
+        transform: translate(-60%, -50%);
       }
     }
 
@@ -725,6 +769,10 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
       .inner-triangle {
         clip-path: polygon(0% 100%, 50% 0%, 100% 100%);
       }
+
+      .action-pill {
+        transform: translate(-50%, -25%);
+      }
     }
 
     &.south {
@@ -732,6 +780,10 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
 
       .inner-triangle {
         clip-path: polygon(0% 0%, 50% 100%, 100% 0%);
+      }
+
+      .action-pill {
+        transform: translate(-50%, -75%);
       }
     }
 
@@ -749,7 +801,9 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
       height: 20%;
     }
   }
+}
 
+#activities {
   .local-activity {
     position: absolute;
     z-index: 4;
@@ -760,6 +814,12 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
       left: 50%;
       top: 50%;
       transform: translate(-50%, -50%);
+
+      .action-pill {
+        right: 50%;
+        bottom: 0;
+        transform: translateX(50%);
+      }
     }
 
     &.travel, &.sleep {
@@ -773,18 +833,35 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
 
     &.travel {
       left: $edge-distance;
+
+      .action-pill {
+        right: 50%;
+        bottom: 0;
+        transform: translateX(50%);
+      }
     }
 
     &.sleep {
       right: $edge-distance;
+
       img {
         float: right;
       }
+
+      .action-pill {
+        right: 24%;
+        bottom: unset;
+        top: -10%;
+      }
     }
 
+    &.sleep + li .action-pill {
+      right: 0;
+      bottom: $edge-distance;
+    }
 
     img {
-    @include clickable-icon-drop-shadow;
+      @include clickable-icon-drop-shadow;
       display: block;
       width: auto;
       height: 100%;
@@ -906,7 +983,13 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
       @include non-clickable;
       border: $pencil-thin dashed $aqua;
       background-color: fade-out($aqua, 0.5);
+      transition: none;
     }
+  }
+
+  .action-pill {
+    left: 50%;
+    transform: translateX(-50%);
   }
 }
 
@@ -1021,12 +1104,13 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
       border: 2px solid darken($dusty-pink, 10%);
       width: calc(100% - (2 * (1rem * 1.2))); // 1rem == $small-text
       border-radius: $portrait-radius;
-      overflow: hidden;
+      position: relative;
 
       img {
         height: auto;
         width: 100%;
         margin-bottom: -4px;
+        border-radius: $portrait-radius;
       }
     }
 

@@ -1,20 +1,23 @@
 'use strict'
 
 import React from 'react'
+import ActionPill, {ActionPillProps} from "./action";
 
-export default function Building ({ name, id, imageUrl, coords }: BuildingProps): JSX.Element {
-  console.log(imageUrl)
+export default function Building ({ name, id, imageUrl, coords, actionPill}: BuildingProps): JSX.Element {
   return (
         <li
           className={`building over-${coords.over} down-${coords.down}`}
           key={id}
           data-entity-id={id}>
           <img src={imageUrl}></img>
+          <ActionPill {...actionPill}></ActionPill>
         </li>
   )
 }
 
-interface BuildingProps {
+type BuildingProps = BuildingData & BuildingExtras;
+
+interface BuildingData {
   name: string
   id: number
   imageUrl: string
@@ -24,4 +27,8 @@ interface BuildingProps {
   }
 }
 
-export { Building, type BuildingProps }
+interface BuildingExtras {
+  actionPill: ActionPillProps
+}
+
+export { Building, type BuildingData }

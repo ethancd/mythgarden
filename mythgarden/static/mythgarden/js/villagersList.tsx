@@ -2,18 +2,14 @@ import React from 'react'
 import List from "./list";
 import colors from "./_colors";
 import {Villager, type VillagerData} from "./villager";
+import {ActionPillProps} from "./action";
 
-function VillagersList ({ villagers, activeGiftId, activeVillagerNames }: VillagersListProps): JSX.Element {
+function VillagersList ({ villagers, actionDictionary }: VillagersListProps): JSX.Element {
   return (
       <List id='villagers' baseColor={colors.dustyPink}>
         {villagers?.map(villager => {
-          const villagerProps = { ...villager, activeGiftId }
-          const villagerIsActive = activeVillagerNames.find((name) => name === villager.name)
-
-          if (villagerIsActive == null) {
-            villagerProps.activeGiftId = null
-          }
-          return Villager(villagerProps)
+          const actionPill = actionDictionary[`villager-${villager.id}`]
+          return Villager({ ...villager, actionPill })
         })}
       </List>
   )
@@ -21,8 +17,7 @@ function VillagersList ({ villagers, activeGiftId, activeVillagerNames }: Villag
 
 interface VillagersListProps {
   villagers: VillagerData[]
-  activeGiftId: number | null
-  activeVillagerNames: string[]
+  actionDictionary: Record<string, ActionPillProps>
 }
 
 export { VillagersList }

@@ -203,25 +203,28 @@ class ActionGenerator:
 
     def gen_give_action(self, item_token, villager):
         """Returns an action that gives passed item to passed villager"""
+        cost_amount = 5
         return Action(
             description=f'Gift {item_token.name} to {villager.name}',
             action_type=Action.GIVE,
             target_villager=villager,
             target_item=item_token,
-            cost_amount=5,
+            cost_amount=cost_amount,
             cost_unit=Action.MIN,
+            cost_wait_class=Action.MINUTES_TO_WAIT_CLASS[cost_amount],
             log_statement='You gave {item_name} to {villager_name}. Looks like they {valence_text}',
         )
 
     def gen_talk_action(self, villager):
         """Returns an action that talks to given villager"""
-
+        cost_amount = villager.friendliness * TALK_MINUTES_PER_FRIENDLINESS
         return Action(
             description=f'Talk to {villager.name}',
             action_type=Action.TALK,
             target_villager=villager,
-            cost_amount=villager.friendliness * TALK_MINUTES_PER_FRIENDLINESS,
+            cost_amount=cost_amount,
             cost_unit=Action.MIN,
+            cost_wait_class=Action.MINUTES_TO_WAIT_CLASS[cost_amount],
             log_statement=f'You talked to {villager.name}.',
         )
 
@@ -267,98 +270,116 @@ class ActionGenerator:
 
     def gen_enter_action(self, building):
         """Returns an action that enters given building"""
+        cost_amount = 5
         return Action(
             description=f'Enter {building.name}',
             action_type=Action.TRAVEL,
             target_place=building,
-            cost_amount=5,
+            cost_amount=cost_amount,
             cost_unit=Action.MIN,
+            cost_wait_class=Action.MINUTES_TO_WAIT_CLASS[cost_amount],
             log_statement=f'You entered {building.name}.',
         )
 
     def gen_exit_action(self, building):
         """Returns an action that exits the current place"""
+        cost_amount = 5
         return Action(
             description=EXIT_DESCRIPTION,
             action_type=Action.TRAVEL,
             target_place=building.surround,
-            cost_amount=5,
+            cost_amount=cost_amount,
             cost_unit=Action.MIN,
+            cost_wait_class=Action.MINUTES_TO_WAIT_CLASS[cost_amount],
             log_statement=f'You exited {building.name}.',
         )
 
     def gen_plant_action(self, seed_token):
         """Returns an action that plants given seed"""
+        cost_amount = 30
         return Action(
             description=f'Plant {seed_token.name}',
             action_type=Action.PLANT,
             target_item=seed_token,
-            cost_amount=30,
+            cost_amount=cost_amount,
             cost_unit=Action.MIN,
+            cost_wait_class=Action.MINUTES_TO_WAIT_CLASS[cost_amount],
             log_statement=f'You planted some {seed_token.name} in the field.',
         )
 
     def gen_water_action(self, plant_token):
         """Returns an action that waters given seed/sprout"""
+        cost_amount = 30
         return Action(
             description=f'Water {plant_token.name}',
             action_type=Action.WATER,
             target_item=plant_token,
-            cost_amount=30,
+            cost_amount=cost_amount,
             cost_unit=Action.MIN,
+            cost_wait_class=Action.MINUTES_TO_WAIT_CLASS[cost_amount],
             log_statement=f'You watered the {plant_token.name}.',
         )
 
     def gen_harvest_action(self, crop_token):
         """Returns an action that harvests given crop"""
+        cost_amount = 30
         return Action(
             description=f'Harvest {crop_token.name}',
             action_type=Action.HARVEST,
             target_item=crop_token,
-            cost_amount=30,
+            cost_amount=cost_amount,
             cost_unit=Action.MIN,
+            cost_wait_class=Action.MINUTES_TO_WAIT_CLASS[cost_amount],
             log_statement=f'You harvested the {crop_token.name}.',
         )
 
     def gen_travel_action(self, destination, direction, display_direction):
         """Returns an action that travels to given destination in given direction"""
+        cost_amount = 60
         return Action(
             description=f'Go {display_direction}',
             action_type=Action.TRAVEL,
             target_place=destination,
             direction=direction,
-            cost_amount=60,
+            cost_amount=cost_amount,
             cost_unit=Action.MIN,
+            cost_wait_class=Action.MINUTES_TO_WAIT_CLASS[cost_amount],
             log_statement=f'You travelled to {destination.name}.',
         )
 
     def gen_fishing_action(self):
         """Returns an action that catches a fish"""
+        cost_amount = 60
         return Action(
             description=FISHING_DESCRIPTION,
             action_type=Action.GATHER,
-            cost_amount=60,
+            cost_amount=cost_amount,
             cost_unit=Action.MIN,
+            cost_wait_class=Action.MINUTES_TO_WAIT_CLASS[cost_amount],
             log_statement='You caught a {result}!',
         )
 
     def gen_digging_action(self):
         """Returns an action that digs for minerals, gems, fossils, etc"""
+        cost_amount = 90
         return Action(
             description=DIGGING_DESCRIPTION,
             action_type=Action.GATHER,
-            cost_amount=90,
+            cost_amount=cost_amount,
             cost_unit=Action.MIN,
+            cost_wait_class=Action.MINUTES_TO_WAIT_CLASS[cost_amount],
             log_statement='You dug up a {result}!',
         )
 
     def gen_foraging_action(self):
         """Returns an action that forages for herbs, plants, etc"""
+        cost_amount = 30
         return Action(
             description=FORAGING_DESCRIPTION,
             action_type=Action.GATHER,
-            cost_amount=30,
+            cost_amount=cost_amount,
             cost_unit=Action.MIN,
+            cost_wait_class=Action.MINUTES_TO_WAIT_CLASS[cost_amount],
             log_statement='You found {result}!',
         )
 

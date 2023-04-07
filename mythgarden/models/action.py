@@ -1,7 +1,7 @@
 from django.db import models
 
 from ._constants import DIRECTIONS, KOIN_SIGN, FISHING_DESCRIPTION, DIGGING_DESCRIPTION, FORAGING_DESCRIPTION, \
-    EXIT_DESCRIPTION
+    EXIT_DESCRIPTION, ITEM_ENTITY, VILLAGER_ENTITY, PLACE_ENTITY, GIFT_ENTITY, MONEY_TYPE, TIME_TYPE
 
 
 class Action(models.Model):
@@ -76,14 +76,52 @@ class Action(models.Model):
         (KOIN, KOIN_SIGN),
     ]
 
+    TRIVIAL = 'TRIVIAL'
+    TRIVIAL_PLUS = 'TRIVIAL_PLUS'
+    SMALL_MINUS = 'SMALL_MINUS'
+    SMALL = 'SMALL'
+    SMALL_PLUS = 'SMALL_PLUS'
+    MEDIUM_MINUS = 'MEDIUM_MINUS'
+    MEDIUM = 'MEDIUM'
+    MEDIUM_PLUS = 'MEDIUM_PLUS'
+    LONG_MINUS = 'LONG_MINUS'
+    LONG = 'LONG'
+
+    MINUTES_TO_WAIT_CLASS = {
+        5: TRIVIAL,
+        10: TRIVIAL_PLUS,
+        20: SMALL_MINUS,
+        30: SMALL,
+        40: SMALL_PLUS,
+        50: MEDIUM_MINUS,
+        60: MEDIUM,
+        70: MEDIUM_PLUS,
+        80: LONG_MINUS,
+        90: LONG,
+    }
+
+    WAIT_CLASSES = [
+        (TRIVIAL, 'trivial'),
+        (TRIVIAL_PLUS, 'trivialPlus'),
+        (SMALL_MINUS, 'smallMinus'),
+        (SMALL, 'small'),
+        (SMALL_PLUS, 'smallPlus'),
+        (MEDIUM_MINUS, 'mediumMinus'),
+        (MEDIUM, 'medium'),
+        (MEDIUM_PLUS, 'mediumPlus'),
+        (LONG_MINUS, 'longMinus'),
+        (LONG, 'long')
+    ]
+
     TIME_UNITS = [MIN, HOUR]
     MONEY_UNITS = [KOIN]
 
     action_type = models.CharField(max_length=8, choices=ACTION_TYPES)
     description = models.CharField(max_length=255)
 
-    cost_amount = models.IntegerField(default=1, null=True, blank=True)
+    cost_amount = models.IntegerField(null=True, blank=True)
     cost_unit = models.CharField(max_length=6, choices=COST_UNITS, null=True, blank=True)
+    cost_wait_class = models.CharField(max_length=12, choices=WAIT_CLASSES, null=True, blank=True)
 
     target_item = models.ForeignKey('ItemToken', on_delete=models.CASCADE, null=True, blank=True)
     target_villager = models.ForeignKey('Villager', on_delete=models.CASCADE, null=True, blank=True)
@@ -100,8 +138,12 @@ class Action(models.Model):
     def serialize(self):
         return {
             'description': self.description,
-            'displayCost': self.display_cost,
+            'costAmount': self.cost_amount,
+            'costType': self.cost_type,
+            'waitClass': self.get_cost_wait_class_display(),
             'emoji': self.emoji,
+            'entityType': self.entity_type,
+            'entityId': self.entity_id,
             'uniqueDigest': self.unique_digest,
             'targetCount': self.target_count
         }
@@ -149,6 +191,47 @@ class Action(models.Model):
         pks = [f'{target.pk}' for target in [self.target_item, self.target_villager, self.target_place] if target]
 
         return f'{self.action_type}-{"-".join(pks)}'
+
+    @property
+    def entity_id(self):
+        pks = [f'{target.pk}' for target in [self.target_item, self.target_villager, self.target_place] if target]
+
+        if len(pks) == 0:
+            return None
+        if len(pks) == 1:
+            return pks[0]
+        if len(pks) > 1:
+            # gift action. TBD what to do here, but we can return just item-id for now,
+            # and add an extra villagers-id property or something later
+            return pks[0]
+
+    @property
+    def entity_type(self):
+        entity_types = []
+
+        if self.target_item:
+            entity_types.append(ITEM_ENTITY)
+        if self.target_villager:
+            entity_types.append(VILLAGER_ENTITY)
+        if self.target_place:
+            entity_types.append(PLACE_ENTITY)
+
+        if len(entity_types) == 0:
+            return None
+        if len(entity_types) == 1:
+            return entity_types[0]
+        if len(entity_types) > 1:
+            # again, gift action. TBD what to do here, maybe a bespoke entity type, hmm
+            return GIFT_ENTITY
+
+    @property
+    def cost_type(self):
+        if self.cost_unit in self.MONEY_UNITS:
+            return MONEY_TYPE
+        elif self.cost_unit in self.TIME_UNITS:
+            return TIME_TYPE
+        else:
+            return None
 
     @property
     def target_count(self):

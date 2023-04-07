@@ -1,28 +1,23 @@
 'use strict'
 
 import React from 'react'
-import { postAction } from './ajax'
 import {Affinity, AffinityProps} from "./affinity";
+import ActionPill, {ActionPillProps} from "./action";
 
-const GIFT_DIGEST_TEMPLATE = `GIVE-giftId-villagerId`
-
-export default function Villager ({ name, imageUrl, affinity, description, id, activeGiftId }: VillagerProps): JSX.Element {
-  function giveGift(): void {
-    if (activeGiftId == null) return
-
-    const digest = GIFT_DIGEST_TEMPLATE.replace('giftId', `${activeGiftId}`).replace('villagerId',  `${id}`)
-    void postAction(digest)
-  }
+export default function Villager ({ name, imageUrl, affinity, description, id, actionPill }: VillagerProps): JSX.Element {
 
   return (
     <li
-      className={`villager${activeGiftId != null ? ' highlighted' : ''}`}
+      className={`villager`}
       key={id}
-      data-entity-id={id}
-      onClick={giveGift}>
+      data-entity-id={id}>
       <div className="row">
         <div className="portrait">
           <img src={imageUrl}></img>
+          { actionPill != null
+            ? <ActionPill {...actionPill}></ActionPill>
+            : null
+          }
         </div>
         <div className="column">
           <Affinity {...affinity}></Affinity>
@@ -45,7 +40,7 @@ interface VillagerData {
 }
 
 interface VillagerExtras {
-  activeGiftId: number | null
+  actionPill: ActionPillProps
 }
 
 export { Villager, type VillagerProps, type VillagerData }

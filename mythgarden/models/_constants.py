@@ -200,6 +200,14 @@ PLACE_TYPES = [
     (HOME, 'Home'),
 ]
 
+ITEM_ENTITY = 'item'
+VILLAGER_ENTITY = 'villager'
+PLACE_ENTITY = 'place'
+GIFT_ENTITY = 'gift'
+
+MONEY_TYPE = 'money'
+TIME_TYPE = 'time'
+
 IMAGE_PREFIX = 'mythgarden/images'
 
 PLACE_IMAGE_DIR = 'places'
