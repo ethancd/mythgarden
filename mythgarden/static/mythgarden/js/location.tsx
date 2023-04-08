@@ -1,15 +1,12 @@
 'use strict'
 
-import React from 'react'
-import Color from 'color'
-import { type ColorFilter } from './lightColorLogic'
+import React, {useContext} from 'react'
+import {ImageFilterContext} from './lightColorLogic'
 import {ActivityData} from "./activitiesList";
 import {ArrowData} from "./arrowsList";
 
-const MAX_FILTER_OPACITY = 0.5;
-export default function Location ({ name, imageUrl, colorFilter, children }: React.PropsWithChildren<LocationProps & HasColorFilter>): JSX.Element {
-  const backgroundColor = Color.rgb(colorFilter.rgbTemperature).darken(colorFilter.shadeBy).hex()
-  const opacity = Math.min(colorFilter.shadeBy, MAX_FILTER_OPACITY)
+export default function Location ({ name, imageUrl, children }: React.PropsWithChildren<LocationProps>): JSX.Element {
+  const { backgroundColor, opacity } = useContext(ImageFilterContext)
 
   return (
         <div id='location'>
@@ -35,9 +32,5 @@ interface LocationData {
 }
 
 type LocationProps = Omit<LocationData, 'hasInventory'>
-
-interface HasColorFilter {
-  colorFilter: ColorFilter
-}
 
 export { Location, type LocationProps, type LocationData }

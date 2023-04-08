@@ -4,7 +4,6 @@ import React from 'react'
 
 import ActionPill, {ActionPillProps} from "./action";
 
-
 export default function Item ({ name, emoji, id, rarity, hasBeenWatered, quantity, actionPill, style}: ItemProps): JSX.Element {
   return (
         <li

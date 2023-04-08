@@ -96,8 +96,7 @@ ul {
   border: 0.2rem solid #294d6b;
   min-width: 4rem;
   justify-content: center;
-  opacity: 0.9;
-  z-index: 10; }
+  opacity: 0.9; }
   .action-pill .cost {
     display: flex;
     align-items: center;
@@ -153,7 +152,8 @@ ul {
     overflow: hidden;
     border: 0.2rem solid #008f11;
     height: 100%;
-    box-sizing: border-box; }
+    box-sizing: border-box;
+    position: relative; }
     #hero .portrait:hover {
       filter: brightness(90%); }
     #hero .portrait:active {
@@ -161,6 +161,14 @@ ul {
     #hero .portrait img {
       height: 100%;
       width: auto; }
+    #hero .portrait .portrait-filter {
+      top: 0;
+      height: 100%;
+      position: absolute;
+      width: 100%;
+      z-index: 5;
+      pointer-events: none;
+      transition: background-color 1s linear, opacity 1s linear; }
   #hero .column {
     justify-content: space-between;
     margin-top: 0.5rem; }
@@ -324,21 +332,25 @@ ul {
   justify-content: space-between;
   width: 100%; }
   #inventory .draggable-gift {
-    flex-grow: 1; }
+    flex-grow: 1;
+    max-width: 100%; }
+
+.draggable-gift > .item {
+  height: 100%; }
 
 #inventory .item, #inventory + .item {
   cursor: pointer;
   display: flex;
   flex-direction: row;
-  border: 0.2rem solid #c68e1e;
-  border-radius: 0.2rem;
-  flex-grow: 1;
   word-wrap: break-word;
-  max-width: 100%;
   align-items: center;
   gap: 0.5rem;
   position: relative;
-  z-index: 10; }
+  border: 0.2rem solid #c68e1e;
+  border-radius: 0.2rem;
+  max-width: 100%;
+  z-index: 10;
+  box-sizing: border-box; }
   #inventory .item:hover, #inventory + .item:hover {
     filter: brightness(90%); }
   #inventory .item:active, #inventory + .item:active {
@@ -704,6 +716,14 @@ ul {
     #dialogue .portrait img {
       height: 100%;
       width: auto; }
+    #dialogue .portrait .portrait-filter {
+      top: 0;
+      height: 100%;
+      position: absolute;
+      width: 100%;
+      z-index: 5;
+      pointer-events: none;
+      transition: background-color 1s linear, opacity 1s linear; }
   #dialogue .name {
     font-size: 2rem; }
   #dialogue .dialogue-text {
@@ -754,6 +774,14 @@ ul {
         width: 100%;
         margin-bottom: -4px;
         border-radius: 25%; }
+      #villagers .villager .portrait .portrait-filter {
+        top: 0;
+        height: 100%;
+        position: absolute;
+        width: 100%;
+        z-index: 5;
+        pointer-events: none;
+        transition: background-color 1s linear, opacity 1s linear; }
     #villagers .villager .name {
       font-size: 1.5rem;
       text-align: center; }

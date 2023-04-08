@@ -214,6 +214,16 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
   @include clickable-drop-shadow($icon-drop-shadow-expression);
 }
 
+@mixin portrait-filter {
+    top: 0;
+    height: 100%;
+    position: absolute;
+    width: 100%;
+    z-index: 5;
+    pointer-events: none;
+    transition: background-color $transition-time linear,
+                opacity $transition-time linear;
+}
 #page {
   height: 100vh;
   background-color: $white-yellow;
@@ -266,7 +276,6 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
   min-width: 4rem;
   justify-content: center;
   opacity: 0.9;
-  z-index: 10;
 
   .cost {
     display: flex;
@@ -339,10 +348,15 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
     border: $pen-thinnish solid #008f11;
     height: 100%;
     box-sizing: border-box;
+    position: relative;
 
     img {
       height: 100%;
       width: auto;
+    }
+
+    .portrait-filter {
+      @include portrait-filter;
     }
   }
 
@@ -554,22 +568,26 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
 
   .draggable-gift {
     flex-grow: 1;
+    max-width: 100%;
   }
+}
+
+.draggable-gift > .item {
+  height: 100%;
 }
 
 #inventory .item, #inventory + .item {
     @include clickable;
     @include row;
-    border: $pen-thinnish solid darken($yellow-leather, 10%);
-    border-radius: $pen-thinnish;
-    //overflow: hidden;
-    flex-grow: 1;
     word-wrap: break-word;
-    max-width: 100%;
     align-items: center;
     gap: $small-gutter;
     position: relative;
+    border: $pen-thinnish solid darken($yellow-leather, 10%);
+    border-radius: $pen-thinnish;
+    max-width: 100%;
     z-index: 10;
+    box-sizing: border-box;
 
     &.empty-slot {
       @include non-clickable;
@@ -1045,7 +1063,6 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
   .speaker {
     @include column;
     gap: $small-gutter;
-
   }
 
   .portrait {
@@ -1057,6 +1074,10 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
     img {
       height: 100%;
       width: auto;
+    }
+
+    .portrait-filter {
+      @include portrait-filter;
     }
   }
 
@@ -1122,6 +1143,10 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
         width: 100%;
         margin-bottom: -4px;
         border-radius: $portrait-radius;
+      }
+
+      .portrait-filter {
+        @include portrait-filter;
       }
     }
 

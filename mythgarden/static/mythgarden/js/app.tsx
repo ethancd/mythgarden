@@ -18,7 +18,7 @@ import {VillagersList} from "./villagersList";
 import Wallet from './wallet'
 
 import { isDeepEqual } from './staticUtils'
-import { FilterizeColorContext, filterFuncFactory, getColorFilterByTime } from './lightColorLogic'
+import { FilterizeColorContext, ImageFilterContext, filterFuncFactory, getImageFilter, getColorFilterByTime } from './lightColorLogic'
 import colors from './_colors'
 import Gallery from "./gallery";
 import {postAction} from "./ajax";
@@ -235,6 +235,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
     const { showGallery } = this.state
 
     const colorFilter = getColorFilterByTime(clock.time)
+    const imageFilter = getImageFilter(colorFilter)
     const filterFn = filterFuncFactory(colorFilter)
 
     const actionDictionary = this.marshalActionDictionary(actions)
@@ -244,6 +245,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
 
     return (
       <FilterizeColorContext.Provider value={ filterFn }>
+        <ImageFilterContext.Provider value={imageFilter}>
         <DndProvider backend={TouchBackend} options={{enableMouseEvents: true}}>
         <Section id="page" baseColor={colors.whiteYellow} handleClick={this.handleClick.bind(this)}>
 
@@ -313,7 +315,8 @@ class App extends React.Component<Partial<AppProps>, AppState> {
             ></VillagersList>
           </div>
         </Section>
-        </DndProvider>
+          </DndProvider>
+          </ImageFilterContext.Provider>
       </FilterizeColorContext.Provider>
     )
   }

@@ -2,12 +2,14 @@
 
 import React, { useState, useContext } from 'react'
 import colors from './_colors'
-import { FilterizeColorContext } from "./lightColorLogic";
+import {FilterizeColorContext, ImageFilterContext} from "./lightColorLogic";
 
 export default function Dialogue ({ name, imageUrl, fullText }: DialogueProps): JSX.Element {
   const [show, setShow] = useState(true)
   const filterizeColor = useContext(FilterizeColorContext)
   const backgroundColor = filterizeColor(colors.parchment)
+
+  const imageFilterStyle = useContext(ImageFilterContext)
 
   if (show) {
     return (
@@ -15,6 +17,7 @@ export default function Dialogue ({ name, imageUrl, fullText }: DialogueProps): 
                 <div className="speaker">
                   <div className="portrait">
                     <img src={imageUrl}></img>
+                    <div className='portrait-filter' style={imageFilterStyle}></div>
                   </div>
                   <span className="name">{name}</span>
                 </div>
