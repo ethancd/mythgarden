@@ -30,7 +30,7 @@ export default function RainbowText ({ text, shading = 0}: RainbowTextProps): JS
     <span className='rainbow-text'>
       {text.split('').map((char, n) => {
         const ix = n % textColors.length
-        return <span style={{color: textColors[ix]}}>{char}</span>
+        return <span style={{color: textColors[ix]}} key={`${char}-${n}`}>{char}</span>
       })}
     </span>
   )

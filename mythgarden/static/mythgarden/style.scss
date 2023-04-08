@@ -1143,6 +1143,7 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
       width: calc(100% - (2 * (1rem * 1.2))); // 1rem == $small-text
       border-radius: $portrait-radius;
       position: relative;
+    overflow: hidden;
 
       img {
         height: auto;

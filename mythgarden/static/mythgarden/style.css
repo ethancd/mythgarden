@@ -779,7 +779,8 @@ ul {
   border: 2px solid #ff9ead;
   width: calc(100% - (2 * (1rem * 1.2)));
   border-radius: 25%;
-  position: relative; }
+  position: relative;
+  overflow: hidden; }
   #villagers .villager .portrait img, #dialogue .speaker .portrait img {
     height: auto;
     width: 100%;

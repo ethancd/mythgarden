@@ -12,22 +12,21 @@ const GIFT_DIGEST_TEMPLATE = `GIVE-giftId-villagerId`
 
 export default function Villager ({ name, imageUrl, affinity, description, id, actionPill, isGiftReceiver}: VillagerProps): JSX.Element {
   const { backgroundColor, opacity } = useContext(ImageFilterContext)
-  const [{isOver, canDrop, isDragging}, dropRef] = useDrop(() => ({
+  const [{isDragging}, dropRef] = useDrop(() => ({
     accept: 'GIFT',
     drop: (item: DraggableGiftProps, monitor) => {
+      if (!isGiftReceiver) return
+
       const digest = GIFT_DIGEST_TEMPLATE.replace('giftId', `${item.giftData.id}`).replace('villagerId',  `${id}`)
       void postAction(digest)
     },
-    canDrop: () => isGiftReceiver,
     collect: (monitor) => ({
-      isOver: monitor.isOver(),
-      canDrop: monitor.canDrop(),
       isDragging: monitor.getItem() != null
     })
   }))
 
-  const highlight = canDrop && isGiftReceiver
-  const grayOut = isDragging && !highlight
+  const highlight = isDragging && isGiftReceiver
+  const grayOut = isDragging && !isGiftReceiver
   const ignore = (!isDragging && actionPill == null)
 
   return (
