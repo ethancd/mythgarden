@@ -148,7 +148,6 @@ ul {
   #hero .portrait {
     cursor: pointer;
     border-radius: 25%;
-    overflow: hidden;
     border: 0.2rem solid #008f11;
     height: 100%;
     box-sizing: border-box;
@@ -157,6 +156,8 @@ ul {
       filter: brightness(90%); }
     #hero .portrait:active {
       filter: brightness(50%); }
+    #hero .portrait img, #hero .portrait .portrait-filter {
+      border-radius: 25%; }
     #hero .portrait img {
       height: 100%;
       width: auto; }
@@ -167,7 +168,8 @@ ul {
       width: 100%;
       z-index: 5;
       pointer-events: none;
-      transition: background-color 1s linear, opacity 1s linear; }
+      transition: background-color 1s linear, opacity 1s linear;
+      border-radius: 25%; }
   #hero .column {
     justify-content: space-between; }
   #hero .name {
@@ -199,7 +201,6 @@ ul {
   #gallery .portrait {
     cursor: pointer;
     border-radius: 25%;
-    overflow: hidden;
     border: 0.1rem solid black;
     height: 40vh;
     box-sizing: border-box; }
@@ -207,6 +208,8 @@ ul {
       filter: brightness(90%); }
     #gallery .portrait:active {
       filter: brightness(50%); }
+    #gallery .portrait img, #gallery .portrait .portrait-filter {
+      border-radius: 25%; }
     #gallery .portrait.current {
       border: 0.2rem solid #b827fc;
       box-shadow: 0 0 2rem 2rem #b827fc; }
@@ -779,8 +782,7 @@ ul {
   border: 2px solid #ff9ead;
   width: calc(100% - (2 * (1rem * 1.2)));
   border-radius: 25%;
-  position: relative;
-  overflow: hidden; }
+  position: relative; }
   #villagers .villager .portrait img, #dialogue .speaker .portrait img {
     height: auto;
     width: 100%;
@@ -793,7 +795,8 @@ ul {
     width: 100%;
     z-index: 5;
     pointer-events: none;
-    transition: background-color 1s linear, opacity 1s linear; }
+    transition: background-color 1s linear, opacity 1s linear;
+    border-radius: 25%; }
 #villagers .villager .name, #dialogue .speaker .name {
   font-size: 1.5rem;
   text-align: center; }

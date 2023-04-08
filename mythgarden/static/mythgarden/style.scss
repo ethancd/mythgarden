@@ -144,7 +144,10 @@ ul {
 
 @mixin rounded-portrait {
   border-radius: $portrait-radius;
-  overflow: hidden;
+
+  img, .portrait-filter {
+    border-radius: $portrait-radius;
+  }
 }
 
 $fuschia: #b827fc;
@@ -233,6 +236,8 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
     pointer-events: none;
     transition: background-color $transition-time linear,
                 opacity $transition-time linear;
+
+    border-radius: $portrait-radius;
 }
 
 @mixin rarity-indicators {
@@ -1143,7 +1148,6 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
       width: calc(100% - (2 * (1rem * 1.2))); // 1rem == $small-text
       border-radius: $portrait-radius;
       position: relative;
-    overflow: hidden;
 
       img {
         height: auto;
