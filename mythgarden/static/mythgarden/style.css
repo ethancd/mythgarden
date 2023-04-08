@@ -1,4 +1,3 @@
-@charset "UTF-8";
 /* variables */
 /* colors */
 /* sizes */
@@ -355,7 +354,7 @@ ul {
   align-items: center;
   gap: 0.5rem;
   position: relative;
-  border: 0.2rem solid #c68e1e;
+  border: 0.2rem solid transparent;
   border-radius: 0.2rem;
   max-width: 100%;
   z-index: 10;
@@ -366,7 +365,8 @@ ul {
     filter: brightness(50%); }
   #inventory .item.empty-slot, #inventory + .item.empty-slot {
     cursor: default;
-    opacity: 0.5; }
+    opacity: 0.5;
+    flex-grow: 1; }
     #inventory .item.empty-slot:hover, #inventory .item.empty-slot:active, #inventory + .item.empty-slot:hover, #inventory + .item.empty-slot:active {
       filter: none; }
   #inventory .item.common, #inventory + .item.common {
@@ -413,6 +413,9 @@ ul {
     @media only screen and (max-width: 900px) {
       #inventory .item .name, #inventory + .item .name {
         font-size: 1rem; } }
+
+#inventory .item.common {
+  border-radius: 0; }
 
 #wallet {
   background-color: #85bb65;
@@ -535,6 +538,11 @@ ul {
   z-index: 4;
   width: 40%;
   height: 40%; }
+  #activities .local-activity.inactive img {
+    cursor: default;
+    filter: grayscale(100%); }
+    #activities .local-activity.inactive img:hover, #activities .local-activity.inactive img:active {
+      filter: grayscale(100%); }
   #activities .local-activity.gather {
     left: 50%;
     top: 50%;
@@ -642,11 +650,34 @@ ul {
     width: 15%;
     box-sizing: border-box;
     overflow: hidden;
-    word-wrap: break-word; }
+    word-wrap: break-word;
+    border-radius: 0.2rem; }
     #local-items .item:hover {
       filter: brightness(90%); }
     #local-items .item:active {
       filter: brightness(50%); }
+    #local-items .item.common {
+      background-color: rgba(225, 168, 54, 0.5); }
+    #local-items .item.uncommon {
+      border-color: limegreen;
+      background-color: rgba(50, 205, 50, 0.5); }
+      #local-items .item.uncommon .type:after {
+        content: '*';
+        color: #1e7b1e; }
+    #local-items .item.rare {
+      border-color: dodgerblue;
+      background-color: rgba(30, 144, 255, 0.5);
+      box-shadow: 0 0 0.1rem 0 dodgerblue; }
+      #local-items .item.rare .type:after {
+        content: '**';
+        color: #005db7; }
+    #local-items .item.epic {
+      border-color: rebeccapurple;
+      background-color: rgba(102, 51, 153, 0.5);
+      box-shadow: 0 0 0.25rem 0 rebeccapurple; }
+      #local-items .item.epic .type:after {
+        content: '***';
+        color: rebeccapurple; }
     #local-items .item.empty-slot {
       cursor: default;
       border-color: beige;
@@ -701,6 +732,103 @@ ul {
     #message-log .message.error {
       color: darkred; }
 
+/* right-sidebar elements, villagers and dialogue*/
+#far-sidebar {
+  height: 100%;
+  width: 15%;
+  position: relative; }
+
+#villagers {
+  display: flex;
+  flex-direction: column;
+  background-color: #ffd1d8;
+  gap: 1rem;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%; }
+  #villagers .villager {
+    cursor: pointer;
+    display: flex;
+    flex-direction: column; }
+    #villagers .villager:hover {
+      filter: brightness(90%); }
+    #villagers .villager:active {
+      filter: brightness(50%); }
+    #villagers .villager.highlighted .portrait {
+      background-color: #ffffffaa;
+      border-color: gold;
+      box-shadow: 0 0 0.5rem 0 gold; }
+    #villagers .villager.highlighted:hover .portrait {
+      background-color: #00000044;
+      box-shadow: 0 0 0.5rem 0 #ccac00;
+      border-color: #ccac00; }
+    #villagers .villager.inactive {
+      cursor: default;
+      filter: grayscale(100%); }
+      #villagers .villager.inactive:hover, #villagers .villager.inactive:active {
+        filter: grayscale(100%); }
+    #villagers .villager.no-hover-filter {
+      cursor: default; }
+      #villagers .villager.no-hover-filter:hover, #villagers .villager.no-hover-filter:active {
+        filter: none; }
+    #villagers .villager .description {
+      font-size: 0.75rem; }
+
+#villagers .villager .portrait, #dialogue .speaker .portrait {
+  border: 2px solid #ff9ead;
+  width: calc(100% - (2 * (1rem * 1.2)));
+  border-radius: 25%;
+  position: relative; }
+  #villagers .villager .portrait img, #dialogue .speaker .portrait img {
+    height: auto;
+    width: 100%;
+    margin-bottom: -4px;
+    border-radius: 25%; }
+  #villagers .villager .portrait .portrait-filter, #dialogue .speaker .portrait .portrait-filter {
+    top: 0;
+    height: 100%;
+    position: absolute;
+    width: 100%;
+    z-index: 5;
+    pointer-events: none;
+    transition: background-color 1s linear, opacity 1s linear; }
+#villagers .villager .name, #dialogue .speaker .name {
+  font-size: 1.5rem;
+  text-align: center; }
+#villagers .villager .row, #dialogue .speaker .row {
+  gap: 0.5rem;
+  justify-content: center;
+  align-items: center; }
+#villagers .villager .column, #dialogue .speaker .column {
+  justify-content: space-between; }
+
+.affinity-container {
+  width: calc(1rem * 1.2);
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0.5rem; }
+  .affinity-container .heart {
+    display: inline-block;
+    height: 1rem; }
+    .affinity-container .heart img {
+      height: 1rem;
+      width: auto; }
+  .affinity-container .partial-container {
+    display: inline-block;
+    height: 1rem;
+    position: relative;
+    z-index: 2; }
+  .affinity-container .partial {
+    opacity: .9;
+    overflow: hidden;
+    width: calc(1rem * 1.2);
+    position: absolute;
+    bottom: 0; }
+    .affinity-container .partial img {
+      bottom: 0;
+      position: absolute; }
+
 #dialogue {
   display: flex;
   flex-direction: column;
@@ -714,117 +842,8 @@ ul {
   overflow-y: auto; }
   #dialogue .speaker {
     display: flex;
-    flex-direction: column;
-    gap: 0.5rem; }
-  #dialogue .portrait {
-    border: 0.2rem solid #ffd1d8;
-    border-radius: 25%;
-    height: 5rem;
-    width: 5rem; }
-    #dialogue .portrait img {
-      height: 100%;
-      width: auto; }
-    #dialogue .portrait .portrait-filter {
-      top: 0;
-      height: 100%;
-      position: absolute;
-      width: 100%;
-      z-index: 5;
-      pointer-events: none;
-      transition: background-color 1s linear, opacity 1s linear; }
-  #dialogue .name {
-    font-size: 2rem; }
+    flex-direction: column; }
   #dialogue .dialogue-text {
     font-size: 1.25rem; }
-  #dialogue:after {
-    color: #8f0011;
-    content: '×';
-    font-size: 3rem;
-    position: absolute;
-    right: 0;
-    top: -1rem; }
-
-/* right-sidebar elements, just villagers */
-#villagers {
-  display: flex;
-  flex-direction: column;
-  background-color: #ffd1d8;
-  gap: 1rem;
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  width: 15%; }
-  #villagers .villager {
-    cursor: pointer;
-    display: flex;
-    flex-direction: column; }
-    #villagers .villager:hover {
-      filter: brightness(90%); }
-    #villagers .villager:active {
-      filter: brightness(50%); }
-    #villagers .villager.highlighted {
-      background-color: #ffffffaa;
-      border: 0.2rem solid gold;
-      box-shadow: 0 0 0.5rem 0 gold; }
-      #villagers .villager.highlighted:hover {
-        background-color: #00000044;
-        box-shadow: 0 0 0.5rem 0 #ccac00;
-        border-color: #ccac00; }
-    #villagers .villager.no-hover-filter:hover {
-      filter: none; }
-    #villagers .villager .portrait {
-      border: 2px solid #ff9ead;
-      width: calc(100% - (2 * (1rem * 1.2)));
-      border-radius: 25%;
-      position: relative; }
-      #villagers .villager .portrait img {
-        height: auto;
-        width: 100%;
-        margin-bottom: -4px;
-        border-radius: 25%; }
-      #villagers .villager .portrait .portrait-filter {
-        top: 0;
-        height: 100%;
-        position: absolute;
-        width: 100%;
-        z-index: 5;
-        pointer-events: none;
-        transition: background-color 1s linear, opacity 1s linear; }
-    #villagers .villager .name {
-      font-size: 1.5rem;
-      text-align: center; }
-    #villagers .villager .row {
-      gap: 0.5rem;
-      justify-content: center;
-      align-items: center; }
-    #villagers .villager .column {
-      justify-content: space-between; }
-    #villagers .villager .description {
-      font-size: 0.75rem; }
-    #villagers .villager .affinity-container {
-      width: calc(1rem * 1.2);
-      display: flex;
-      flex-direction: column-reverse;
-      gap: 0.5rem; }
-      #villagers .villager .affinity-container .heart {
-        display: inline-block;
-        height: 1rem; }
-        #villagers .villager .affinity-container .heart img {
-          height: 1rem;
-          width: auto; }
-      #villagers .villager .affinity-container .partial-container {
-        display: inline-block;
-        height: 1rem;
-        position: relative;
-        z-index: 2; }
-      #villagers .villager .affinity-container .partial {
-        opacity: .9;
-        overflow: hidden;
-        width: calc(1rem * 1.2);
-        position: absolute;
-        bottom: 0; }
-        #villagers .villager .affinity-container .partial img {
-          bottom: 0;
-          position: absolute; }
 
 /*# sourceMappingURL=style.css.map */

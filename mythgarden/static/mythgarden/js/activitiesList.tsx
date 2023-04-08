@@ -20,7 +20,7 @@ function ActivitiesList ({ activities, actionDictionary }: ActivityListProps): J
 function Activity({id, actionType, imageUrl, actionPill }: ActivityProps): JSX.Element {
   return (
       <li
-      className={`local-activity ${actionType.toLowerCase()}`}
+      className={`local-activity ${actionType.toLowerCase()} ${actionPill == null ? 'inactive' : ''}`}
       key={actionType}
       data-entity-id={id}
       data-action-type={actionType}>

@@ -197,6 +197,16 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
   }
 }
 
+@mixin non-clickable-disabled {
+  cursor: default;
+
+  filter: grayscale(100%);
+
+  &:hover, &:active {
+    filter: grayscale(100%);
+  }
+}
+
 @mixin clickable-drop-shadow($drop-shadow-expression) {
   cursor: pointer;
   @include filter-brightness-plus-drop-shadow(100%, $drop-shadow-expression);
@@ -224,6 +234,45 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
     transition: background-color $transition-time linear,
                 opacity $transition-time linear;
 }
+
+@mixin rarity-indicators {
+  &.common {
+    background-color: fade-out($yellow-leather, 0.5);
+  }
+
+  &.uncommon {
+    border-color: limegreen;
+    background-color: fade-out(limegreen, 0.5);
+
+    .type:after {
+      content: '*';
+      color: darken(limegreen, 20%);
+    }
+  }
+
+  &.rare {
+    border-color: dodgerblue;
+    background-color: fade-out(dodgerblue, 0.5);
+    box-shadow: 0 0 $pencil-thin 0 dodgerblue;
+
+    .type:after {
+      content: '**';
+      color: darken(dodgerblue, 20%);
+    }
+  }
+
+  &.epic {
+    border-color: rebeccapurple;
+    background-color: fade-out(rebeccapurple, 0.5);
+    box-shadow: 0 0 $very-fine-shadow-distance 0 rebeccapurple;
+
+    .type:after {
+      content: '***';
+      color: rebeccapurple;
+    }
+  }
+}
+
 #page {
   height: 100vh;
   background-color: $white-yellow;
@@ -584,90 +633,63 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
 }
 
 #inventory .item, #inventory + .item {
-    @include clickable;
-    @include row;
-    word-wrap: break-word;
-    align-items: center;
-    gap: $small-gutter;
+  @include clickable;
+  @include row;
+  word-wrap: break-word;
+  align-items: center;
+  gap: $small-gutter;
+  position: relative;
+  border: $pen-thinnish solid transparent;
+  border-radius: $pen-thinnish;
+  max-width: 100%;
+  z-index: 10;
+  box-sizing: border-box;
+
+  &.empty-slot {
+    @include non-clickable;
+    opacity: 0.5;
+    flex-grow: 1;
+  }
+
+  @include rarity-indicators;
+
+  .type {
+    font-size: $medium-text;
     position: relative;
-    border: $pen-thinnish solid darken($yellow-leather, 10%);
-    border-radius: $pen-thinnish;
-    max-width: 100%;
-    z-index: 10;
-    box-sizing: border-box;
 
-    &.empty-slot {
-      @include non-clickable;
-      opacity: 0.5;
+    @media only screen and (max-width: 900px) {
+      font-size: $med-small-text;
     }
 
-    &.common {
-      background-color: fade-out($yellow-leather, 0.5);
-    }
-
-    &.uncommon {
-      border-color: limegreen;
-      background-color: fade-out(limegreen, 0.5);
-
-      .type:after {
-        content: '*';
-        color: darken(limegreen, 20%);
-      }
-    }
-
-    &.rare {
-      border-color: dodgerblue;
-      background-color: fade-out(dodgerblue, 0.5);
-      box-shadow: 0 0 $pencil-thin 0 dodgerblue;
-
-      .type:after {
-        content: '**';
-        color: darken(dodgerblue, 20%);
-      }
-    }
-
-    &.epic {
-      border-color: rebeccapurple;
-      background-color: fade-out(rebeccapurple, 0.5);
-      box-shadow: 0 0 $very-fine-shadow-distance 0 rebeccapurple;
-
-      .type:after {
-        content: '***';
-        color: rebeccapurple;
-      }
-    }
-
-    .type {
+    &:after {
+      content: '';
+      position: absolute;
       font-size: $medium-text;
-      position: relative;
+      bottom: calc(0% - 2rem); // 2rem == $medium-text
+      left: 0;
 
       @media only screen and (max-width: 900px) {
         font-size: $med-small-text;
       }
-
-      &:after {
-        content: '';
-        position: absolute;
-        font-size: $medium-text;
-        bottom: calc(0% - 2rem); // 2rem == $medium-text
-        left: 0;
-
-        @media only screen and (max-width: 900px) {
-          font-size: $med-small-text;
-        }
-      }
-    }
-
-    .name {
-      font-size: $med-small-text;
-      display: inline-block;
-      max-width: 80%;
-
-      @media only screen and (max-width: 900px) {
-        font-size: $small-text;
-      }
     }
   }
+
+  .name {
+    font-size: $med-small-text;
+    display: inline-block;
+    max-width: 80%;
+
+    @media only screen and (max-width: 900px) {
+      font-size: $small-text;
+    }
+  }
+}
+
+#inventory .item {
+  &.common {
+    border-radius: 0;
+  }
+}
 
 
 #wallet {
@@ -840,6 +862,12 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
     width: 40%;
     height: 40%;
 
+    &.inactive {
+      img {
+        @include non-clickable-disabled;
+      }
+    }
+
     &.gather {
       left: 50%;
       top: 50%;
@@ -975,6 +1003,7 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
 
   .item {
     @include clickable;
+    @include rarity-indicators;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -982,6 +1011,7 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
     box-sizing: border-box;
     overflow: hidden;
     word-wrap: break-word;
+    border-radius: $pen-thinnish;
 
     &.empty-slot {
       @include non-clickable;
@@ -1056,57 +1086,13 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
   }
 }
 
-#dialogue {
-  @include column;
-  background-color: $parchment;
+/* right-sidebar elements, villagers and dialogue*/
+
+#far-sidebar {
   height: 100%;
-  width: 100%;
-  position: absolute;
-  top: 0;
-  z-index: 10;
-  cursor: pointer;
-  overflow-y: auto;
-
-  .speaker {
-    @include column;
-    gap: $small-gutter;
-  }
-
-  .portrait {
-    border: $pen-thinnish solid $dusty-pink;
-    border-radius: $portrait-radius;
-    height: 5rem;
-    width: 5rem;
-
-    img {
-      height: 100%;
-      width: auto;
-    }
-
-    .portrait-filter {
-      @include portrait-filter;
-    }
-  }
-
-  .name {
-    font-size: $medium-text
-  }
-
-  .dialogue-text {
-    font-size: $smallish-text;
-  }
-
-  &:after {
-    color: #8f0011;
-    content: '×';
-    font-size: $med-large-text;
-    position: absolute;
-    right: 0;
-    top: -$medium-gutter;
-  }
+  width: 15%;
+  position: relative;
 }
-
-/* right-sidebar elements, just villagers */
 
 #villagers {
   @include column;
@@ -1115,31 +1101,44 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
-  width: 15%;
+  width: 100%;
 
   .villager {
     @include clickable;
     @include column;
 
     &.highlighted {
-      background-color: #ffffffaa;
-      border: $pen-thinnish solid gold;
-      box-shadow: 0 0 $fine-shadow-distance 0 gold;
+      .portrait {
+        background-color: #ffffffaa;
+        border-color: gold;
+        box-shadow: 0 0 $fine-shadow-distance 0 gold;
+      }
 
       &:hover {
-        background-color: #00000044;
-        box-shadow: 0 0 $fine-shadow-distance 0 darken(gold, 10%);
-        border-color: darken(gold, 10%);
+        .portrait {
+          background-color: #00000044;
+          box-shadow: 0 0 $fine-shadow-distance 0 darken(gold, 10%);
+          border-color: darken(gold, 10%);
+        }
       }
+    }
+
+    &.inactive {
+      @include non-clickable-disabled;
     }
 
     &.no-hover-filter {
-      &:hover {
-        filter: none;
-      }
+      @include non-clickable;
     }
 
-    .portrait {
+    .description {
+      font-size: $fine-text;
+    }
+  }
+}
+
+#villagers .villager, #dialogue .speaker {
+  .portrait {
       border: 2px solid darken($dusty-pink, 10%);
       width: calc(100% - (2 * (1rem * 1.2))); // 1rem == $small-text
       border-radius: $portrait-radius;
@@ -1157,60 +1156,75 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
       }
     }
 
-    .name {
-      font-size: $med-small-text;
-      text-align: center;
-    }
+  .name {
+    font-size: $med-small-text;
+    text-align: center;
+  }
 
-    .row {
-      gap: $small-gutter;
-      justify-content: center;
-      align-items: center;
-    }
+  .row {
+    gap: $small-gutter;
+    justify-content: center;
+    align-items: center;
+  }
 
-    .column {
+  .column {
       justify-content: space-between;
     }
+}
 
-    .description {
-      font-size: $fine-text;
+.affinity-container {
+  width: calc(1rem * 1.2); // hard-coded h->w ratio of the heart image
+  display: flex;
+  flex-direction: column-reverse;
+  gap: $small-gutter;
+
+  .heart {
+    display: inline-block;
+    height: $small-text;
+
+    img {
+      height: $small-text;
+      width: auto;
     }
+  }
 
-    .affinity-container {
-      width: calc(1rem * 1.2); // hard-coded h->w ratio of the heart image
-      display: flex;
-      flex-direction: column-reverse;
-      gap: $small-gutter;
+  .partial-container {
+    display: inline-block;
+    height: $small-text;
+    position: relative;
+    z-index: 2;
+  }
 
-      .heart {
-        display: inline-block;
-        height: $small-text;
+  .partial {
+    opacity: .9;
+    overflow: hidden;
+    width: calc(1rem * 1.2); // hard-coded h->w ratio of the heart image
+    position: absolute;
+    bottom: 0;
 
-        img {
-          height: $small-text;
-          width: auto;
-        }
-      }
-
-      .partial-container {
-        display: inline-block;
-        height: $small-text;
-        position: relative;
-        z-index: 2;
-      }
-
-      .partial {
-        opacity: .9;
-        overflow: hidden;
-        width: calc(1rem * 1.2); // hard-coded h->w ratio of the heart image
-        position: absolute;
-        bottom: 0;
-
-        img {
-          bottom: 0;
-          position: absolute;
-        }
-      }
+    img {
+      bottom: 0;
+      position: absolute;
     }
+  }
+}
+
+#dialogue {
+  @include column;
+  background-color: $parchment;
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  z-index: 10;
+  cursor: pointer;
+  overflow-y: auto;
+
+  .speaker {
+    @include column;
+  }
+
+  .dialogue-text {
+    font-size: $smallish-text;
   }
 }

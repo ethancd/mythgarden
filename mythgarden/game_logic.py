@@ -237,7 +237,7 @@ class ActionGenerator:
             target_item=item_token,
             cost_amount=item_token.price,
             cost_unit=Action.KOIN,
-            log_statement=f'You sold {item_token.name} for {item_token.price} koin.',
+            log_statement=f'You sold {item_token.name} for {item_token.price} fleurs.',
         )
 
     def gen_buy_action(self, item_token):
@@ -248,7 +248,7 @@ class ActionGenerator:
             target_item=item_token,
             cost_amount=item_token.price,
             cost_unit=Action.KOIN,
-            log_statement=f'You bought {item_token.name} for {item_token.price} koin.',
+            log_statement=f'You bought {item_token.name} for {item_token.price} fleurs.',
         )
 
     def gen_stow_action(self, item_token):
@@ -427,7 +427,8 @@ class ActionExecutor:
         """Executes a travel action, which updates the current location and ticks the clock"""
 
         session.location = action.target_place
-        session.messages.create(text=action.log_statement)
+        log_statement = self.__add_emoji(action, action.log_statement)
+        session.messages.create(text=log_statement)
 
         session.clock.advance(action.cost_amount)
 
@@ -455,7 +456,9 @@ class ActionExecutor:
         villager_state.mark_as_talked_to()
         affinity_message = self.__make_affinity_message_if_any(hearts_gained, villager)
 
-        session.messages.create(text=action.log_statement)
+        log_statement = self.__add_emoji(action, action.log_statement)
+        session.messages.create(text=log_statement)
+
         if affinity_message:
             session.messages.create(text=affinity_message)
 
@@ -469,6 +472,7 @@ class ActionExecutor:
             'hero': session.hero_state,
             'clock': session.clock,
             'dialogue': dialogue,
+            'speaker': villager_state
         }
 
     def execute_give_action(self, action, session):
@@ -492,12 +496,14 @@ class ActionExecutor:
         session.inventory.item_tokens.remove(gift)
 
         valence_text = self.__get_valence_text(valence)
-        log_statement = action.log_statement.format(item_name=gift.name, villager_name=villager.name,
+        formatted_log_statement = action.log_statement.format(item_name=gift.name, villager_name=villager.name,
                                                     valence_text=valence_text)
 
         affinity_message = self.__make_affinity_message_if_any(hearts_gained, villager)
 
+        log_statement = self.__add_emoji(action, formatted_log_statement)
         session.messages.create(text=log_statement)
+
         if affinity_message:
             session.messages.create(text=affinity_message)
 
@@ -512,6 +518,7 @@ class ActionExecutor:
             'clock': session.clock,
             'inventory': list(session.inventory.item_tokens.all()),
             'dialogue': dialogue,
+            'speaker': villager_state
         }
 
     def execute_sell_action(self, action, session):
@@ -541,7 +548,8 @@ class ActionExecutor:
             session.hero_state.koin_earned += action.cost_amount
             session.hero_state.save()
 
-        session.messages.create(text=action.log_statement)
+        log_statement = self.__add_emoji(action, action.log_statement)
+        session.messages.create(text=log_statement)
 
         session.wallet.save()
 
@@ -574,7 +582,9 @@ class ActionExecutor:
 
         session.wallet.money -= action.cost_amount
 
-        session.messages.create(text=action.log_statement)
+        log_statement = self.__add_emoji(action, action.log_statement)
+        session.messages.create(text=log_statement)
+
         session.wallet.save()
 
         return {
@@ -592,7 +602,8 @@ class ActionExecutor:
         session.inventory.item_tokens.remove(item)
         session.location_state.item_tokens.add(item)
 
-        session.messages.create(text=action.log_statement)
+        log_statement = self.__add_emoji(action, action.log_statement)
+        session.messages.create(text=log_statement)
 
         return {
             'localItemTokens': list(session.local_item_tokens.all()),
@@ -608,7 +619,8 @@ class ActionExecutor:
         session.location_state.item_tokens.remove(item)
         session.inventory.item_tokens.add(item)
 
-        session.messages.create(text=action.log_statement)
+        log_statement = self.__add_emoji(action, action.log_statement)
+        session.messages.create(text=log_statement)
 
         return {
             'localItemTokens': list(session.local_item_tokens.all()),
@@ -621,7 +633,8 @@ class ActionExecutor:
         session.inventory.item_tokens.remove(action.target_item)
         session.location_state.item_tokens.add(action.target_item)
 
-        session.messages.create(text=action.log_statement)
+        log_statement = self.__add_emoji(action, action.log_statement)
+        session.messages.create(text=log_statement)
 
         session.clock.advance(action.cost_amount)
         session.clock.save()
@@ -639,7 +652,8 @@ class ActionExecutor:
         item_token.has_been_watered = True
         item_token.save()
 
-        session.messages.create(text=action.log_statement)
+        log_statement = self.__add_emoji(action, action.log_statement)
+        session.messages.create(text=log_statement)
 
         session.clock.advance(action.cost_amount)
         session.clock.save()
@@ -655,7 +669,8 @@ class ActionExecutor:
         session.inventory.item_tokens.add(action.target_item)
         session.location_state.item_tokens.remove(action.target_item)
 
-        session.messages.create(text=action.log_statement)
+        log_statement = self.__add_emoji(action, action.log_statement)
+        session.messages.create(text=log_statement)
 
         session.clock.advance(action.cost_amount)
         session.clock.save()
@@ -674,7 +689,7 @@ class ActionExecutor:
         item = self.__pull_item_from_pool(session.location, luck_level)
         session.inventory.item_tokens.add(ItemToken.objects.create(session=session, item=item))
 
-        log_statement = action.log_statement.format(result=item.name)
+        log_statement = self.__add_emoji(action, action.log_statement.format(result=item.name))
         session.messages.create(text=log_statement)
 
         session.clock.advance(action.cost_amount)
@@ -689,7 +704,8 @@ class ActionExecutor:
         """Executes a sleep action, which advances the clock to midnight"""
 
         session.hero_state.is_in_bed = True
-        session.messages.create(text=action.log_statement)
+        log_statement = self.__add_emoji(action, action.log_statement)
+        session.messages.create(text=log_statement)
 
         session.clock.advance(session.clock.minutes_to_midnight)
 
@@ -701,6 +717,9 @@ class ActionExecutor:
         }
 
     # private methods
+    def __add_emoji(self, action, log_statement):
+        return f'{action.emoji} {log_statement}'
+
     def __get_dialogue_for_talk_action(self, villager_state, villager):
         if villager_state.has_ever_been_talked_to:
             trigger = DialogueLine.TALKED_TO
@@ -814,7 +833,7 @@ class ActionExecutor:
     def __make_affinity_message_if_any(self, hearts_gained, villager):
         if hearts_gained > 0:
             hearts = ''.join(['❤️' for _ in range(hearts_gained)])
-            return f"You and {villager.name} have developed more of a bond! +{hearts}"
+            return f" +{hearts} You and {villager.name} have developed more of a bond!"
         else:
             return None
 

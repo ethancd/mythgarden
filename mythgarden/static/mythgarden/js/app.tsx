@@ -230,7 +230,8 @@ class App extends React.Component<Partial<AppProps>, AppState> {
       localItemTokens,
       messages,
       villagerStates,
-      dialogue
+      dialogue,
+      speaker
     } = this.state.combinedProps
 
     const { showGallery } = this.state
@@ -303,15 +304,15 @@ class App extends React.Component<Partial<AppProps>, AppState> {
                 <List id='message-log' baseColor={colors.parchment}>
                   {messages?.map(message => Message({ ...message }))}
                 </List>
-
-                {(dialogue != null ? <Dialogue {...dialogue} key={dialogue.id}></Dialogue> : null)}
               </section>
             </section>
-
-            <VillagersList villagers={villagerStates}
+            <section id='far-sidebar'>
+              <VillagersList villagers={villagerStates}
                            actionDictionary={actionDictionary}
                            giftReceiverIds={giftReceiverIds}
-            ></VillagersList>
+              ></VillagersList>
+              {(dialogue != null ? <Dialogue {...dialogue} affinity={speaker?.affinity} key={dialogue.id}></Dialogue> : null)}
+            </section>
           </div>
         </Section>
           </DndProvider>
@@ -336,6 +337,7 @@ interface AppProps {
   villagerStates: VillagerData[]
   wallet: string
   portraitUrls: string[]
+  speaker: VillagerData | null
 }
 
 interface AppState {
