@@ -7,7 +7,8 @@ from .models import Bridge, Action, Place, Building, Session, VillagerState, Ite
 from .models._constants import SEED, SPROUT, CROP, COMMON, UNCOMMON, RARE, EPIC, RARITIES, RARITY_WEIGHTS, FARM, SHOP, \
     WILD_TYPES, FOREST, MOUNTAIN, BEACH, LOVE, LIKE, NEUTRAL, DISLIKE, HATE, FIRST_DAY, DAWN, FISHING_DESCRIPTION, \
     DIGGING_DESCRIPTION, FORAGING_DESCRIPTION, SUNSET, TALK_MINUTES_PER_FRIENDLINESS, MAX_BOOST_LEVEL, \
-    BOOST_DENOMINATOR, KYS_MESSAGE, EXIT_DESCRIPTION, DAYS_OF_WEEK, MAX_ITEMS
+    BOOST_DENOMINATOR, KYS_MESSAGE, EXIT_DESCRIPTION, DAYS_OF_WEEK, MAX_ITEMS, DAY_TO_INDEX, MAX_LUCK_LEVEL, \
+    LUCK_DENOMINATOR
 from .static_helpers import guard_type, guard_types
 
 
@@ -194,34 +195,37 @@ class ActionGenerator:
         actions = []
 
         for item_token in inventory:
-            actions.append(self.gen_put_action(item_token))
+            actions.append(self.gen_stow_action(item_token))
 
         for item_token in storage_contents:
-            actions.append(self.gen_take_action(item_token))
+            actions.append(self.gen_retrieve_action(item_token))
 
         return actions
 
     def gen_give_action(self, item_token, villager):
         """Returns an action that gives passed item to passed villager"""
+        cost_amount = 5
         return Action(
             description=f'Gift {item_token.name} to {villager.name}',
             action_type=Action.GIVE,
             target_villager=villager,
             target_item=item_token,
-            cost_amount=5,
+            cost_amount=cost_amount,
             cost_unit=Action.MIN,
+            cost_wait_class=Action.MINUTES_TO_WAIT_CLASS[cost_amount],
             log_statement='You gave {item_name} to {villager_name}. Looks like they {valence_text}',
         )
 
     def gen_talk_action(self, villager):
         """Returns an action that talks to given villager"""
-
+        cost_amount = villager.friendliness * TALK_MINUTES_PER_FRIENDLINESS
         return Action(
             description=f'Talk to {villager.name}',
             action_type=Action.TALK,
             target_villager=villager,
-            cost_amount=villager.friendliness * TALK_MINUTES_PER_FRIENDLINESS,
+            cost_amount=cost_amount,
             cost_unit=Action.MIN,
+            cost_wait_class=Action.MINUTES_TO_WAIT_CLASS[cost_amount],
             log_statement=f'You talked to {villager.name}.',
         )
 
@@ -233,7 +237,7 @@ class ActionGenerator:
             target_item=item_token,
             cost_amount=item_token.price,
             cost_unit=Action.KOIN,
-            log_statement=f'You sold {item_token.name} for {item_token.price} koin.',
+            log_statement=f'You sold {item_token.name} for {item_token.price} fleurs.',
         )
 
     def gen_buy_action(self, item_token):
@@ -244,121 +248,139 @@ class ActionGenerator:
             target_item=item_token,
             cost_amount=item_token.price,
             cost_unit=Action.KOIN,
-            log_statement=f'You bought {item_token.name} for {item_token.price} koin.',
+            log_statement=f'You bought {item_token.name} for {item_token.price} fleurs.',
         )
 
-    def gen_put_action(self, item_token):
+    def gen_stow_action(self, item_token):
         """Returns an action that puts given item into storage"""
         return Action(
-            description=f'Put {item_token.name} in chest',
-            action_type=Action.PUT,
+            description=f'Stow {item_token.name}',
+            action_type=Action.STOW,
             target_item=item_token,
-            log_statement=f'You put {item_token.name} away.',
+            log_statement=f'You put {item_token.name} in your chest.',
         )
 
-    def gen_take_action(self, item_token):
+    def gen_retrieve_action(self, item_token):
         """Returns an action that takes given item out of storage"""
         return Action(
-            description=f'Take {item_token.name} from chest',
-            action_type=Action.TAKE,
+            description=f'Retrieve {item_token.name}',
+            action_type=Action.RETRIEVE,
             target_item=item_token,
-            log_statement=f'You took {item_token.name} out.',
+            log_statement=f'You took {item_token.name} out of your chest.',
         )
 
     def gen_enter_action(self, building):
         """Returns an action that enters given building"""
+        cost_amount = 5
         return Action(
             description=f'Enter {building.name}',
             action_type=Action.TRAVEL,
             target_place=building,
-            cost_amount=5,
+            cost_amount=cost_amount,
             cost_unit=Action.MIN,
+            cost_wait_class=Action.MINUTES_TO_WAIT_CLASS[cost_amount],
             log_statement=f'You entered {building.name}.',
         )
 
     def gen_exit_action(self, building):
         """Returns an action that exits the current place"""
+        cost_amount = 5
         return Action(
             description=EXIT_DESCRIPTION,
             action_type=Action.TRAVEL,
             target_place=building.surround,
-            cost_amount=5,
+            cost_amount=cost_amount,
             cost_unit=Action.MIN,
+            cost_wait_class=Action.MINUTES_TO_WAIT_CLASS[cost_amount],
             log_statement=f'You exited {building.name}.',
         )
 
     def gen_plant_action(self, seed_token):
         """Returns an action that plants given seed"""
+        cost_amount = 30
         return Action(
             description=f'Plant {seed_token.name}',
             action_type=Action.PLANT,
             target_item=seed_token,
-            cost_amount=30,
+            cost_amount=cost_amount,
             cost_unit=Action.MIN,
+            cost_wait_class=Action.MINUTES_TO_WAIT_CLASS[cost_amount],
             log_statement=f'You planted some {seed_token.name} in the field.',
         )
 
     def gen_water_action(self, plant_token):
         """Returns an action that waters given seed/sprout"""
+        cost_amount = 30
         return Action(
             description=f'Water {plant_token.name}',
             action_type=Action.WATER,
             target_item=plant_token,
-            cost_amount=30,
+            cost_amount=cost_amount,
             cost_unit=Action.MIN,
+            cost_wait_class=Action.MINUTES_TO_WAIT_CLASS[cost_amount],
             log_statement=f'You watered the {plant_token.name}.',
         )
 
     def gen_harvest_action(self, crop_token):
         """Returns an action that harvests given crop"""
+        cost_amount = 30
         return Action(
             description=f'Harvest {crop_token.name}',
             action_type=Action.HARVEST,
             target_item=crop_token,
-            cost_amount=30,
+            cost_amount=cost_amount,
             cost_unit=Action.MIN,
+            cost_wait_class=Action.MINUTES_TO_WAIT_CLASS[cost_amount],
             log_statement=f'You harvested the {crop_token.name}.',
         )
 
     def gen_travel_action(self, destination, direction, display_direction):
         """Returns an action that travels to given destination in given direction"""
+        cost_amount = 60
         return Action(
             description=f'Go {display_direction}',
             action_type=Action.TRAVEL,
             target_place=destination,
             direction=direction,
-            cost_amount=60,
+            cost_amount=cost_amount,
             cost_unit=Action.MIN,
+            cost_wait_class=Action.MINUTES_TO_WAIT_CLASS[cost_amount],
             log_statement=f'You travelled to {destination.name}.',
         )
 
     def gen_fishing_action(self):
         """Returns an action that catches a fish"""
+        cost_amount = 60
         return Action(
             description=FISHING_DESCRIPTION,
             action_type=Action.GATHER,
-            cost_amount=60,
+            cost_amount=cost_amount,
             cost_unit=Action.MIN,
+            cost_wait_class=Action.MINUTES_TO_WAIT_CLASS[cost_amount],
             log_statement='You caught a {result}!',
         )
 
     def gen_digging_action(self):
         """Returns an action that digs for minerals, gems, fossils, etc"""
+        cost_amount = 90
         return Action(
             description=DIGGING_DESCRIPTION,
             action_type=Action.GATHER,
-            cost_amount=90,
+            cost_amount=cost_amount,
             cost_unit=Action.MIN,
+            cost_wait_class=Action.MINUTES_TO_WAIT_CLASS[cost_amount],
             log_statement='You dug up a {result}!',
         )
 
     def gen_foraging_action(self):
         """Returns an action that forages for herbs, plants, etc"""
+        cost_amount = 30
         return Action(
             description=FORAGING_DESCRIPTION,
             action_type=Action.GATHER,
-            cost_amount=30,
+            cost_amount=cost_amount,
             cost_unit=Action.MIN,
+            cost_wait_class=Action.MINUTES_TO_WAIT_CLASS[cost_amount],
             log_statement='You found {result}!',
         )
 
@@ -378,7 +400,7 @@ class ActionGenerator:
         boost_fraction = 1 - (min(boost_level, MAX_BOOST_LEVEL) / BOOST_DENOMINATOR)
 
         for action in actions:
-            if not action.is_cost_in_money() and action.action_type is not Action.SLEEP:
+            if not action.is_cost_in_money() and action.cost_amount is not None:
                 action.cost_amount = math.floor(action.cost_amount * boost_fraction)
 
         return actions
@@ -405,7 +427,8 @@ class ActionExecutor:
         """Executes a travel action, which updates the current location and ticks the clock"""
 
         session.location = action.target_place
-        session.messages.create(text=action.log_statement)
+        log_statement = self.__add_emoji(action, action.log_statement)
+        session.messages.create(text=log_statement)
 
         session.clock.advance(action.cost_amount)
 
@@ -433,7 +456,9 @@ class ActionExecutor:
         villager_state.mark_as_talked_to()
         affinity_message = self.__make_affinity_message_if_any(hearts_gained, villager)
 
-        session.messages.create(text=action.log_statement)
+        log_statement = self.__add_emoji(action, action.log_statement)
+        session.messages.create(text=log_statement)
+
         if affinity_message:
             session.messages.create(text=affinity_message)
 
@@ -447,6 +472,7 @@ class ActionExecutor:
             'hero': session.hero_state,
             'clock': session.clock,
             'dialogue': dialogue,
+            'speaker': villager_state
         }
 
     def execute_give_action(self, action, session):
@@ -470,12 +496,14 @@ class ActionExecutor:
         session.inventory.item_tokens.remove(gift)
 
         valence_text = self.__get_valence_text(valence)
-        log_statement = action.log_statement.format(item_name=gift.name, villager_name=villager.name,
+        formatted_log_statement = action.log_statement.format(item_name=gift.name, villager_name=villager.name,
                                                     valence_text=valence_text)
 
         affinity_message = self.__make_affinity_message_if_any(hearts_gained, villager)
 
+        log_statement = self.__add_emoji(action, formatted_log_statement)
         session.messages.create(text=log_statement)
+
         if affinity_message:
             session.messages.create(text=affinity_message)
 
@@ -487,8 +515,10 @@ class ActionExecutor:
 
         return {
             'hero': session.hero_state,
+            'clock': session.clock,
             'inventory': list(session.inventory.item_tokens.all()),
             'dialogue': dialogue,
+            'speaker': villager_state
         }
 
     def execute_sell_action(self, action, session):
@@ -518,7 +548,8 @@ class ActionExecutor:
             session.hero_state.koin_earned += action.cost_amount
             session.hero_state.save()
 
-        session.messages.create(text=action.log_statement)
+        log_statement = self.__add_emoji(action, action.log_statement)
+        session.messages.create(text=log_statement)
 
         session.wallet.save()
 
@@ -551,7 +582,9 @@ class ActionExecutor:
 
         session.wallet.money -= action.cost_amount
 
-        session.messages.create(text=action.log_statement)
+        log_statement = self.__add_emoji(action, action.log_statement)
+        session.messages.create(text=log_statement)
+
         session.wallet.save()
 
         return {
@@ -560,8 +593,8 @@ class ActionExecutor:
             'localItemTokens': list(session.local_item_tokens.all()),
         }
 
-    def execute_put_action(self, action, session):
-        """Executes a put action, which removes an item from the hero's inventory
+    def execute_stow_action(self, action, session):
+        """Executes a stow action, which removes an item from the hero's inventory
         and adds it into location storage"""
 
         item = action.target_item
@@ -569,15 +602,16 @@ class ActionExecutor:
         session.inventory.item_tokens.remove(item)
         session.location_state.item_tokens.add(item)
 
-        session.messages.create(text=action.log_statement)
+        log_statement = self.__add_emoji(action, action.log_statement)
+        session.messages.create(text=log_statement)
 
         return {
             'localItemTokens': list(session.local_item_tokens.all()),
             'inventory': list(session.inventory.item_tokens.all()),
         }
 
-    def execute_take_action(self, action, session):
-        """Executes a take action, which adds an item into the hero's inventory
+    def execute_retrieve_action(self, action, session):
+        """Executes a retrieve action, which adds an item into the hero's inventory
         and removes it from location storage"""
 
         item = action.target_item
@@ -585,7 +619,8 @@ class ActionExecutor:
         session.location_state.item_tokens.remove(item)
         session.inventory.item_tokens.add(item)
 
-        session.messages.create(text=action.log_statement)
+        log_statement = self.__add_emoji(action, action.log_statement)
+        session.messages.create(text=log_statement)
 
         return {
             'localItemTokens': list(session.local_item_tokens.all()),
@@ -598,7 +633,8 @@ class ActionExecutor:
         session.inventory.item_tokens.remove(action.target_item)
         session.location_state.item_tokens.add(action.target_item)
 
-        session.messages.create(text=action.log_statement)
+        log_statement = self.__add_emoji(action, action.log_statement)
+        session.messages.create(text=log_statement)
 
         session.clock.advance(action.cost_amount)
         session.clock.save()
@@ -616,7 +652,8 @@ class ActionExecutor:
         item_token.has_been_watered = True
         item_token.save()
 
-        session.messages.create(text=action.log_statement)
+        log_statement = self.__add_emoji(action, action.log_statement)
+        session.messages.create(text=log_statement)
 
         session.clock.advance(action.cost_amount)
         session.clock.save()
@@ -632,7 +669,8 @@ class ActionExecutor:
         session.inventory.item_tokens.add(action.target_item)
         session.location_state.item_tokens.remove(action.target_item)
 
-        session.messages.create(text=action.log_statement)
+        log_statement = self.__add_emoji(action, action.log_statement)
+        session.messages.create(text=log_statement)
 
         session.clock.advance(action.cost_amount)
         session.clock.save()
@@ -647,10 +685,11 @@ class ActionExecutor:
         """Executes a gather action, which finds a random item in the current location's item pool
         and adds a copy to the hero's inventory"""
 
-        item = self.__pull_item_from_pool(session.location)
+        luck_level = min(session.hero.luck_level, MAX_LUCK_LEVEL)
+        item = self.__pull_item_from_pool(session.location, luck_level)
         session.inventory.item_tokens.add(ItemToken.objects.create(session=session, item=item))
 
-        log_statement = action.log_statement.format(result=item.name)
+        log_statement = self.__add_emoji(action, action.log_statement.format(result=item.name))
         session.messages.create(text=log_statement)
 
         session.clock.advance(action.cost_amount)
@@ -665,7 +704,8 @@ class ActionExecutor:
         """Executes a sleep action, which advances the clock to midnight"""
 
         session.hero_state.is_in_bed = True
-        session.messages.create(text=action.log_statement)
+        log_statement = self.__add_emoji(action, action.log_statement)
+        session.messages.create(text=log_statement)
 
         session.clock.advance(session.clock.minutes_to_midnight)
 
@@ -677,6 +717,9 @@ class ActionExecutor:
         }
 
     # private methods
+    def __add_emoji(self, action, log_statement):
+        return f'{action.emoji} {log_statement}'
+
     def __get_dialogue_for_talk_action(self, villager_state, villager):
         if villager_state.has_ever_been_talked_to:
             trigger = DialogueLine.TALKED_TO
@@ -687,8 +730,9 @@ class ActionExecutor:
 
         return villager.get_dialogue(trigger, affinity_tier)
 
-    def __pull_item_from_pool(self, location):
-        """Returns a random item from the given location's item pool, weighted by rarity"""
+    def __pull_item_from_pool(self, location, luck_level):
+        """Returns a random item from the given location's item pool, weighted by rarity.
+        Modulate rarity percentages based on hero luck level"""
 
         # Pick a rarity, find an item of that rarity;
         # if none found, try again with another rarity;
@@ -696,7 +740,8 @@ class ActionExecutor:
         rarities = [r for r in RARITIES]
 
         while len(rarities) > 0:
-            weights = [RARITY_WEIGHTS[r] for r in rarities]
+            weights = [self.__get_luck_modified_weight(r, luck_level) for r in rarities]
+            print(luck_level, weights)
             rarity = random.choices(rarities, weights=weights, k=1)[0]
 
             items_at_rarity = location.item_pool.filter(rarity=rarity)
@@ -718,6 +763,24 @@ class ActionExecutor:
                 continue
 
         raise ValueError(f'No items found in location {location.name} of any rarity')
+
+    def __get_luck_modified_weight(self, rarity, luck_level):
+        luck_percent = luck_level / LUCK_DENOMINATOR
+
+        LUCK_GROWTH_BY_RARITY = {
+            COMMON: -1,
+            UNCOMMON: 4 / 7,
+            RARE: 2 / 7,
+            EPIC: 1 / 7
+        }
+
+        luck_factor = LUCK_GROWTH_BY_RARITY[rarity]
+
+        base_weight = RARITY_WEIGHTS[rarity]
+        modified_weight = base_weight + luck_percent * luck_factor
+
+        return modified_weight
+
 
     def __calc_talk_affinity_change(self, affinity_tier, friendliness):
         """Calculates the change in affinity for a talk action based on the affinity tier the villager is already at
@@ -770,7 +833,7 @@ class ActionExecutor:
     def __make_affinity_message_if_any(self, hearts_gained, villager):
         if hearts_gained > 0:
             hearts = ''.join(['❤️' for _ in range(hearts_gained)])
-            return f"You and {villager.name} have developed more of a bond! +{hearts}"
+            return f" +{hearts} You and {villager.name} have developed more of a bond!"
         else:
             return None
 
@@ -1003,25 +1066,33 @@ class EventOperator:
 
         if is_new_high_score:
             hero.boost_level += 1
-            hero.save()
+            hero.luck_level = 0
+        else:
+            hero.luck_level += 7
+
+        hero.save()
 
         end_of_game_message = self.get_end_of_game_message(hero_state, is_new_high_score)
 
         session.reset_session_state(end_of_game_message)
 
     def trigger_kys(self, session):
+        days_completed = DAY_TO_INDEX[session.clock.day]
+        session.hero.luck_level += days_completed
+        session.hero.save()
+
         session.reset_session_state(KYS_MESSAGE)
 
     def get_end_of_game_message(self, hero_state, is_new_high_score):
-        start = f'You ended the week with {hero_state.koin_earned} koin and ' \
-                f'{hero_state.hearts_earned} hearts for a total score of {hero_state.score}.'
+        start = f'You ended the week with {hero_state.koin_earned} ⚜️ and ' \
+                f'{hero_state.hearts_earned} ❤️ for a score of {hero_state.score}.'
 
         if is_new_high_score:
-            middle = f"That's a new high score! Feeling your movements quicken slightly with the shifting of time," \
+            middle = f"That's a new high score! Feeling your movements quicken slightly with the shifting of time,"
 
         else:
-            middle = f"That doesn't beat your high score – but there's always next loop! "\
-                       "Strengthened by the wisdom of experience," \
+            middle = f"That doesn't beat your high score – but something on the breeze tells you " \
+                       "your luck is about to change. Feeling that the winds of chance are in your favor,"
 
         end = "you enter the time loop to begin the week again."
 

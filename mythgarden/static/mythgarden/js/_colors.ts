@@ -9,6 +9,13 @@ const dustyPink = '#ffd1d8'
 const whiteYellow = '#fff5e5'
 const blueMoonGray = '#90c0df'
 const whiteWindowPane = '#888888'
+const defaultGray = '#999';
+
+const fuschia = '#b827fc';
+const electricBlue = '#2c90fc';
+const brightGreen = '#b8fd33';
+const lightOrange = '#fec837';
+const hotRed = '#fd1892';
 
 export default {
   skyBlue,
@@ -21,5 +28,11 @@ export default {
   dustyPink,
   whiteYellow,
   blueMoonGray,
-  whiteWindowPane
+  whiteWindowPane,
+  defaultGray,
+  fuschia,
+  electricBlue,
+  brightGreen,
+  lightOrange,
+  hotRed
 }

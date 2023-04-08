@@ -200,6 +200,14 @@ PLACE_TYPES = [
     (HOME, 'Home'),
 ]
 
+ITEM_ENTITY = 'item'
+VILLAGER_ENTITY = 'villager'
+PLACE_ENTITY = 'place'
+GIFT_ENTITY = 'gift'
+
+MONEY_TYPE = 'money'
+TIME_TYPE = 'time'
+
 IMAGE_PREFIX = 'mythgarden/images'
 
 PLACE_IMAGE_DIR = 'places'
@@ -207,6 +215,14 @@ FARMER_PORTRAIT_DIR = 'portraits/farmer'
 VILLAGER_PORTRAIT_DIR = 'portraits/villager'
 
 DEFAULT_PORTRAIT = 'default.png'
+
+ACTIVITY_ICON_PATHS = {
+    'BASKET': 'basket-placeholder.png',
+    'FISHING_ROD': 'fishing-rod-placeholder.png',
+    'PICKAXE': 'pickaxe-placeholder.png',
+    'BED': 'bed-placeholder.png',
+    'DOOR': 'door-placeholder.png'
+}
 
 FISHING_DESCRIPTION = 'Go fishing'
 DIGGING_DESCRIPTION = 'Dig for something interesting'
@@ -219,5 +235,8 @@ TALK_MINUTES_PER_FRIENDLINESS = 10
 
 BOOST_DENOMINATOR = 30  # means that every level of boost reduces action time by 1/30th, aka from 90->87, 60->58, 30->29, 5->4
 MAX_BOOST_LEVEL = BOOST_DENOMINATOR - 5  # max boost will reduce all action times by 25/30ths, aka from 90->15, 60->10, 30->5, 5->0
+
+LUCK_DENOMINATOR = 200  # means that every level of luck will be worth 0.5%, ie every week will give 3.5% luck
+MAX_LUCK_LEVEL = 130  # max luck level will reduce common item rate to 0
 
 KYS_MESSAGE = 'Whether out of despair, boredom, tactical necessity, or a whimsical fit of pique, you hurl yourself off a nearby cliff to your death. A few moments later, you brush the dirt off your dauntless shoulders and enter the time loop to begin the week again.'

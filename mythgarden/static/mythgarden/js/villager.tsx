@@ -1,24 +1,49 @@
 'use strict'
 
-import React from 'react'
-import { postAction } from './ajax'
+import React, {useContext} from 'react'
 import {Affinity, AffinityProps} from "./affinity";
+import ActionPill, {ActionPillProps} from "./action";
+import { useDrop } from "react-dnd";
+import {DraggableGiftProps} from "./draggableGift";
+import {postAction} from "./ajax";
+import {ImageFilterContext} from "./lightColorLogic";
 
 const GIFT_DIGEST_TEMPLATE = `GIVE-giftId-villagerId`
 
-export default function Villager ({ name, imageUrl, affinity, description, id, activeGiftId }: VillagerProps): JSX.Element {
-  function giveGift(): void {
-    if (activeGiftId == null) return
+export default function Villager ({ name, imageUrl, affinity, description, id, actionPill, isGiftReceiver}: VillagerProps): JSX.Element {
+  const { backgroundColor, opacity } = useContext(ImageFilterContext)
+  const [{isOver, canDrop, isDragging}, dropRef] = useDrop(() => ({
+    accept: 'GIFT',
+    drop: (item: DraggableGiftProps, monitor) => {
+      const digest = GIFT_DIGEST_TEMPLATE.replace('giftId', `${item.giftData.id}`).replace('villagerId',  `${id}`)
+      void postAction(digest)
+    },
+    canDrop: () => isGiftReceiver,
+    collect: (monitor) => ({
+      isOver: monitor.isOver(),
+      canDrop: monitor.canDrop(),
+      isDragging: monitor.getItem() != null
+    })
+  }))
 
-    const digest = GIFT_DIGEST_TEMPLATE.replace('giftId', `${activeGiftId}`).replace('villagerId',  `${id}`)
-    void postAction(digest)
-  }
+  const highlight = canDrop && isGiftReceiver
+  const grayOut = isDragging && !highlight
+  const ignore = (!isDragging && actionPill == null)
 
   return (
-    <li className={`villager${activeGiftId != null ? ' highlighted' : ''}`} key={id} onClick={giveGift}>
+    <li
+      className={`villager ${highlight ? 'highlighted' : ''} ${grayOut ? 'inactive' : ''} ${ignore ? 'no-hover-filter': ''}`}
+      key={id}
+      data-entity-id={id}
+      ref={dropRef}>
       <div className="row">
         <div className="portrait">
           <img src={imageUrl}></img>
+          { actionPill != null
+            ? <ActionPill {...actionPill}></ActionPill>
+            : null
+          }
+          <div className='portrait-filter' style={{ backgroundColor, opacity }}></div>
         </div>
         <div className="column">
           <Affinity {...affinity}></Affinity>
@@ -41,7 +66,8 @@ interface VillagerData {
 }
 
 interface VillagerExtras {
-  activeGiftId: number | null
+  actionPill: ActionPillProps
+  isGiftReceiver: boolean
 }
 
 export { Villager, type VillagerProps, type VillagerData }

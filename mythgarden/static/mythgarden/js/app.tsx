@@ -1,13 +1,13 @@
 import React, {SyntheticEvent} from 'react'
-import { Action, type ActionProps } from './action'
-import { ActionsList } from './actionsList'
-import { type ActionClickData } from './actionStem'
-import { Building, type BuildingProps } from './building'
+import { TouchBackend } from 'react-dnd-touch-backend'
+import { DndProvider } from 'react-dnd'
+
+import {type ActionData, ActionPillProps} from './action'
+import {Building, type BuildingData} from './building'
 import { Clock, type ClockData } from './clock'
 import { Dialogue, type DialogueData} from './dialogue'
-import EmptyItem from './emptyItem'
 import { Hero, type HeroData } from './hero'
-import { Item, type ItemProps } from './item'
+import { Item, type ItemData } from './item'
 import List from './list'
 import {Location, type LocationData} from './location'
 import { Message, type MessageProps } from './message'
@@ -18,19 +18,35 @@ import {VillagersList} from "./villagersList";
 import Wallet from './wallet'
 
 import { isDeepEqual } from './staticUtils'
-import { FilterizeColorContext, filterFuncFactory, getColorFilterByTime } from './lightColorLogic'
+import { FilterizeColorContext, ImageFilterContext, filterFuncFactory, getImageFilter, getColorFilterByTime } from './lightColorLogic'
 import colors from './_colors'
 import Gallery from "./gallery";
+import {postAction} from "./ajax";
+import {ItemsList} from "./itemsList";
+import {BuildingsList} from "./buildingsList";
+import {ArrowsList} from "./arrowsList";
+import {ActivitiesList} from "./activitiesList";
+import {GiftPreview} from "./draggableGift";
+import RainbowText from "./rainbowText";
 
-const MAX_ITEMS = 6
+const TALK_ACTION = 'TALK'
+const TRAVEL_ACTION = 'TRAVEL'
+
+const WATER_ACTION = 'WATER'
+const PLANT_ACTION = 'PLANT'
+const HARVEST_ACTION = 'HARVEST'
+const BUY_ACTION = 'BUY'
+const SELL_ACTION = 'SELL'
+const STOW_ACTION = 'STOW'
+const RETRIEVE_ACTION = 'RETRIEVE'
+
+const ITEM_ACTIONS = [WATER_ACTION, PLANT_ACTION, HARVEST_ACTION, BUY_ACTION, SELL_ACTION, STOW_ACTION, RETRIEVE_ACTION]
 
 class App extends React.Component<Partial<AppProps>, AppState> {
   constructor (props: AppProps) {
     super(props)
     this.state = {
       combinedProps: props,
-      activeGiftId: null,
-      activeVillagerNames: [],
       showGallery: false,
     }
   }
@@ -60,15 +76,41 @@ class App extends React.Component<Partial<AppProps>, AppState> {
     messageContainer.scrollTop = messageContainer.scrollHeight
   }
 
-  // might be nice to move this to an ItemsList component
-  mapItemsWithEmptySlots (items: ItemProps[]): JSX.Element[] {
-    const paddedItems = items.concat(Array(MAX_ITEMS - items.length).fill(null))
+  marshalActionDictionary (actions: ActionData[]): ActionRecord {
+    const actionDictionary = {} as ActionRecord
 
-    return paddedItems.map((item, n) => item != null ? Item(item) : EmptyItem({ slotNumber: n }))
+    actions.forEach(action => {
+      const hasEntity = action.entityType != null && action.entityId != null
+      const isGiftAction = action.giftReceiverId != null
+
+      const key = hasEntity
+        ? isGiftAction
+          ? `gift-${action.entityId}`
+          : `${action.entityType}-${action.entityId}`
+        : 'no-entity'
+
+      const {emoji, costAmount, costType, waitClass} = action
+
+      actionDictionary[key] = {emoji, costAmount, costType, waitClass}
+    })
+
+    return actionDictionary;
   }
 
-  getComponentTarget(e: React.SyntheticEvent<Element, Event>) {
-    const componentClasses = ['action', 'action-stem', 'item', 'villager', 'hero-portrait', 'gallery']
+  marshalGiftReceiverIds (actions: ActionData[]): Set<number> {
+    const giftReceiverIds = new Set<number>()
+
+    actions.forEach(action => {
+      if (action.giftReceiverId != null) {
+        giftReceiverIds.add(action.giftReceiverId)
+      }
+    })
+
+    return giftReceiverIds
+  }
+
+  getComponentTarget(e: React.SyntheticEvent) {
+    const componentClasses = ['action', 'local-activity', 'item', 'villager', 'building', 'hero-portrait', 'gallery', 'arrow']
     const componentClassSelector = componentClasses.map(c => '.' + c).join(', ')
     const componentDomNode = (e.target as HTMLElement).closest(componentClassSelector) as HTMLElement
 
@@ -79,14 +121,47 @@ class App extends React.Component<Partial<AppProps>, AppState> {
     return element.classList.contains(className);
   }
 
-  marshalActionClickData(dataset: DOMStringMap): ActionClickData {
-    const giftId = dataset.giftId == null ? null : parseInt(dataset.giftId)
-    const villagerNames = dataset.villagerNames == null ? [] : dataset.villagerNames.split(',')
+  marshalActivityClickData(dataset: DOMStringMap) {
+    const entityId = this.grabId(dataset) || ''
+    const actionType = dataset.actionType == null ? null : dataset.actionType
 
     return {
-      giftId,
-      villagerNames
+      entityId,
+      actionType
     }
+  }
+
+  grabId(dataset: DOMStringMap): number|null {
+    const entityId = dataset.entityId == null ? null : parseInt(dataset.entityId)
+
+    return entityId
+  }
+
+  findMatchingAction(actionType: string, entityId: number): ActionData | undefined {
+    const matchingAction = this.state.combinedProps.actions.find(action => {
+      return action.uniqueDigest === `${actionType}-${entityId}`
+    })
+
+    return matchingAction
+  }
+
+  fireActionIfAvailable(actionType: string, target: HTMLElement) {
+    const entityId = this.grabId(target.dataset)
+    if (entityId == null) return
+
+    const matchingAction = this.findMatchingAction(actionType, entityId)
+    if (matchingAction == null) return
+
+    void postAction(matchingAction.uniqueDigest)
+  }
+
+  fireActionWithEmptyIdIfAvailable(actionType: string) {
+    const matchingAction = this.state.combinedProps.actions.find(action => {
+      return action.uniqueDigest === `${actionType}-`  // load-bearing hyphen at the end there
+    })
+    if (matchingAction == null) return
+
+    void postAction(matchingAction.uniqueDigest)
   }
 
   handleClick (e: SyntheticEvent): void {
@@ -95,28 +170,43 @@ class App extends React.Component<Partial<AppProps>, AppState> {
     const target = this.getComponentTarget(e)
     if (target == null) return
 
-    if (this.hasClass(target, 'action-stem')) {
-      const actionClickData = this.marshalActionClickData(target.dataset)
-      this.highlightTargetVillagers(actionClickData)
-    }
-
     if (this.hasClass(target, 'hero-portrait')) {
       // click hero-portrait = toggle gallery open/closed
       if (!this.state.showGallery) {
         this.showGallery()
       }
     }
-  }
 
-  highlightTargetVillagers (actionClickData: ActionClickData): void {
-    const {
-      giftId,
-      villagerNames
-    } = actionClickData
+    if (this.hasClass(target, 'villager')) {
+      this.fireActionIfAvailable(TALK_ACTION, target)
+    }
 
-    console.log('setting!')
+    if (this.hasClass(target, 'building')) {
+      this.fireActionIfAvailable(TRAVEL_ACTION, target)
+    }
 
-    this.setState({ activeGiftId: giftId, activeVillagerNames: villagerNames })
+    if (this.hasClass(target, 'arrow')) {
+      this.fireActionIfAvailable(TRAVEL_ACTION, target)
+    }
+
+    if (this.hasClass(target, 'local-activity')) {
+      const { actionType, entityId} = this.marshalActivityClickData(target.dataset)
+
+      if (actionType == null || entityId == null) return
+
+      if (entityId == '') {  // expect these location activities to often have no entity id
+        this.fireActionWithEmptyIdIfAvailable(actionType)
+      } else {
+        this.fireActionIfAvailable(actionType, target)
+      }
+    }
+
+    if (this.hasClass(target, 'item')) {
+      // relying on assumption that any item has only ONE action available at a time (excluding gift actions)
+      ITEM_ACTIONS.forEach(actionType => {
+        this.fireActionIfAvailable(actionType, target)
+      })
+    }
   }
 
   showGallery (): void {
@@ -124,7 +214,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
   }
 
   clearActiveUX (): void {
-    this.setState({ activeGiftId: null, activeVillagerNames: [], showGallery: false })
+    this.setState({ showGallery: false })
   }
 
   render (): JSX.Element {
@@ -140,23 +230,30 @@ class App extends React.Component<Partial<AppProps>, AppState> {
       localItemTokens,
       messages,
       villagerStates,
-      dialogue
+      dialogue,
+      speaker
     } = this.state.combinedProps
 
-    const { activeGiftId, activeVillagerNames, showGallery } = this.state
+    const { showGallery } = this.state
 
     const colorFilter = getColorFilterByTime(clock.time)
+    const imageFilter = getImageFilter(colorFilter)
     const filterFn = filterFuncFactory(colorFilter)
+
+    const actionDictionary = this.marshalActionDictionary(actions)
+    const giftReceiverIds = this.marshalGiftReceiverIds(actions)
 
     return (
       <FilterizeColorContext.Provider value={ filterFn }>
+        <ImageFilterContext.Provider value={imageFilter}>
+        <DndProvider backend={TouchBackend} options={{enableMouseEvents: true}}>
         <Section id="page" baseColor={colors.whiteYellow} handleClick={this.handleClick.bind(this)}>
 
           <Section id="top-bar" baseColor={colors.skyBlue}>
             <Hero {...hero}></Hero>
             <Gallery {...{show: showGallery, currentPortraitUrl: hero.imageUrl, portraitUrls} }></Gallery>
-            <h1 id="logo">Mythgarden</h1>
-            <Clock display={clock.display} time={clock.time} boostLevel={hero.boostLevel}></Clock>
+            <h1 id="logo"><RainbowText text={'Mythgarden'}></RainbowText></h1>
+            <Clock display={clock.display} time={clock.time} boostLevel={hero.boostLevel} luckPercent={hero.luckPercent}></Clock>
             <div id='sky-container'>
                 <Sun time={clock.time}></Sun>
                 <Moon time={clock.time} dayNumber={clock.dayNumber}></Moon>
@@ -165,27 +262,41 @@ class App extends React.Component<Partial<AppProps>, AppState> {
 
           <div id="main-area">
             <section id="sidebar">
-              <List id='inventory' baseColor={colors.yellowLeather}>
-                {(inventory != null) ? this.mapItemsWithEmptySlots(inventory) : null}
-              </List>
-
+              <ItemsList
+                id='inventory'
+                baseColor={colors.yellowLeather}
+                items={inventory}
+                actionDictionary={actionDictionary}
+                giftable={true}
+              ></ItemsList>
+              <GiftPreview></GiftPreview>
               <Wallet value={wallet}></Wallet>
             </section>
 
-            <ActionsList actions={actions} villagerCount={villagerStates.length}></ActionsList>
-
             <section id="center-col">
-              <Location {...{...place, colorFilter}}>
-                {/* might be nice to have a BuildingsList component so we can give individual buildings a filterable bg color */}
-                <List id='buildings' baseColor={colors.lavenderPurpleTranslucent}>
-                  {buildings?.map(building => Building(building))}
-                </List>
+              <Location {...{...place, colorFilter, actionDictionary}}>
+                <ActivitiesList activities={place.activities}
+                                actionDictionary={actionDictionary}
+                ></ActivitiesList>
+
+                <ArrowsList arrows={place.arrows}
+                actionDictionary={actionDictionary}
+                ></ArrowsList>
+
+                <BuildingsList
+                  buildings={buildings}
+                  actionDictionary={actionDictionary}
+                ></BuildingsList>
               </Location>
 
               {place.hasInventory
-                ? <List id='local-items' baseColor={colors.sandyBrown}>
-                    {this.mapItemsWithEmptySlots(localItemTokens)}
-                  </List>
+                ? <ItemsList
+                  id='local-items'
+                  baseColor={colors.sandyBrown}
+                  items={localItemTokens}
+                  actionDictionary={actionDictionary}
+                  giftable={false}
+                ></ItemsList>
                 : null
               }
 
@@ -193,39 +304,44 @@ class App extends React.Component<Partial<AppProps>, AppState> {
                 <List id='message-log' baseColor={colors.parchment}>
                   {messages?.map(message => Message({ ...message }))}
                 </List>
-                {(dialogue != null ? <Dialogue {...dialogue} key={dialogue.id}></Dialogue> : null)}
               </section>
             </section>
-
-            <VillagersList villagers={villagerStates}
-                           activeGiftId={activeGiftId}
-                           activeVillagerNames={activeVillagerNames}></VillagersList>
+            <section id='far-sidebar'>
+              <VillagersList villagers={villagerStates}
+                           actionDictionary={actionDictionary}
+                           giftReceiverIds={giftReceiverIds}
+              ></VillagersList>
+              {(dialogue != null ? <Dialogue {...dialogue} affinity={speaker?.affinity} key={dialogue.id}></Dialogue> : null)}
+            </section>
           </div>
         </Section>
+          </DndProvider>
+          </ImageFilterContext.Provider>
       </FilterizeColorContext.Provider>
     )
   }
 }
 
+type ActionRecord = Record<string, ActionPillProps>
+
 interface AppProps {
-  actions: ActionProps[]
-  buildings: BuildingProps[]
+  actions: ActionData[]
+  buildings: BuildingData[]
   clock: ClockData
   dialogue: DialogueData | null
   hero: HeroData
-  inventory: ItemProps[]
-  localItemTokens: ItemProps[]
+  inventory: ItemData[]
+  localItemTokens: ItemData[]
   messages: MessageProps[]
   place: LocationData
   villagerStates: VillagerData[]
   wallet: string
   portraitUrls: string[]
+  speaker: VillagerData | null
 }
 
 interface AppState {
   combinedProps: AppProps
-  activeGiftId: number|null
-  activeVillagerNames: string[]
   showGallery: boolean
 }
 

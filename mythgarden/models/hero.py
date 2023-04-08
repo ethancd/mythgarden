@@ -1,6 +1,6 @@
 from django.db import models
 
-from ._constants import DEFAULT_PORTRAIT
+from ._constants import DEFAULT_PORTRAIT, LUCK_DENOMINATOR
 from .farmer_portrait import FarmerPortrait
 
 
@@ -10,6 +10,7 @@ class Hero(models.Model):
 
     high_score = models.IntegerField(default=0)
     boost_level = models.IntegerField(default=0)
+    luck_level = models.IntegerField(default=0)
 
     @classmethod
     def get_default_pk(cls):
@@ -42,6 +43,18 @@ class Hero(models.Model):
 
         return self.portrait.image_url
 
+    @property
+    def luck_percent(self):
+        if self.luck_level == 0:
+            return ''
+
+        luck_float = self.luck_level / LUCK_DENOMINATOR
+
+        if self.luck_level % 2 == 0:
+            return '{:.0%}'.format(luck_float)
+        else:
+            return '{:.1%}'.format(luck_float)
+
 
 class HeroState(models.Model):
     session = models.OneToOneField('Session', on_delete=models.CASCADE, primary_key=True, related_name='hero_state')
@@ -64,7 +77,8 @@ class HeroState(models.Model):
             'isDefaultName': self.hero.is_default_name,
             'isDefaultPortrait': self.hero.is_default_portrait,
             'imageUrl': self.hero.image_url,
-            'boostLevel': self.hero.boost_level
+            'boostLevel': self.hero.boost_level,
+            'luckPercent': self.hero.luck_percent
         }
 
     @property

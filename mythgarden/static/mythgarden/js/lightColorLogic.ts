@@ -22,6 +22,8 @@ const MOONLIGHT_LUX = 10
 const MAX_SHADING = 0.75
 const MIX_RATIO = 0.1
 
+const MAX_FILTER_OPACITY = 0.5;
+
 enum DaySegment {
   Morning = 'morning',
   Midday = 'midday',
@@ -34,6 +36,16 @@ interface ColorFilter {
   shadeBy: number
   rgbTemperature: number[]
   mixRatio: number
+}
+
+const getImageFilter = function (colorFilter: ColorFilter) {
+  const backgroundColor = Color.rgb(colorFilter.rgbTemperature).darken(colorFilter.shadeBy).hex()
+  const opacity = Math.min(colorFilter.shadeBy, MAX_FILTER_OPACITY)
+
+  return {
+    backgroundColor,
+    opacity,
+  }
 }
 
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -57,8 +69,14 @@ const defaultFilter = {
   mixRatio: 0.5
 }
 
+const defaultFilterStyle = {
+  backgroundColor: '#fff',
+  opacity: 0,
+}
+
 const defaultFilterFn = filterFuncFactory(defaultFilter)
 
+const ImageFilterContext = createContext(defaultFilterStyle)
 const FilterizeColorContext = createContext(defaultFilterFn)
 
 function getColorFilterByTime (time: number): ColorFilter {
@@ -191,8 +209,10 @@ function convertLuxToShadeBy (lux: number): number {
 }
 
 export {
+  ImageFilterContext,
   FilterizeColorContext,
   filterFuncFactory,
   getColorFilterByTime,
+  getImageFilter,
   type ColorFilter
 }

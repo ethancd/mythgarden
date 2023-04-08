@@ -1,9 +1,11 @@
 from django.db import models
 from django.templatetags.static import static
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 from ._constants import PLACE_TYPES, FARM, TOWN, MOUNTAIN, FOREST, BEACH, HOME, MINERAL, FOSSIL, FISH, HERB, FLOWER, \
-    BERRY, TECH, MAGIC, IMAGE_PREFIX, PLACE_IMAGE_DIR, SHOP
+    BERRY, TECH, MAGIC, IMAGE_PREFIX, PLACE_IMAGE_DIR, SHOP, ACTIVITY_ICON_PATHS, WILD_TYPES
 from .item import Item, ItemToken
+from .action import Action
 
 
 class PlaceManager(models.Manager):
@@ -46,8 +48,57 @@ class Place(models.Model):
             'name': self.name,
             'imageUrl': self.image_url,
             'id': self.id,
-            'hasInventory': self.has_inventory
+            'hasInventory': self.has_inventory,
+            'arrows': self.get_arrows(),
+            'activities': self.get_activities()
         }
+
+    def get_arrows(self):
+        arrows = []
+
+        for bridge in self.bridges_as_1.all():
+            new_arrow = {'direction': bridge.direction_2, 'id': bridge.place_2.id}
+            arrows.append(new_arrow)
+
+        for bridge in self.bridges_as_2.all():
+            new_arrow = {'direction': bridge.direction_1, 'id': bridge.place_1.id}
+            arrows.append(new_arrow)
+
+        return arrows
+
+    def get_activities(self):
+        activities = []
+
+        if self.place_type in WILD_TYPES:
+
+            if self.place_type == FOREST:
+                image_path = ACTIVITY_ICON_PATHS['BASKET']
+            if self.place_type == MOUNTAIN:
+                image_path = ACTIVITY_ICON_PATHS['PICKAXE']
+            if self.place_type == BEACH:
+                image_path = ACTIVITY_ICON_PATHS['FISHING_ROD']
+
+            activities.append({'actionType': Action.GATHER, 'imageUrl': static(f'{IMAGE_PREFIX}/{image_path}')})
+
+        try:
+            building = self.building
+            if building.surround is not None:
+                image_path = ACTIVITY_ICON_PATHS['DOOR']
+
+                activities.append({
+                    'actionType': Action.TRAVEL,
+                    'id': building.surround.id,
+                    'imageUrl': static(f'{IMAGE_PREFIX}/{image_path}')
+                })
+        except Building.DoesNotExist:
+            pass
+
+        if self.is_farmhouse:
+            image_path = ACTIVITY_ICON_PATHS['BED']
+            activities.append({'actionType': Action.SLEEP, 'imageUrl': static(f'{IMAGE_PREFIX}/{image_path}')})
+
+        return activities
+
 
     @property
     def image_url(self):
@@ -85,11 +136,24 @@ class Place(models.Model):
 class Building(Place):
     surround = models.ForeignKey(Place, on_delete=models.CASCADE, related_name='buildings')
 
+    over = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(3)], default=2)
+    down = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(3)], default=2)
+
     def __str__(self):
         return super().__str__()
 
     def serialize(self):
-        return super().serialize()
+        building_data = {'coords': self.coordinates}
+        combined_data = building_data | super().serialize()
+
+        return combined_data
+
+    @property
+    def coordinates(self):
+        return {
+            'over': self.over,
+            'down': self.down
+        }
 
     class Meta:
         ordering = ['name']

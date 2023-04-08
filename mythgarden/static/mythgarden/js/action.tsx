@@ -1,28 +1,53 @@
 import React from 'react'
-import { postAction } from './ajax'
+import Duration, { WaitClass } from "./duration";
+import PriceTag from "./priceTag";
 
-export default function Action (this: any, { description, emoji, displayCost, uniqueDigest }: ActionProps): JSX.Element {
-  const postThisAction = postAction.bind(this, uniqueDigest)
-
-  return (
-        <li
-            onClick={() => { void postThisAction() }}
-            className='action'
-            key={uniqueDigest}
-        >
-            <span className='type'>{emoji}</span>
-            <span className="description">{description}</span>
-            <span className="cost">{displayCost}</span>
-        </li>
-  )
+export default function ActionPill ({ emoji, costAmount, costType, waitClass }: ActionPillProps): JSX.Element {
+  if (costAmount == null || costType == null) {
+    return (
+      <div className='action-pill'>
+        <span className='action-type'>{emoji}</span>
+      </div>
+    )
+  } else {
+    return (
+      <div className='action-pill'>
+          { costType == CostType.Time
+            ? <>
+                <span className='action-type'>{emoji}</span>
+                <Duration amount={costAmount} waitClass={waitClass}></Duration>
+              </>
+            : <PriceTag amount={costAmount}></PriceTag>
+          }
+      </div>
+    )
+  }
 }
 
-interface ActionProps {
+enum CostType {
+  Time = 'time',
+  Money = 'money'
+}
+
+enum EntityType {
+  Item = 'item',
+  Villager = 'villager',
+  Place = 'place',
+  Gift = 'gift'
+}
+
+interface ActionData {
   description: string
+  costAmount?: number
+  costType?: CostType
+  waitClass?: WaitClass
   emoji: string
-  displayCost: string
+  entityType: EntityType|null
+  entityId: number|null
+  giftReceiverId?: number
   uniqueDigest: string
-  targetCount: number
 }
 
-export { Action, type ActionProps }
+type ActionPillProps = Pick<ActionData, 'costAmount'|'costType'|'emoji'|'waitClass'>
+
+export { ActionPill, type ActionPillProps, type ActionData, WaitClass }

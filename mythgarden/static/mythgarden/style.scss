@@ -4,6 +4,7 @@
 $sky-blue: #87ceeb;
 $yellow-leather: #e1a836;
 $dollar-bill-green: #85bb65;
+$deep-grass-green: #59b300;
 $sandy-brown: #f9cca4;
 $lavender-purple: #b09cc9;
 $parchment: #fcf5ef;
@@ -17,6 +18,8 @@ $neon-orange: #ff5f1f;
 $neon-red: #ff3131;
 $invisible: #ffffff00;
 $aqua: #05d0eb;
+$maple: #edc078;
+$candle-light: #e09d37;
 
 $dark-text: #333;
 $light-text: #eee;
@@ -30,16 +33,39 @@ $medium-text: 2rem;
 $med-large-text: 3rem;
 $large-text: 4rem;
 
+$pencil-thin: 0.1rem;
+$pen-thinnish: 0.2rem;
+$marker-thick: 0.3rem;
+
 $fine-gutter: 0.125rem;
 $small-gutter: 0.5rem;
 $medium-gutter: 1rem;
 
-$villager-portrait-size: calc($small-text * 5 + $fine-gutter * 4);
+$small-curve: 0.5rem;
 $portrait-radius: 25%;
+
+$very-fine-shadow-distance: 0.25rem;
+$fine-shadow-distance: 0.5rem;
+$small-shadow-distance: 1rem;
+$med-small-shadow-distance: 2rem;
+$medium-shadow-distance: 3rem;
+$med-large-shadow-distance: 4rem;
+$large-shadow-distance: 5rem;
+$huge-shadow-distance: 10rem;
+
+$villager-portrait-size: calc($small-text * 5 + $fine-gutter * 4);
+$edge-distance: 2%;
+
 
 /* degrees */
 
 $meta-element-opacity: 0.6;
+$hovered-brightness: 90%;
+$pressed-brightness: 50%;
+
+/* timing */
+
+$transition-time: 1s;
 
 /* site-wide */
 
@@ -50,6 +76,10 @@ body, html {
   margin: 0;
   padding: 0;
   -webkit-user-select: none;
+}
+
+* {
+  transition: background-color $transition-time linear;
 }
 
 /* reset */
@@ -78,29 +108,6 @@ textarea {
 /* development code */
 ul#djDebugPanelList {
   display: block !important;
-}
-
-/* layout */
-
-#page {
-  height: 100vh;
-  background-color: $white-yellow;
-
-  &.dark-mode {
-    color: $light-text;
-
-    #actions {
-      .action {
-        border-color: $off-white-gray;
-      }
-    }
-
-    #location {
-      h2.name {
-        background-color: #000000aa;
-      }
-    }
-  }
 }
 
 /* general lists */
@@ -148,7 +155,7 @@ $hot-red: #fd1892;
 
 
 @mixin rainbow-border {
-  border: 5px solid transparent;
+  border: $marker-thick solid transparent;
   border-image: linear-gradient(to bottom right,
     $fuschia 0%,
     $electric-blue 25%,
@@ -157,6 +164,214 @@ $hot-red: #fd1892;
     $hot-red 100%);
   border-image-slice: 1;
 }
+
+
+@mixin filter-brightness($percent) {
+  filter: brightness($percent);
+}
+
+$icon-drop-shadow-expression: drop-shadow($fine-shadow-distance $fine-shadow-distance $very-fine-shadow-distance #000);
+$icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #fff);
+
+@mixin filter-brightness-plus-drop-shadow($percent, $drop-shadow-expression) {
+  filter: brightness($percent) $drop-shadow-expression;
+}
+
+@mixin clickable {
+  cursor: pointer;
+
+  &:hover {
+    @include filter-brightness($hovered-brightness);
+  }
+
+  &:active {
+    @include filter-brightness($pressed-brightness);
+  }
+}
+
+@mixin non-clickable {
+  cursor: default;
+
+  &:hover, &:active {
+    filter: none;
+  }
+}
+
+@mixin non-clickable-disabled {
+  cursor: default;
+
+  filter: grayscale(100%);
+
+  &:hover, &:active {
+    filter: grayscale(100%);
+  }
+}
+
+@mixin clickable-drop-shadow($drop-shadow-expression) {
+  cursor: pointer;
+  @include filter-brightness-plus-drop-shadow(100%, $drop-shadow-expression);
+
+  &:hover {
+    @include filter-brightness-plus-drop-shadow($hovered-brightness, $drop-shadow-expression);
+  }
+
+  &:active {
+    @include filter-brightness-plus-drop-shadow($pressed-brightness, $drop-shadow-expression);
+  }
+}
+
+@mixin clickable-icon-drop-shadow {
+  @include clickable-drop-shadow($icon-drop-shadow-expression);
+}
+
+@mixin portrait-filter {
+    top: 0;
+    height: 100%;
+    position: absolute;
+    width: 100%;
+    z-index: 5;
+    pointer-events: none;
+    transition: background-color $transition-time linear,
+                opacity $transition-time linear;
+}
+
+@mixin rarity-indicators {
+  &.common {
+    background-color: fade-out($yellow-leather, 0.5);
+  }
+
+  &.uncommon {
+    border-color: limegreen;
+    background-color: fade-out(limegreen, 0.5);
+
+    .type:after {
+      content: '*';
+      color: darken(limegreen, 20%);
+    }
+  }
+
+  &.rare {
+    border-color: dodgerblue;
+    background-color: fade-out(dodgerblue, 0.5);
+    box-shadow: 0 0 $pencil-thin 0 dodgerblue;
+
+    .type:after {
+      content: '**';
+      color: darken(dodgerblue, 20%);
+    }
+  }
+
+  &.epic {
+    border-color: rebeccapurple;
+    background-color: fade-out(rebeccapurple, 0.5);
+    box-shadow: 0 0 $very-fine-shadow-distance 0 rebeccapurple;
+
+    .type:after {
+      content: '***';
+      color: rebeccapurple;
+    }
+  }
+}
+
+#page {
+  height: 100vh;
+  background-color: $white-yellow;
+  overflow: hidden;
+
+  &.dark-mode {
+    color: $light-text;
+
+    #actions {
+      .action {
+        border-color: $off-white-gray;
+      }
+    }
+
+    #location {
+      .darkness-filter {
+        opacity: 0.8;
+      }
+
+      h2.name {
+        @media only screen and (max-width: 900px) {
+          font-size: $medium-text;
+          background-color: #333;
+        }
+      }
+
+      .building, .arrow, .local-activity img {
+        @include clickable-drop-shadow($icon-dark-mode-drop-shadow-expression);
+      }
+
+      .building {
+        border-color: #ddd;
+      }
+    }
+  }
+}
+
+.action-pill {
+  @include row;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  font-size: $med-small-text;
+  border-radius: $small-curve;
+  background-color: #4682b4;
+  gap: $small-gutter;
+  align-items: baseline;
+  height: 2rem;
+  border: $pen-thinnish solid darken(#4682b4, 20%);
+  min-width: 4rem;
+  justify-content: center;
+  opacity: 0.9;
+
+  .cost {
+    display: flex;
+    align-items: center;
+    height: 100%;
+  }
+}
+
+.duration {
+  .dial {
+    border: $pencil-thin solid black;
+    border-radius: 50%;
+    background-color: white;
+    position: relative;
+    width: 20px;
+    height: 20px;
+
+    .hand {
+      background-color: #000;
+      position: absolute;
+      height: 50%;
+      width: 2px;
+      left: calc(50% - 1px);
+      border-radius: 1px;
+
+      &.hour {
+        top: 0;
+      }
+
+      &.minute {
+        top: 50%;
+        transform-origin: center 0;
+      }
+    }
+
+    .center-arbor {
+      background-color: #000;
+      position: absolute;
+      height: 2px;
+      width: 2px;
+      border-radius: 50%;
+      left: calc(50% - 1px);
+      top: calc(50% - 1px);
+    }
+  }
+}
+
 /* top-bar HUD elements */
 
 #top-bar {
@@ -177,29 +392,29 @@ $hot-red: #fd1892;
   max-width: 50%;
 
   .portrait {
+    @include clickable;
     @include rounded-portrait;
-    border: 2px solid #008f11;
+    border: $pen-thinnish solid #008f11;
     height: 100%;
     box-sizing: border-box;
-    cursor: pointer;
-
+    position: relative;
 
     img {
       height: 100%;
       width: auto;
     }
+
+    .portrait-filter {
+      @include portrait-filter;
+    }
   }
 
   .column {
     justify-content: space-between;
-    margin-top: $small-gutter;
   }
 
   .name {
     font-size: $medium-text;
-
-    textarea {
-    }
 
     @media only screen and (max-width: 900px) {
       font-size: $med-small-text;
@@ -223,18 +438,18 @@ $hot-red: #fd1892;
   height: 95vh;
   box-sizing: border-box;
   gap: $medium-gutter;
-  box-shadow: 0 0 10rem 5rem $off-black-gray;
+  box-shadow: 0 0 $huge-shadow-distance $large-shadow-distance $off-black-gray;
 
   .portrait {
+    @include clickable;
     @include rounded-portrait;
-    border: 1px solid black;
+    border: $pencil-thin solid black;
     height: 40vh;
-    cursor: pointer;
     box-sizing: border-box;
 
     &.current {
-      border: 3px solid $fuschia;
-      box-shadow: 0 0 5px 5px $fuschia;
+      border: $pen-thinnish solid $fuschia;
+      box-shadow: 0 0 $med-small-shadow-distance $med-small-shadow-distance $fuschia;
     }
 
     img {
@@ -253,8 +468,8 @@ $hot-red: #fd1892;
   opacity: 75%;
   position: absolute;
   text-transform: uppercase;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  top: 0;
+  transform: translateX(-50%);
 }
 
 @keyframes sinewave {
@@ -295,6 +510,7 @@ $hot-red: #fd1892;
   font-size: $medium-text;
   margin: $small-gutter;
   text-align: right;
+  justify-content: space-between;
 
   @media only screen and (max-width: 900px) {
     font-size: $med-small-text;
@@ -321,7 +537,17 @@ $hot-red: #fd1892;
   @media only screen and (max-width: 900px) {
     font-size: $small-text;
   }
+}
 
+#luck-percent {
+  font-weight: bold;
+  font-size: $med-small-text;
+  text-align: right;
+  text-shadow: 1px 1px 2px #888;
+
+  @media only screen and (max-width: 900px) {
+    font-size: $smallish-text;
+  }
 }
 
 #sky-container {
@@ -335,19 +561,21 @@ $hot-red: #fd1892;
     width: 4rem;
     height: 4rem;
     border-radius: 50%;
+
+    //transition: left $transition-time linear, bottom $transition-time cubic-bezier(.1, .6, .5, .9);
   }
 
   #sun {
     @include heavenly-body;
     background-color: yellow;
-    box-shadow: 0 0 4rem 1rem yellow;
+    box-shadow: 0 0 $med-large-shadow-distance $small-shadow-distance yellow;
   }
 
   #moon {
     @include heavenly-body;
     background-color: $white-yellow;
-    box-shadow: 0 0 1rem .25rem $white-yellow;
-    border: 1px solid white;
+    box-shadow: 0 0 $small-shadow-distance $very-fine-shadow-distance $white-yellow;
+    border: $pencil-thin solid white;
     overflow: hidden;
 
     #darkside {
@@ -384,7 +612,7 @@ $hot-red: #fd1892;
 #sidebar {
   @include column;
   justify-content: space-between;
-  width: 20%;
+  width: 15%;
 }
 
 #inventory {
@@ -394,89 +622,75 @@ $hot-red: #fd1892;
   justify-content: space-between;
   width: 100%;
 
-  .item {
-    @include row;
-    border: 2px solid;
-    overflow: hidden;
+  .draggable-gift {
     flex-grow: 1;
-    word-wrap: break-word;
     max-width: 100%;
-    align-items: center;
-    gap: $small-gutter;
+  }
+}
 
-    &.empty-slot {
-      border-color: $invisible;
-      opacity: 0.5;
+.draggable-gift > .item {
+  height: 100%;
+}
+
+#inventory .item, #inventory + .item {
+  @include clickable;
+  @include row;
+  word-wrap: break-word;
+  align-items: center;
+  gap: $small-gutter;
+  position: relative;
+  border: $pen-thinnish solid transparent;
+  border-radius: $pen-thinnish;
+  max-width: 100%;
+  z-index: 10;
+  box-sizing: border-box;
+
+  &.empty-slot {
+    @include non-clickable;
+    opacity: 0.5;
+    flex-grow: 1;
+  }
+
+  @include rarity-indicators;
+
+  .type {
+    font-size: $medium-text;
+    position: relative;
+
+    @media only screen and (max-width: 900px) {
+      font-size: $med-small-text;
     }
 
-    &.common {
-      border-color: $invisible;
-    }
-
-    &.uncommon {
-      border-color: limegreen;
-      background-color: fade-out(limegreen, 0.5);
-
-      .type:after {
-        content: '*';
-        color: darken(limegreen, 20%);
-      }
-    }
-
-    &.rare {
-      border-color: dodgerblue;
-      background-color: fade-out(dodgerblue, 0.5);
-      box-shadow: 0 0 0.1rem 0 dodgerblue;
-
-      .type:after {
-        content: '**';
-        color: darken(dodgerblue, 20%);
-      }
-    }
-
-    &.epic {
-      border-color: rebeccapurple;
-      background-color: fade-out(rebeccapurple, 0.5);
-      box-shadow: 0 0 0.25rem 0 rebeccapurple;
-
-      .type:after {
-        content: '***';
-        color: rebeccapurple;
-      }
-    }
-
-    .type {
+    &:after {
+      content: '';
+      position: absolute;
       font-size: $medium-text;
-      position: relative;
+      bottom: calc(0% - 2rem); // 2rem == $medium-text
+      left: 0;
 
       @media only screen and (max-width: 900px) {
         font-size: $med-small-text;
       }
-
-      &:after {
-        content: '';
-        position: absolute;
-        font-size: $medium-text;
-        bottom: calc(0% - 2rem); // 2rem == $medium-text
-        left: 0;
-
-        @media only screen and (max-width: 900px) {
-          font-size: $med-small-text;
-        }
-      }
     }
+  }
 
-    .name {
-      font-size: $med-small-text;
-      display: inline-block;
-      max-width: 80%;
+  .name {
+    font-size: $med-small-text;
+    display: inline-block;
+    max-width: 80%;
 
-      @media only screen and (max-width: 900px) {
-        font-size: $small-text;
-      }
+    @media only screen and (max-width: 900px) {
+      font-size: $small-text;
     }
   }
 }
+
+#inventory .item {
+  &.common {
+    border-radius: 0;
+  }
+}
+
 
 #wallet {
   background-color: $dollar-bill-green;
@@ -490,67 +704,42 @@ $hot-red: #fd1892;
   }
 }
 
-/* column between left-sidebar and center-col */
-// will be deleted after "action chip" feature is implemented
-
-#actions {
-  @include column;
-  background-color: pink;
-  width: 20%;
-  overflow-y: auto;
-
-  .action {
-    border-bottom: 1px solid $off-black-gray;
-    cursor: pointer;
-    display: flex;
-    font-size: $small-text;
-    justify-content: flex-start;
-    padding: $small-gutter 0;
-    width: 100%;
-
-    span {
-      display: inline-block;
-    }
-
-    .type {
-      min-width: 2.5rem;
-    }
-
-    .description {
-      text-align: center;
-      flex-grow: 1;
-    }
-
-    .cost {
-      min-width: 2.5rem;
-      text-align: right;
-    }
-  }
-}
-
 /* center-col elements */
 
 #center-col {
   @include column;
   height: 100%;
-  overflow: hidden;
-  width: 60%;
+  width: 70%;
   justify-content: space-between;
 }
 
 #location {
-  height: 50%;
+  height: 70%;
   position: relative;
   width: 100%;
   flex-grow: 0;
 
   h2.name {
-    font-size: $medium-text;
+    font-size: $med-large-text;
+    font-family: "Lobster Two", "Times New Roman", serif;
     font-weight: bold;
+    display: inline-block;
     text-align: center;
-    position: relative;
+    position: absolute;
+    left: 50%;
+    top: -$small-gutter;
+    transform: translate(-50%, -100%);
+    margin: $fine-gutter;
+    padding: $small-gutter;
     z-index: 10;
-    background-color: #ffffffaa;
+    border-radius: $small-curve;
+    //opacity: 0.8;
+    white-space: nowrap;
+
+    @media only screen and (max-width: 900px) {
+      font-size: $medium-text;
+      background-color: #fff;
+    }
   }
 
   .landscape-filter {
@@ -558,49 +747,249 @@ $hot-red: #fd1892;
     height: 100%;
     position: absolute;
     width: 100%;
-    z-index: 2;
+    z-index: 5;
+    pointer-events: none;
+    transition: background-color $transition-time linear,
+                opacity $transition-time linear;
+  }
+
+  .darkness-filter {
+    @extend .landscape-filter;
+    z-index: 1;
+    background-color: black;
+    opacity: 0;
+    transition: opacity $transition-time linear;
   }
 
   .landscape {
-    bottom: 0;
-    position: absolute;
     width: 100%;
+    height: auto;
+    filter: grayscale(50%);
+  }
+
+}
+
+#directions {
+  .action-pill {
+    right: unset;
+    bottom: unset;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .arrow {
+    @include clickable-icon-drop-shadow;
+    position: absolute;
+    z-index: 2;
+    font-size: $medium-text;
+    font-family: "Lobster Two", "Times New Roman", serif;
+
+    .inner-triangle {
+      background-color: $maple;
+      height: 100%;
+      width: 100%;
+    }
+
+    &.west {
+      left: $edge-distance;
+
+      .inner-triangle {
+        clip-path: polygon(0% 50%, 100% 0%, 100% 100%);
+      }
+
+      .action-pill {
+        transform: translate(-40%, -50%);
+      }
+    }
+
+    &.east {
+      right: $edge-distance;
+
+      .inner-triangle {
+        clip-path: polygon(0% 0%, 0% 100%, 100% 50%);
+      }
+
+      .action-pill {
+        transform: translate(-60%, -50%);
+      }
+    }
+
+    &.north {
+      top: $edge-distance;
+
+      .inner-triangle {
+        clip-path: polygon(0% 100%, 50% 0%, 100% 100%);
+      }
+
+      .action-pill {
+        transform: translate(-50%, -25%);
+      }
+    }
+
+    &.south {
+      bottom: $edge-distance;
+
+      .inner-triangle {
+        clip-path: polygon(0% 0%, 50% 100%, 100% 0%);
+      }
+
+      .action-pill {
+        transform: translate(-50%, -75%);
+      }
+    }
+
+    &.west, &.east {
+      top: 50%;
+      transform: translateY(-50%);
+      height: 60%;
+      width: 10%;
+    }
+
+    &.north, &.south {
+      left: 50%;
+      transform: translateX(-50%);
+      width: 30%;
+      height: 20%;
+    }
+  }
+}
+
+#activities {
+  .local-activity {
+    position: absolute;
+    z-index: 4;
+    width: 40%;
+    height: 40%;
+
+    &.inactive {
+      img {
+        @include non-clickable-disabled;
+      }
+    }
+
+    &.gather {
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+
+      .action-pill {
+        right: 50%;
+        bottom: 0;
+        transform: translateX(50%);
+      }
+    }
+
+    &.travel, &.sleep {
+      bottom: $edge-distance;
+      height: 50%;
+
+      img {
+        margin: 0;
+      }
+    }
+
+    &.travel {
+      left: $edge-distance;
+
+      .action-pill {
+        right: 50%;
+        bottom: 0;
+        transform: translateX(50%);
+      }
+    }
+
+    &.sleep {
+      right: $edge-distance;
+
+      img {
+        float: right;
+      }
+
+      .action-pill {
+        right: 24%;
+        bottom: unset;
+        top: -10%;
+      }
+    }
+
+    &.sleep + li .action-pill {
+      right: 0;
+      bottom: $edge-distance;
+    }
+
+    img {
+      @include clickable-icon-drop-shadow;
+      display: block;
+      width: auto;
+      height: 100%;
+      margin: auto;
+    }
   }
 }
 
 #buildings {
-    bottom: 0;
-    justify-content: space-between;
-  background-color: rgba($lavender-purple, 0.5);
-    left: 50%;
+  .building {
+    @include clickable-icon-drop-shadow;
+    @include column;
     position: absolute;
-    transform: translate(-50%, 0);
-    width: 100%;
-    z-index: 5;
+    z-index: 3;
+    width: 30%;
+    border-radius: $small-curve;
+    border: $pencil-thin solid #333;
+    box-sizing: border-box;
+    overflow: hidden;
 
-    .building {
-      @include column;
-      max-width: 20%;
+    &.over-1 {
+      left: $edge-distance;
+    }
+    &.over-2 {
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    &.over-3 {
+      right: $edge-distance;
+    }
 
-      .icon {
+    &.down-1 {
+      top: $edge-distance;
+    }
+    &.down-2 {
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    &.down-3 {
+      bottom: $edge-distance;
+    }
+
+    &.over-2.down-2 {
+      transform: translate(-50%, -50%)
+    }
+
+    img {
+      width: 100%;
+      height: auto;
+    }
+
+    .icon {
+      font-size: $med-large-text;
+      text-align: center;
+
+      @media only screen and (max-width: 900px) {
         font-size: $medium-text;
-        text-align: center;
-
-        @media only screen and (max-width: 900px) {
-          font-size: $smallish-text;
-        }
       }
+    }
 
-      .name {
-        text-align: center;
-        font-size: $med-small-text;
+    .name {
+      text-align: center;
+      font-size: $med-small-text;
 
-        @media only screen and (max-width: 900px) {
-          font-size: $fine-text;
-        }
+      @media only screen and (max-width: 900px) {
+        font-size: $fine-text;
       }
     }
   }
+}
 
 
 #local-items {
@@ -610,8 +999,11 @@ $hot-red: #fd1892;
   justify-content: space-between;
   overflow: hidden;
   width: 100%;
+  position: relative;
 
   .item {
+    @include clickable;
+    @include rarity-indicators;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -619,8 +1011,10 @@ $hot-red: #fd1892;
     box-sizing: border-box;
     overflow: hidden;
     word-wrap: break-word;
+    border-radius: $pen-thinnish;
 
     &.empty-slot {
+      @include non-clickable;
       border-color: beige;
       opacity: 0.5;
     }
@@ -646,15 +1040,22 @@ $hot-red: #fd1892;
     }
 
     &.watered {
-      border: 1px dashed $aqua;
+      @include non-clickable;
+      border: $pencil-thin dashed $aqua;
       background-color: fade-out($aqua, 0.5);
+      transition: none;
     }
+  }
+
+  .action-pill {
+    left: 50%;
+    transform: translateX(-50%);
   }
 }
 
 
 #footer {
-  height: 30%;
+  height: 10%;
   flex-grow: 1;
   width: 100%;
   position: relative;
@@ -685,6 +1086,129 @@ $hot-red: #fd1892;
   }
 }
 
+/* right-sidebar elements, villagers and dialogue*/
+
+#far-sidebar {
+  height: 100%;
+  width: 15%;
+  position: relative;
+}
+
+#villagers {
+  @include column;
+  background-color: $dusty-pink;
+  gap: $medium-gutter;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
+
+  .villager {
+    @include clickable;
+    @include column;
+
+    &.highlighted {
+      .portrait {
+        background-color: #ffffffaa;
+        border-color: gold;
+        box-shadow: 0 0 $fine-shadow-distance 0 gold;
+      }
+
+      &:hover {
+        .portrait {
+          background-color: #00000044;
+          box-shadow: 0 0 $fine-shadow-distance 0 darken(gold, 10%);
+          border-color: darken(gold, 10%);
+        }
+      }
+    }
+
+    &.inactive {
+      @include non-clickable-disabled;
+    }
+
+    &.no-hover-filter {
+      @include non-clickable;
+    }
+
+    .description {
+      font-size: $fine-text;
+    }
+  }
+}
+
+#villagers .villager, #dialogue .speaker {
+  .portrait {
+      border: 2px solid darken($dusty-pink, 10%);
+      width: calc(100% - (2 * (1rem * 1.2))); // 1rem == $small-text
+      border-radius: $portrait-radius;
+      position: relative;
+
+      img {
+        height: auto;
+        width: 100%;
+        margin-bottom: -4px;
+        border-radius: $portrait-radius;
+      }
+
+      .portrait-filter {
+        @include portrait-filter;
+      }
+    }
+
+  .name {
+    font-size: $med-small-text;
+    text-align: center;
+  }
+
+  .row {
+    gap: $small-gutter;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .column {
+      justify-content: space-between;
+    }
+}
+
+.affinity-container {
+  width: calc(1rem * 1.2); // hard-coded h->w ratio of the heart image
+  display: flex;
+  flex-direction: column-reverse;
+  gap: $small-gutter;
+
+  .heart {
+    display: inline-block;
+    height: $small-text;
+
+    img {
+      height: $small-text;
+      width: auto;
+    }
+  }
+
+  .partial-container {
+    display: inline-block;
+    height: $small-text;
+    position: relative;
+    z-index: 2;
+  }
+
+  .partial {
+    opacity: .9;
+    overflow: hidden;
+    width: calc(1rem * 1.2); // hard-coded h->w ratio of the heart image
+    position: absolute;
+    bottom: 0;
+
+    img {
+      bottom: 0;
+      position: absolute;
+    }
+  }
+}
+
 #dialogue {
   @include column;
   background-color: $parchment;
@@ -698,133 +1222,9 @@ $hot-red: #fd1892;
 
   .speaker {
     @include column;
-    gap: $small-gutter;
-
-  }
-
-  .portrait {
-    border: 2px solid $dusty-pink;
-    height: 5rem;
-    width: 5rem;
-
-    img {
-      height: 100%;
-      width: auto;
-    }
-  }
-
-  .name {
-    font-size: $medium-text
   }
 
   .dialogue-text {
     font-size: $smallish-text;
-  }
-
-  &:after {
-    color: #8f0011;
-    content: '×';
-    font-size: $med-large-text;
-    position: absolute;
-    right: 0;
-    top: -$medium-gutter;
-  }
-}
-
-/* right-sidebar elements, just villagers */
-
-#villagers {
-  @include column;
-  background-color: $dusty-pink;
-  gap: $medium-gutter;
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  width: 20%;
-
-  .villager {
-    @include column;
-
-    &.highlighted {
-      cursor: pointer;
-      background-color: #ffffffaa;
-      border: 2px solid gold;
-      box-shadow: 0 0 0.5rem 0 gold;
-
-      &:hover {
-        background-color: #00000044;
-        box-shadow: 0 0 0.5rem 0 darken(gold, 10%);
-        border-color: darken(gold, 10%);
-      }
-    }
-
-    .portrait {
-      border: 2px solid darken($dusty-pink, 10%);
-      width: calc(100% - (2 * (1rem * 1.2))); // 1rem == $small-text
-      border-radius: $portrait-radius;
-      overflow: hidden;
-
-      img {
-        height: auto;
-        width: 100%;
-        margin-bottom: -4px;
-      }
-    }
-
-    .name {
-      font-size: $med-small-text;
-      text-align: center;
-    }
-
-    .row {
-      gap: $small-gutter;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .column {
-      justify-content: space-between;
-    }
-
-    .description {
-      font-size: $fine-text;
-    }
-
-    .affinity-container {
-      width: calc(1rem * 1.2); // hard-coded h->w ratio of the heart image
-      display: flex;
-      flex-direction: column-reverse;
-      gap: $small-gutter;
-
-      .heart {
-        display: inline-block;
-        height: $small-text;
-
-        img {
-          height: $small-text;
-          width: auto;
-        }
-      }
-
-      .partial-container {
-        display: inline-block;
-        height: $small-text;
-        position: relative;
-        z-index: 2;
-      }
-
-      .partial {
-        opacity: .9;
-        overflow: hidden;
-        width: calc(1rem * 1.2); // hard-coded h->w ratio of the heart image
-        position: absolute;
-        bottom: 0;
-
-        img {
-          bottom: 0;
-          position: absolute;
-        }
-      }
-    }
   }
 }
