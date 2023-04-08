@@ -146,7 +146,6 @@ class Building(Place):
         building_data = {'coords': self.coordinates}
         combined_data = building_data | super().serialize()
 
-        print(combined_data)
         return combined_data
 
     @property

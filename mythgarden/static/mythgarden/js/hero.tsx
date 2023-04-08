@@ -3,8 +3,9 @@
 import React, {useContext} from 'react'
 import TypeableName from "./typeableName";
 import {ImageFilterContext} from "./lightColorLogic";
+import RainbowText from "./rainbowText";
 
-export default function Hero ({ name, isDefaultName, imageUrl, score, highScore, koinEarned, heartsEarned }: HeroProps): JSX.Element {
+export default function Hero ({ name, isDefaultName, imageUrl, score, highScore, luckPercent, koinEarned, heartsEarned }: HeroProps): JSX.Element {
   const { backgroundColor, opacity } = useContext(ImageFilterContext)
 
   return (
@@ -33,6 +34,7 @@ interface HeroData {
   koinEarned: number
   heartsEarned: number
   boostLevel: number
+  luckPercent: string
 }
 
 type HeroProps = Omit<HeroData, 'boostLevel'>

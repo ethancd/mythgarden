@@ -362,14 +362,10 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
 
   .column {
     justify-content: space-between;
-    margin-top: $small-gutter;
   }
 
   .name {
     font-size: $medium-text;
-
-    textarea {
-    }
 
     @media only screen and (max-width: 900px) {
       font-size: $med-small-text;
@@ -465,6 +461,7 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
   font-size: $medium-text;
   margin: $small-gutter;
   text-align: right;
+  justify-content: space-between;
 
   @media only screen and (max-width: 900px) {
     font-size: $med-small-text;
@@ -491,7 +488,17 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
   @media only screen and (max-width: 900px) {
     font-size: $small-text;
   }
+}
 
+#luck-percent {
+  font-weight: bold;
+  font-size: $med-small-text;
+  text-align: right;
+  text-shadow: 1px 1px 2px #888;
+
+  @media only screen and (max-width: 900px) {
+    font-size: $smallish-text;
+  }
 }
 
 #sky-container {
@@ -704,7 +711,7 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
     padding: $small-gutter;
     z-index: 10;
     border-radius: $small-curve;
-    opacity: 0.8;
+    //opacity: 0.8;
     white-space: nowrap;
 
     @media only screen and (max-width: 900px) {

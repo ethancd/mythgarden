@@ -11,6 +11,12 @@ const blueMoonGray = '#90c0df'
 const whiteWindowPane = '#888888'
 const defaultGray = '#999';
 
+const fuschia = '#b827fc';
+const electricBlue = '#2c90fc';
+const brightGreen = '#b8fd33';
+const lightOrange = '#fec837';
+const hotRed = '#fd1892';
+
 export default {
   skyBlue,
   yellowLeather,
@@ -23,5 +29,10 @@ export default {
   whiteYellow,
   blueMoonGray,
   whiteWindowPane,
-  defaultGray
+  defaultGray,
+  fuschia,
+  electricBlue,
+  brightGreen,
+  lightOrange,
+  hotRed
 }

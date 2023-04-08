@@ -7,7 +7,8 @@ from .models import Bridge, Action, Place, Building, Session, VillagerState, Ite
 from .models._constants import SEED, SPROUT, CROP, COMMON, UNCOMMON, RARE, EPIC, RARITIES, RARITY_WEIGHTS, FARM, SHOP, \
     WILD_TYPES, FOREST, MOUNTAIN, BEACH, LOVE, LIKE, NEUTRAL, DISLIKE, HATE, FIRST_DAY, DAWN, FISHING_DESCRIPTION, \
     DIGGING_DESCRIPTION, FORAGING_DESCRIPTION, SUNSET, TALK_MINUTES_PER_FRIENDLINESS, MAX_BOOST_LEVEL, \
-    BOOST_DENOMINATOR, KYS_MESSAGE, EXIT_DESCRIPTION, DAYS_OF_WEEK, MAX_ITEMS
+    BOOST_DENOMINATOR, KYS_MESSAGE, EXIT_DESCRIPTION, DAYS_OF_WEEK, MAX_ITEMS, DAY_TO_INDEX, MAX_LUCK_LEVEL, \
+    LUCK_DENOMINATOR
 from .static_helpers import guard_type, guard_types
 
 
@@ -399,7 +400,7 @@ class ActionGenerator:
         boost_fraction = 1 - (min(boost_level, MAX_BOOST_LEVEL) / BOOST_DENOMINATOR)
 
         for action in actions:
-            if not action.is_cost_in_money() and action.action_type is not Action.SLEEP:
+            if not action.is_cost_in_money() and action.cost_amount is not None:
                 action.cost_amount = math.floor(action.cost_amount * boost_fraction)
 
         return actions
@@ -669,7 +670,8 @@ class ActionExecutor:
         """Executes a gather action, which finds a random item in the current location's item pool
         and adds a copy to the hero's inventory"""
 
-        item = self.__pull_item_from_pool(session.location)
+        luck_level = min(session.hero.luck_level, MAX_LUCK_LEVEL)
+        item = self.__pull_item_from_pool(session.location, luck_level)
         session.inventory.item_tokens.add(ItemToken.objects.create(session=session, item=item))
 
         log_statement = action.log_statement.format(result=item.name)
@@ -709,8 +711,9 @@ class ActionExecutor:
 
         return villager.get_dialogue(trigger, affinity_tier)
 
-    def __pull_item_from_pool(self, location):
-        """Returns a random item from the given location's item pool, weighted by rarity"""
+    def __pull_item_from_pool(self, location, luck_level):
+        """Returns a random item from the given location's item pool, weighted by rarity.
+        Modulate rarity percentages based on hero luck level"""
 
         # Pick a rarity, find an item of that rarity;
         # if none found, try again with another rarity;
@@ -718,7 +721,8 @@ class ActionExecutor:
         rarities = [r for r in RARITIES]
 
         while len(rarities) > 0:
-            weights = [RARITY_WEIGHTS[r] for r in rarities]
+            weights = [self.__get_luck_modified_weight(r, luck_level) for r in rarities]
+            print(luck_level, weights)
             rarity = random.choices(rarities, weights=weights, k=1)[0]
 
             items_at_rarity = location.item_pool.filter(rarity=rarity)
@@ -740,6 +744,24 @@ class ActionExecutor:
                 continue
 
         raise ValueError(f'No items found in location {location.name} of any rarity')
+
+    def __get_luck_modified_weight(self, rarity, luck_level):
+        luck_percent = luck_level / LUCK_DENOMINATOR
+
+        LUCK_GROWTH_BY_RARITY = {
+            COMMON: -1,
+            UNCOMMON: 4 / 7,
+            RARE: 2 / 7,
+            EPIC: 1 / 7
+        }
+
+        luck_factor = LUCK_GROWTH_BY_RARITY[rarity]
+
+        base_weight = RARITY_WEIGHTS[rarity]
+        modified_weight = base_weight + luck_percent * luck_factor
+
+        return modified_weight
+
 
     def __calc_talk_affinity_change(self, affinity_tier, friendliness):
         """Calculates the change in affinity for a talk action based on the affinity tier the villager is already at
@@ -1025,25 +1047,33 @@ class EventOperator:
 
         if is_new_high_score:
             hero.boost_level += 1
-            hero.save()
+            hero.luck_level = 0
+        else:
+            hero.luck_level += 7
+
+        hero.save()
 
         end_of_game_message = self.get_end_of_game_message(hero_state, is_new_high_score)
 
         session.reset_session_state(end_of_game_message)
 
     def trigger_kys(self, session):
+        days_completed = DAY_TO_INDEX[session.clock.day]
+        session.hero.luck_level += days_completed
+        session.hero.save()
+
         session.reset_session_state(KYS_MESSAGE)
 
     def get_end_of_game_message(self, hero_state, is_new_high_score):
-        start = f'You ended the week with {hero_state.koin_earned} koin and ' \
-                f'{hero_state.hearts_earned} hearts for a total score of {hero_state.score}.'
+        start = f'You ended the week with {hero_state.koin_earned} ⚜️ and ' \
+                f'{hero_state.hearts_earned} ❤️ for a score of {hero_state.score}.'
 
         if is_new_high_score:
-            middle = f"That's a new high score! Feeling your movements quicken slightly with the shifting of time," \
+            middle = f"That's a new high score! Feeling your movements quicken slightly with the shifting of time,"
 
         else:
-            middle = f"That doesn't beat your high score – but there's always next loop! "\
-                       "Strengthened by the wisdom of experience," \
+            middle = f"That doesn't beat your high score – but something on the breeze tells you " \
+                       "your luck is about to change. Feeling that the winds of chance are in your favor,"
 
         end = "you enter the time loop to begin the week again."
 

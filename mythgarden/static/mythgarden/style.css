@@ -170,8 +170,7 @@ ul {
       pointer-events: none;
       transition: background-color 1s linear, opacity 1s linear; }
   #hero .column {
-    justify-content: space-between;
-    margin-top: 0.5rem; }
+    justify-content: space-between; }
   #hero .name {
     font-size: 2rem; }
     @media only screen and (max-width: 900px) {
@@ -256,7 +255,8 @@ ul {
   flex-direction: column;
   font-size: 2rem;
   margin: 0.5rem;
-  text-align: right; }
+  text-align: right;
+  justify-content: space-between; }
   @media only screen and (max-width: 900px) {
     #clock {
       font-size: 1.5rem; } }
@@ -274,6 +274,15 @@ ul {
   @media only screen and (max-width: 900px) {
     #boost {
       font-size: 1rem; } }
+
+#luck-percent {
+  font-weight: bold;
+  font-size: 1.5rem;
+  text-align: right;
+  text-shadow: 1px 1px 2px #888; }
+  @media only screen and (max-width: 900px) {
+    #luck-percent {
+      font-size: 1.25rem; } }
 
 #sky-container {
   width: calc(100% - 4rem);
@@ -442,7 +451,6 @@ ul {
     padding: 0.5rem;
     z-index: 10;
     border-radius: 0.5rem;
-    opacity: 0.8;
     white-space: nowrap; }
     @media only screen and (max-width: 900px) {
       #location h2.name {

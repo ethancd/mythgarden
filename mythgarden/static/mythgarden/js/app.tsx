@@ -27,6 +27,7 @@ import {BuildingsList} from "./buildingsList";
 import {ArrowsList} from "./arrowsList";
 import {ActivitiesList} from "./activitiesList";
 import {GiftPreview} from "./draggableGift";
+import RainbowText from "./rainbowText";
 
 const TALK_ACTION = 'TALK'
 const TRAVEL_ACTION = 'TRAVEL'
@@ -241,8 +242,6 @@ class App extends React.Component<Partial<AppProps>, AppState> {
     const actionDictionary = this.marshalActionDictionary(actions)
     const giftReceiverIds = this.marshalGiftReceiverIds(actions)
 
-    console.log(giftReceiverIds)
-
     return (
       <FilterizeColorContext.Provider value={ filterFn }>
         <ImageFilterContext.Provider value={imageFilter}>
@@ -252,8 +251,8 @@ class App extends React.Component<Partial<AppProps>, AppState> {
           <Section id="top-bar" baseColor={colors.skyBlue}>
             <Hero {...hero}></Hero>
             <Gallery {...{show: showGallery, currentPortraitUrl: hero.imageUrl, portraitUrls} }></Gallery>
-            <h1 id="logo">Mythgarden</h1>
-            <Clock display={clock.display} time={clock.time} boostLevel={hero.boostLevel}></Clock>
+            <h1 id="logo"><RainbowText text={'Mythgarden'}></RainbowText></h1>
+            <Clock display={clock.display} time={clock.time} boostLevel={hero.boostLevel} luckPercent={hero.luckPercent}></Clock>
             <div id='sky-container'>
                 <Sun time={clock.time}></Sun>
                 <Moon time={clock.time} dayNumber={clock.dayNumber}></Moon>
