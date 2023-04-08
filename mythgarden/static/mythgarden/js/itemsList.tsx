@@ -1,13 +1,13 @@
 import React from 'react'
 import List from "./list";
-import {Villager, type VillagerData} from "./villager";
 import {ActionPillProps} from "./action";
 import Item, {ItemData} from "./item";
 import EmptyItem from "./emptyItem";
+import DraggableGift from "./draggableGift";
 
 const MAX_ITEMS = 6
 
-function ItemsList ({ items, id, baseColor, actionDictionary }: ItemsListProps): JSX.Element {
+function ItemsList ({ items, id, baseColor, actionDictionary, giftable }: ItemsListProps): JSX.Element {
   const paddedItems = items.concat(Array(MAX_ITEMS - items.length).fill(null))
 
   return (
@@ -15,14 +15,28 @@ function ItemsList ({ items, id, baseColor, actionDictionary }: ItemsListProps):
         {paddedItems.map((item, n) => {
           if (item == null) {
             return (
-              EmptyItem({ slotNumber: n })
+              <EmptyItem key={`empty-slot-${n}`}></EmptyItem>
             )
           }
 
           const actionPill = actionDictionary[`item-${item.id}`]
-          return (
-            Item({...item, actionPill})
-          )
+
+          if (giftable) {
+            const giftActionPill = actionDictionary[`gift-${item.id}`]
+            const { name, emoji, id, rarity } = item;
+            return (
+              <DraggableGift giftData={{ name, emoji, id, rarity }}
+                             giftActionPill={giftActionPill}
+                            key={`${id}-draggable`}
+              >
+                <Item {...{...item, actionPill}}></Item>
+              </DraggableGift>
+            )
+          } else {
+            return (
+              <Item {...{...item, actionPill}} key={item.id}></Item>
+            )
+          }
         })}
       </List>
   )
@@ -33,6 +47,7 @@ interface ItemsListProps {
   id: string
   baseColor: string
   actionDictionary: Record<string, ActionPillProps>
+  giftable: boolean
 }
 
 export { ItemsList }

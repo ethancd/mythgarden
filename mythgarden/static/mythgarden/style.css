@@ -323,72 +323,75 @@ ul {
   height: 80%;
   justify-content: space-between;
   width: 100%; }
-  #inventory .item {
-    cursor: pointer;
-    display: flex;
-    flex-direction: row;
-    border: 0.2rem solid #c68e1e;
-    border-radius: 0.2rem;
-    flex-grow: 1;
-    word-wrap: break-word;
-    max-width: 100%;
-    align-items: flex-start;
-    gap: 0.5rem;
-    position: relative;
-    z-index: 10; }
-    #inventory .item:hover {
-      filter: brightness(90%); }
-    #inventory .item:active {
-      filter: brightness(50%); }
-    #inventory .item.empty-slot {
-      cursor: default;
-      opacity: 0.5; }
-      #inventory .item.empty-slot:hover, #inventory .item.empty-slot:active {
-        filter: none; }
-    #inventory .item.common {
-      background-color: rgba(225, 168, 54, 0.5); }
-    #inventory .item.uncommon {
-      border-color: limegreen;
-      background-color: rgba(50, 205, 50, 0.5); }
-      #inventory .item.uncommon .type:after {
-        content: '*';
-        color: #1e7b1e; }
-    #inventory .item.rare {
-      border-color: dodgerblue;
-      background-color: rgba(30, 144, 255, 0.5);
-      box-shadow: 0 0 0.1rem 0 dodgerblue; }
-      #inventory .item.rare .type:after {
-        content: '**';
-        color: #005db7; }
-    #inventory .item.epic {
-      border-color: rebeccapurple;
-      background-color: rgba(102, 51, 153, 0.5);
-      box-shadow: 0 0 0.25rem 0 rebeccapurple; }
-      #inventory .item.epic .type:after {
-        content: '***';
-        color: rebeccapurple; }
-    #inventory .item .type {
+  #inventory .draggable-gift {
+    flex-grow: 1; }
+
+#inventory .item, #inventory + .item {
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  border: 0.2rem solid #c68e1e;
+  border-radius: 0.2rem;
+  flex-grow: 1;
+  word-wrap: break-word;
+  max-width: 100%;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  z-index: 10; }
+  #inventory .item:hover, #inventory + .item:hover {
+    filter: brightness(90%); }
+  #inventory .item:active, #inventory + .item:active {
+    filter: brightness(50%); }
+  #inventory .item.empty-slot, #inventory + .item.empty-slot {
+    cursor: default;
+    opacity: 0.5; }
+    #inventory .item.empty-slot:hover, #inventory .item.empty-slot:active, #inventory + .item.empty-slot:hover, #inventory + .item.empty-slot:active {
+      filter: none; }
+  #inventory .item.common, #inventory + .item.common {
+    background-color: rgba(225, 168, 54, 0.5); }
+  #inventory .item.uncommon, #inventory + .item.uncommon {
+    border-color: limegreen;
+    background-color: rgba(50, 205, 50, 0.5); }
+    #inventory .item.uncommon .type:after, #inventory + .item.uncommon .type:after {
+      content: '*';
+      color: #1e7b1e; }
+  #inventory .item.rare, #inventory + .item.rare {
+    border-color: dodgerblue;
+    background-color: rgba(30, 144, 255, 0.5);
+    box-shadow: 0 0 0.1rem 0 dodgerblue; }
+    #inventory .item.rare .type:after, #inventory + .item.rare .type:after {
+      content: '**';
+      color: #005db7; }
+  #inventory .item.epic, #inventory + .item.epic {
+    border-color: rebeccapurple;
+    background-color: rgba(102, 51, 153, 0.5);
+    box-shadow: 0 0 0.25rem 0 rebeccapurple; }
+    #inventory .item.epic .type:after, #inventory + .item.epic .type:after {
+      content: '***';
+      color: rebeccapurple; }
+  #inventory .item .type, #inventory + .item .type {
+    font-size: 2rem;
+    position: relative; }
+    @media only screen and (max-width: 900px) {
+      #inventory .item .type, #inventory + .item .type {
+        font-size: 1.5rem; } }
+    #inventory .item .type:after, #inventory + .item .type:after {
+      content: '';
+      position: absolute;
       font-size: 2rem;
-      position: relative; }
+      bottom: calc(0% - 2rem);
+      left: 0; }
       @media only screen and (max-width: 900px) {
-        #inventory .item .type {
+        #inventory .item .type:after, #inventory + .item .type:after {
           font-size: 1.5rem; } }
-      #inventory .item .type:after {
-        content: '';
-        position: absolute;
-        font-size: 2rem;
-        bottom: calc(0% - 2rem);
-        left: 0; }
-        @media only screen and (max-width: 900px) {
-          #inventory .item .type:after {
-            font-size: 1.5rem; } }
-    #inventory .item .name {
-      font-size: 1.5rem;
-      display: inline-block;
-      max-width: 80%; }
-      @media only screen and (max-width: 900px) {
-        #inventory .item .name {
-          font-size: 1rem; } }
+  #inventory .item .name, #inventory + .item .name {
+    font-size: 1.5rem;
+    display: inline-block;
+    max-width: 80%; }
+    @media only screen and (max-width: 900px) {
+      #inventory .item .name, #inventory + .item .name {
+        font-size: 1rem; } }
 
 #wallet {
   background-color: #85bb65;
@@ -739,6 +742,8 @@ ul {
         background-color: #00000044;
         box-shadow: 0 0 0.5rem 0 #ccac00;
         border-color: #ccac00; }
+    #villagers .villager.no-hover-filter:hover {
+      filter: none; }
     #villagers .villager .portrait {
       border: 2px solid #ff9ead;
       width: calc(100% - (2 * (1rem * 1.2)));

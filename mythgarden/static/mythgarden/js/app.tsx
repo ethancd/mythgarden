@@ -1,4 +1,7 @@
 import React, {SyntheticEvent} from 'react'
+import { TouchBackend } from 'react-dnd-touch-backend'
+import { DndProvider } from 'react-dnd'
+
 import {type ActionData, ActionPillProps} from './action'
 import {Building, type BuildingData} from './building'
 import { Clock, type ClockData } from './clock'
@@ -23,6 +26,7 @@ import {ItemsList} from "./itemsList";
 import {BuildingsList} from "./buildingsList";
 import {ArrowsList} from "./arrowsList";
 import {ActivitiesList} from "./activitiesList";
+import {GiftPreview} from "./draggableGift";
 
 const TALK_ACTION = 'TALK'
 const TRAVEL_ACTION = 'TRAVEL'
@@ -71,17 +75,37 @@ class App extends React.Component<Partial<AppProps>, AppState> {
     messageContainer.scrollTop = messageContainer.scrollHeight
   }
 
-  marshalActionDictionary (actions: ActionData[]): Record<string, ActionPillProps> {
-    const actionDictionary = {} as Record<string, ActionPillProps>
+  marshalActionDictionary (actions: ActionData[]): ActionRecord {
+    const actionDictionary = {} as ActionRecord
 
     actions.forEach(action => {
       const hasEntity = action.entityType != null && action.entityId != null
-      const key = hasEntity ? `${action.entityType}-${action.entityId}` : 'no-entity'
+      const isGiftAction = action.giftReceiverId != null
+
+      const key = hasEntity
+        ? isGiftAction
+          ? `gift-${action.entityId}`
+          : `${action.entityType}-${action.entityId}`
+        : 'no-entity'
+
       const {emoji, costAmount, costType, waitClass} = action
+
       actionDictionary[key] = {emoji, costAmount, costType, waitClass}
     })
 
     return actionDictionary;
+  }
+
+  marshalGiftReceiverIds (actions: ActionData[]): Set<number> {
+    const giftReceiverIds = new Set<number>()
+
+    actions.forEach(action => {
+      if (action.giftReceiverId != null) {
+        giftReceiverIds.add(action.giftReceiverId)
+      }
+    })
+
+    return giftReceiverIds
   }
 
   getComponentTarget(e: React.SyntheticEvent) {
@@ -214,9 +238,13 @@ class App extends React.Component<Partial<AppProps>, AppState> {
     const filterFn = filterFuncFactory(colorFilter)
 
     const actionDictionary = this.marshalActionDictionary(actions)
+    const giftReceiverIds = this.marshalGiftReceiverIds(actions)
+
+    console.log(giftReceiverIds)
 
     return (
       <FilterizeColorContext.Provider value={ filterFn }>
+        <DndProvider backend={TouchBackend} options={{enableMouseEvents: true}}>
         <Section id="page" baseColor={colors.whiteYellow} handleClick={this.handleClick.bind(this)}>
 
           <Section id="top-bar" baseColor={colors.skyBlue}>
@@ -237,8 +265,9 @@ class App extends React.Component<Partial<AppProps>, AppState> {
                 baseColor={colors.yellowLeather}
                 items={inventory}
                 actionDictionary={actionDictionary}
+                giftable={true}
               ></ItemsList>
-
+              <GiftPreview></GiftPreview>
               <Wallet value={wallet}></Wallet>
             </section>
 
@@ -264,6 +293,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
                   baseColor={colors.sandyBrown}
                   items={localItemTokens}
                   actionDictionary={actionDictionary}
+                  giftable={false}
                 ></ItemsList>
                 : null
               }
@@ -279,13 +309,17 @@ class App extends React.Component<Partial<AppProps>, AppState> {
 
             <VillagersList villagers={villagerStates}
                            actionDictionary={actionDictionary}
+                           giftReceiverIds={giftReceiverIds}
             ></VillagersList>
           </div>
         </Section>
+        </DndProvider>
       </FilterizeColorContext.Provider>
     )
   }
 }
+
+type ActionRecord = Record<string, ActionPillProps>
 
 interface AppProps {
   actions: ActionData[]

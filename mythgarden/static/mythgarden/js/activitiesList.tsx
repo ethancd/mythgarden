@@ -10,7 +10,7 @@ function ActivitiesList ({ activities, actionDictionary }: ActivityListProps): J
           : actionDictionary['no-entity']
 
         return (
-          Activity({...activity, actionPill})
+          <Activity {...{...activity, actionPill}} key={`${activity.actionType}-${activity.id}`}></Activity>
         )
       })}
     </ul>

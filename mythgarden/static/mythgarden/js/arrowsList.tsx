@@ -7,7 +7,7 @@ function ArrowsList ({ arrows, actionDictionary }: ArrowsListProps): JSX.Element
         {arrows.map(arrow => {
           const actionPill = actionDictionary[`place-${arrow.id}`]
           return (
-            Arrow({...arrow, actionPill})
+            <Arrow {...{...arrow, actionPill}} key={arrow.id}></Arrow>
           )
         })}
       </ul>
@@ -18,7 +18,6 @@ function Arrow({id, direction, actionPill }: ArrowProps): JSX.Element {
   return (
       <li
       className={`arrow ${direction.toLowerCase()}`}
-      key={id}
       data-entity-id={id}>
         <div
           className='inner-triangle'

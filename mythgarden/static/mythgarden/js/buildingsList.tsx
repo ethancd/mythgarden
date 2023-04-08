@@ -10,7 +10,7 @@ function BuildingsList ({ buildings, actionDictionary }: BuildingsListProps): JS
         {buildings.map(building => {
           const actionPill = actionDictionary[`place-${building.id}`]
           return (
-            Building({...building, actionPill})
+            <Building {...{...building, actionPill}} key={building.id}></Building>
           )
         })}
       </List>

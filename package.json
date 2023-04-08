@@ -8,6 +8,10 @@
     "eslint-webpack-plugin": "^4.0.0",
     "mocha": "^10.2.0",
     "react": "^18.2.0",
+    "react-dnd": "^16.0.1",
+    "react-dnd-html5-backend": "^16.0.1",
+    "react-dnd-preview": "^8.0.0",
+    "react-dnd-touch-backend": "^16.0.1",
     "react-dom": "^18.2.0",
     "styled-components": "^5.3.8",
     "tsc": "^2.0.4"

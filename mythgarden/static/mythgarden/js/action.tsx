@@ -44,8 +44,8 @@ interface ActionData {
   emoji: string
   entityType: EntityType|null
   entityId: number|null
+  giftReceiverId?: number
   uniqueDigest: string
-  targetCount: number
 }
 
 type ActionPillProps = Pick<ActionData, 'costAmount'|'costType'|'emoji'|'waitClass'>

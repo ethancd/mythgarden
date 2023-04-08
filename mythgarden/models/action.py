@@ -144,8 +144,8 @@ class Action(models.Model):
             'emoji': self.emoji,
             'entityType': self.entity_type,
             'entityId': self.entity_id,
+            'giftReceiverId': self.gift_receiver_id,
             'uniqueDigest': self.unique_digest,
-            'targetCount': self.target_count
         }
 
     @property
@@ -223,6 +223,13 @@ class Action(models.Model):
         if len(entity_types) > 1:
             # again, gift action. TBD what to do here, maybe a bespoke entity type, hmm
             return GIFT_ENTITY
+
+    @property
+    def gift_receiver_id(self):
+        if self.action_type != Action.GIVE:
+            return
+        else:
+            return self.target_villager.pk
 
     @property
     def cost_type(self):

@@ -4,12 +4,16 @@ import colors from "./_colors";
 import {Villager, type VillagerData} from "./villager";
 import {ActionPillProps} from "./action";
 
-function VillagersList ({ villagers, actionDictionary }: VillagersListProps): JSX.Element {
+function VillagersList ({ villagers, actionDictionary, giftReceiverIds}: VillagersListProps): JSX.Element {
   return (
       <List id='villagers' baseColor={colors.dustyPink}>
         {villagers?.map(villager => {
           const actionPill = actionDictionary[`villager-${villager.id}`]
-          return Villager({ ...villager, actionPill })
+          const isGiftReceiver = giftReceiverIds.has(villager.id)
+
+          return (
+            <Villager {...{...villager, actionPill, isGiftReceiver}} key={villager.id}></Villager>
+          )
         })}
       </List>
   )
@@ -18,6 +22,7 @@ function VillagersList ({ villagers, actionDictionary }: VillagersListProps): JS
 interface VillagersListProps {
   villagers: VillagerData[]
   actionDictionary: Record<string, ActionPillProps>
+  giftReceiverIds: Set<number>
 }
 
 export { VillagersList }

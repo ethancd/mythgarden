@@ -552,7 +552,12 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
   justify-content: space-between;
   width: 100%;
 
-  .item {
+  .draggable-gift {
+    flex-grow: 1;
+  }
+}
+
+#inventory .item, #inventory + .item {
     @include clickable;
     @include row;
     border: $pen-thinnish solid darken($yellow-leather, 10%);
@@ -561,7 +566,7 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
     flex-grow: 1;
     word-wrap: break-word;
     max-width: 100%;
-    align-items: flex-start;
+    align-items: center;
     gap: $small-gutter;
     position: relative;
     z-index: 10;
@@ -638,7 +643,7 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
       }
     }
   }
-}
+
 
 #wallet {
   background-color: $dollar-bill-green;
@@ -1097,6 +1102,12 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
         background-color: #00000044;
         box-shadow: 0 0 $fine-shadow-distance 0 darken(gold, 10%);
         border-color: darken(gold, 10%);
+      }
+    }
+
+    &.no-hover-filter {
+      &:hover {
+        filter: none;
       }
     }
 
