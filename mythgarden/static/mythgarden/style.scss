@@ -20,6 +20,7 @@ $invisible: #ffffff00;
 $aqua: #05d0eb;
 $maple: #edc078;
 $candle-light: #e09d37;
+$burnished-gold: #e6c200;
 
 $dark-text: #333;
 $light-text: #eee;
@@ -213,6 +214,7 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
 @mixin clickable-drop-shadow($drop-shadow-expression) {
   cursor: pointer;
   @include filter-brightness-plus-drop-shadow(100%, $drop-shadow-expression);
+  backdrop-filter: blur(0); // fix safari drop shadow rendering by recruiting gpu
 
   &:hover {
     @include filter-brightness-plus-drop-shadow($hovered-brightness, $drop-shadow-expression);
@@ -286,10 +288,8 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
   &.dark-mode {
     color: $light-text;
 
-    #actions {
-      .action {
-        border-color: $off-white-gray;
-      }
+    #wallet {
+      color: $burnished-gold;
     }
 
     #location {
@@ -698,11 +698,15 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
 
 
 #wallet {
-  background-color: $dollar-bill-green;
+  @include column;
+  background-color: #624a2e;
   font-size: $large-text;
   text-align: center;
   overflow: hidden;
   height: 20%;
+  border: $pen-thinnish dashed $dollar-bill-green;
+  color: gold;
+  justify-content: center;
 
   @media only screen and (max-width: 900px) {
     font-size: $med-large-text;

@@ -10,6 +10,7 @@ const whiteYellow = '#fff5e5'
 const blueMoonGray = '#90c0df'
 const whiteWindowPane = '#888888'
 const defaultGray = '#999';
+const walletLeather = '#624A2E';
 
 const fuschia = '#b827fc';
 const electricBlue = '#2c90fc';
@@ -30,6 +31,7 @@ export default {
   blueMoonGray,
   whiteWindowPane,
   defaultGray,
+  walletLeather,
   fuschia,
   electricBlue,
   brightGreen,

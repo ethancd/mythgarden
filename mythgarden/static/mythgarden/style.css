@@ -62,8 +62,8 @@ ul {
   overflow: hidden; }
   #page.dark-mode {
     color: #eee; }
-    #page.dark-mode #actions .action {
-      border-color: #ddd; }
+    #page.dark-mode #wallet {
+      color: #e6c200; }
     #page.dark-mode #location .darkness-filter {
       opacity: 0.8; }
     @media only screen and (max-width: 900px) {
@@ -72,7 +72,8 @@ ul {
         background-color: #333; } }
     #page.dark-mode #location .building, #page.dark-mode #location .arrow, #page.dark-mode #location .local-activity img {
       cursor: pointer;
-      filter: brightness(100%) drop-shadow(0 0 0.5rem #fff); }
+      filter: brightness(100%) drop-shadow(0 0 0.5rem #fff);
+      backdrop-filter: blur(0); }
       #page.dark-mode #location .building:hover, #page.dark-mode #location .arrow:hover, #page.dark-mode #location .local-activity img:hover {
         filter: brightness(90%) drop-shadow(0 0 0.5rem #fff); }
       #page.dark-mode #location .building:active, #page.dark-mode #location .arrow:active, #page.dark-mode #location .local-activity img:active {
@@ -421,11 +422,16 @@ ul {
   border-radius: 0; }
 
 #wallet {
-  background-color: #85bb65;
+  display: flex;
+  flex-direction: column;
+  background-color: #624a2e;
   font-size: 4rem;
   text-align: center;
   overflow: hidden;
-  height: 20%; }
+  height: 20%;
+  border: 0.2rem dashed #85bb65;
+  color: gold;
+  justify-content: center; }
   @media only screen and (max-width: 900px) {
     #wallet {
       font-size: 3rem; } }
@@ -489,6 +495,7 @@ ul {
 #directions .arrow {
   cursor: pointer;
   filter: brightness(100%) drop-shadow(0.5rem 0.5rem 0.25rem #000);
+  backdrop-filter: blur(0);
   position: absolute;
   z-index: 2;
   font-size: 2rem;
@@ -579,6 +586,7 @@ ul {
   #activities .local-activity img {
     cursor: pointer;
     filter: brightness(100%) drop-shadow(0.5rem 0.5rem 0.25rem #000);
+    backdrop-filter: blur(0);
     display: block;
     width: auto;
     height: 100%;
@@ -591,6 +599,7 @@ ul {
 #buildings .building {
   cursor: pointer;
   filter: brightness(100%) drop-shadow(0.5rem 0.5rem 0.25rem #000);
+  backdrop-filter: blur(0);
   display: flex;
   flex-direction: column;
   position: absolute;

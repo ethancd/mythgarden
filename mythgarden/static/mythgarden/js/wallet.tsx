@@ -6,10 +6,13 @@ import {FilterizeColorContext} from "./lightColorLogic";
 
 export default function Wallet ({ value }: WalletProps): JSX.Element {
   const filterizeColor = useContext(FilterizeColorContext)
-  const backgroundColor = filterizeColor(colors.dollarBillGreen)
+  const backgroundColor = filterizeColor(colors.walletLeather)
 
   return (
-        <div id="wallet" style={{ backgroundColor }}>{value}</div>
+        <div id="wallet" style={{
+          backgroundColor,
+          backgroundImage: `url("/static/mythgarden/images/leather-texture.png")`
+        }}><span>{value}</span></div>
   )
 }
 
