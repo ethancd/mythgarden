@@ -279,10 +279,9 @@ ul {
       font-size: 1rem; } }
 
 #luck-percent {
-  font-weight: bold;
   font-size: 1.5rem;
   text-align: right;
-  text-shadow: 1px 1px 2px #888; }
+  font-family: "Lobster Two", "Times New Roman", serif; }
   @media only screen and (max-width: 900px) {
     #luck-percent {
       font-size: 1.25rem; } }

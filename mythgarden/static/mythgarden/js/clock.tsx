@@ -19,8 +19,6 @@ export default function Clock ({ display, time, boostLevel, luckPercent }: Clock
 
   const lateness = getLateness(time)
 
-  const luckText = `+${luckPercent} luck`
-
   return (
       <div id="clock">
         <div className={lateness}>{display}</div>
@@ -28,7 +26,7 @@ export default function Clock ({ display, time, boostLevel, luckPercent }: Clock
           ? <div id="boost">lvl.{boostLevel}</div>
           : null }
         { luckPercent != ''
-          ? <div id='luck-percent'><RainbowText text={luckText} shading={0}></RainbowText></div>
+          ? <div id='luck-percent'>{`+${luckPercent}`} <RainbowText text={'luck'} shading={0.35}></RainbowText></div>
           : null
         }
       </div>
