@@ -1091,8 +1091,8 @@ class EventOperator:
             middle = f"That's a new high score! Feeling your movements quicken slightly with the shifting of time,"
 
         else:
-            middle = f"That doesn't beat your high score – but something on the breeze tells you " \
-                       "your luck is about to change. Feeling that the winds of chance are in your favor,"
+            middle = f"That doesn't beat your high score – but a whisper on the breeze tells you "\
+                    "your luck is about to change. Feeling lucky,"
 
         end = "you enter the time loop to begin the week again."
 
