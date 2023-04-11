@@ -39,7 +39,10 @@ def load_session_with_related_data(session_key):
     # grabbing 200 events is too heavy of a query, should only have to grab the ones we're actually triggering
     # session_data_queryset = session_data_queryset.prefetch_related('scheduled_event_states__event')
 
-    return session_data_queryset.get(pk=session_key)
+    session = session_data_queryset.get(pk=session_key)
+    session.fresh = {}  # reset this every call
+
+    return session
 
 
 def get_home_models(session):

@@ -658,7 +658,6 @@ class ActionExecutor:
         session.fresh['local_item_tokens'] = True
         session.fresh['messages'] = True
         session.fresh['clock'] = True
-        session.save()
 
         session.clock.advance(action.cost_amount)
         session.clock.save()
