@@ -13,13 +13,28 @@ class Session(models.Model):
     key = models.CharField(max_length=32, primary_key=True, default=generate_uuid)
     location = models.ForeignKey(Place, on_delete=models.CASCADE, null=True, default=Place.get_default_pk)
     hero = models.ForeignKey('Hero', on_delete=models.CASCADE, related_name='current_session', null=True, default=Hero.get_default_pk)
+    current_dialogue = models.ForeignKey('DialogueLine', on_delete=models.SET_NULL, null=True)
 
     is_first_session = models.BooleanField(default=False)
     skip_post_save_signal = models.BooleanField(default=False)
     initial_message_text = models.CharField(max_length=255, default=WELCOME_MESSAGE)
     game_over = models.BooleanField(default=False)
 
-    fresh = models.JSONField(default=dict)
+    fresh = models.JSONField(default=dict, blank=True)
+
+    def mark_fresh(self, *args):
+        for arg in args:
+            self.fresh[arg] = True
+
+    def is_fresh(self, key):
+        print(self.fresh)
+        return self.fresh.get(key)
+
+    def clear_fresh(self):
+        self.fresh = {}
+
+    def get_fresh_keys(self):
+        return [key for key, value in self.fresh.items() if value]
 
     @property
     def location_state(self):

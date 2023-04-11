@@ -11,6 +11,10 @@ class Clock(models.Model):
     time = models.IntegerField(default=DAWN, validators=[MinValueValidator(0), MaxValueValidator(MINUTES_IN_A_DAY - 1)])
     is_new_day = models.BooleanField(default=False)
 
+    # last_triggered_day_number = models.IntegerField(null=True, validators=[MinValueValidator(0), MaxValueValidator(6)])
+    last_triggered_day = models.CharField(default=FIRST_DAY, max_length=9, choices=DAYS_OF_WEEK)
+    last_triggered_time = models.IntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(MINUTES_IN_A_DAY - 1)])
+
     def __str__(self):
         return 'Clock ' + self.session.abbr_key_tag()
 
@@ -50,21 +54,19 @@ class Clock(models.Model):
             self.time = self.time % MINUTES_IN_A_DAY
             self.advance_day(days_to_add)
 
+        return self  # for chaining
+
     def advance_day(self, days_to_add):
         """ Advances the day by the given number of days, rolling over at the end of the week. """
         new_day_index = (self.day_index + days_to_add) % 7
         self.day = DAYS_OF_WEEK[new_day_index][0]
         self.is_new_day = True
 
-    def is_now(self, day, time):
-        return self.day == day and self.time == time
+    def mark_last_triggered_point_as_now(self):
+        self.last_triggered_day = self.day
+        self.last_triggered_time = self.time
 
-    def is_in_past(self, day, time):
-        is_past_day = DAY_TO_INDEX[self.day] > DAY_TO_INDEX[day]
-        return is_past_day or (self.day == day and self.time > time)
-
-    def is_now_or_in_past(self, day, time):
-        return self.is_now(day, time) or self.is_in_past(day, time)
+        return self  # for chaining
 
     @property
     def minutes_to_midnight(self):

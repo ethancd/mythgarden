@@ -28,15 +28,6 @@ def local_items_changed(sender, instance, action, **kwargs):
         raise ValidationError(f'{instance.place.name} cannot hold more than {MAX_ITEMS} items.')
 
 
-@receiver(post_save, sender=Clock)
-def time_has_passed(sender, instance, created, **kwargs):
-    if created:
-        return
-
-    with transaction.atomic():
-        EventOperator().react_to_time_passing(instance, instance.session)
-
-
 @receiver(post_save, sender=Session)
 def create_session_state(sender, instance, created, **kwargs):
     if created and not instance.skip_post_save_signal:

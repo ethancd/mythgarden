@@ -6,6 +6,22 @@ from .game_logic import ActionGenerator, can_afford_action
 from .models import Session, FarmerPortrait
 
 
+MODEL_LAMBDAS = {
+    'actions': lambda session: ActionGenerator().get_actions_for_session(session),
+    'buildings': lambda session: session.location.buildings.all(),
+    'clock': lambda session: session.clock,
+    'dialogue': lambda session: session.current_dialogue,
+    'localItemTokens': lambda session: session.local_item_tokens.all(),
+    'hero': lambda session: session.hero_state,
+    'inventory': lambda session: session.inventory.item_tokens.all(),
+    'messages': lambda session: session.messages.all(),
+    'place': lambda session: session.location,
+    'portraitUrls': lambda session: FarmerPortrait.get_gallery_portrait_urls(),
+    'speaker': lambda session: session.get_villager_state(session.current_dialogue.speaker),
+    'villagerStates': lambda session: session.occupant_states.all(),
+    'wallet': lambda session: session.wallet,
+}
+
 def retrieve_session(request):
     """Loads a session from the database or creates a new one if one does not exist.
     Also saves the session key to the request session."""
@@ -40,29 +56,43 @@ def load_session_with_related_data(session_key):
     # session_data_queryset = session_data_queryset.prefetch_related('scheduled_event_states__event')
 
     session = session_data_queryset.get(pk=session_key)
-    session.fresh = {}  # reset this every call
+    session.clear_fresh()  # reset this every call
 
     return session
 
 
 def get_home_models(session):
     """Returns a dictionary of models that are needed to render the home page."""
-    actions = ActionGenerator().get_actions_for_session(session)
-    portrait_urls = FarmerPortrait.get_gallery_portrait_urls()
 
-    return {
-        'actions': actions,
-        'portraitUrls': portrait_urls,
-        'hero': session.hero_state,
-        'clock': session.clock,
-        'wallet': session.wallet,
-        'messages': session.messages.all(),
-        'place': session.location,
-        'inventory': session.inventory.item_tokens.all(),
-        'buildings': session.location.buildings.all(),
-        'localItemTokens': session.local_item_tokens.all(),
-        'villagerStates': session.occupant_states.all(),
-    }
+    home_model_keys = [
+        'actions',
+        'portraitUrls',
+        'hero',
+        'clock',
+        'wallet',
+        'messages',
+        'place',
+        'inventory',
+        'buildings',
+        'localItemTokens',
+        'villagerStates',
+    ]
+
+    return get_models(home_model_keys, session)
+
+
+def get_fresh_models(session):
+    """Returns a dictionary of models that have been updated on this call."""
+
+    return get_models(session.get_fresh_keys(), session)
+
+
+def get_models(model_keys, session):
+    models = {}
+    for key in model_keys:
+        models[key] = MODEL_LAMBDAS[key](session)
+
+    return models
 
 
 def get_requested_action(request, session):

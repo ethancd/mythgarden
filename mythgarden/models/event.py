@@ -47,8 +47,22 @@ class VillagerAppearsEvent(ScheduledEvent):
 
         return super().save(*args, **kwargs)
 
+    @property
+    def day_display(self):
+        if self.is_daily:
+            return "daily"
+        else:
+            return f"on {self.day}"
+
+    @property
+    def place_display(self):
+        if self.place:
+            return f'appears in {self.place.name}'
+        else:
+            return 'disappears'
+
     def __str__(self):
-        return f'Event: {self.villager} appears in {self.place} at {self.time} on {self.day}'
+        return f'Event: {self.villager.name} {self.place_display} at {self.time / 60} {self.day_display}'
 
 
 class ScheduledEventState(models.Model):

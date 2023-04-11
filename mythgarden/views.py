@@ -9,7 +9,7 @@ from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.views.decorators.csrf import ensure_csrf_cookie
 
-from .view_helpers import retrieve_session, get_home_models, get_requested_action, get_serialized_messages, \
+from .view_helpers import retrieve_session, get_home_models, get_fresh_models, get_requested_action, get_serialized_messages, \
     validate_action, custom_serialize, set_user_data, load_session_with_related_data
 from .game_logic import ActionGenerator, ActionExecutor, EventOperator
 from .models import Session
@@ -42,8 +42,7 @@ def action(request):
         requested_action = get_requested_action(request, session)
         validate_action(session, requested_action)
         with transaction.atomic():
-            updated_models = ActionExecutor().execute(requested_action, session)
-            updated_models['actions'] = ActionGenerator().get_actions_for_session(session)
+            ActionExecutor().execute(requested_action, session)
     except (ValidationError, IntegrityError) as e:
         session.messages.create(text=e.message, is_error=True)
         return JsonResponse({'error': e.message, 'messages': get_serialized_messages(session)})
@@ -53,6 +52,8 @@ def action(request):
             EventOperator().trigger_game_over(session)
         return JsonResponse({'gameOver': True})
     else:
+        session.mark_fresh('actions')
+        updated_models = get_fresh_models(session)
         results = {model_name: custom_serialize(data) for model_name, data in updated_models.items()}
         return JsonResponse(results)
 
