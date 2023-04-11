@@ -19,6 +19,8 @@ class Session(models.Model):
     initial_message_text = models.CharField(max_length=255, default=WELCOME_MESSAGE)
     game_over = models.BooleanField(default=False)
 
+    fresh = models.JSONField(default=dict)
+
     @property
     def location_state(self):
         # session.place_states.place is prefetched

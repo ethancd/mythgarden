@@ -655,6 +655,11 @@ class ActionExecutor:
         log_statement = self.__add_emoji(action, action.log_statement)
         session.messages.create(text=log_statement)
 
+        session.fresh['local_item_tokens'] = True
+        session.fresh['messages'] = True
+        session.fresh['clock'] = True
+        session.save()
+
         session.clock.advance(action.cost_amount)
         session.clock.save()
 
@@ -1006,7 +1011,10 @@ class EventOperator:
     def reset_for_new_day(self, session):
         self.reset_villager_states(session.villager_states.all())
         self.reset_daily_events(session.event_states.all())
-        self.grow_crops(session.place_states.all())
+
+        if session.fresh.get('local_item_tokens', None):
+            refresh_farm_items = True
+        self.grow_crops(session.place_states.all(), refresh_farm_items)
 
     def reset_villager_states(self, villager_states):
         villager_states.update(has_been_talked_to=False, has_been_given_gift=False)
@@ -1014,11 +1022,14 @@ class EventOperator:
     def reset_daily_events(self, event_states):
         event_states.filter(event__is_daily=True).update(has_occurred=False)
 
-    def grow_crops(self, place_states):
+    def grow_crops(self, place_states, refresh_farm_items):
         """Find all seeds/sprouts in the farm and "grow" them if they've been watered –
         ie replace them with a new item token at the next growth stage."""
 
         farm_state = next((state for state in place_states if state.place.place_type == FARM))
+        if refresh_farm_items:
+            farm_state.refresh_from_db()
+
         item_tokens = farm_state.item_tokens.all()
         new_contents = []
 
