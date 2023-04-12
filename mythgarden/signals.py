@@ -34,4 +34,5 @@ def create_session_state(sender, instance, created, **kwargs):
         Wallet.objects.create(session=instance)
         Message.objects.create(session=instance, text=instance.initial_message_text)
 
-        instance.populate_place_states_and_villager_states()
+        place_state_objects = instance.populate_place_states()
+        instance.populate_villager_states(place_state_objects)
