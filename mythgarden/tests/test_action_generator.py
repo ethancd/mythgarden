@@ -72,6 +72,15 @@ def create_session(skip_post_save_signal=True):
     return Session.objects.create(skip_post_save_signal=skip_post_save_signal)
 
 
+def create_basic_action(cost_amount=60):
+    return Action(
+        description=f'Talk to someone',
+        action_type=Action.TALK,
+        cost_amount=cost_amount,
+        cost_unit=Action.MIN,
+        log_statement=f'You talked to someone.',
+    )
+
 class GenAvailableActionsTests(TestCase):
     def setUp(self) -> None:
         self.ag = ActionGenerator()
@@ -1568,3 +1577,86 @@ class GenSleepActionTests(TestCase):
         action = self.ag.gen_sleep_action(self.clock)
 
         self.assertEqual(action.cost_unit, Action.MIN)
+
+
+class ApplySpeedBoostTests(TestCase):
+    def setUp(self):
+        self.ag = ActionGenerator()
+        self.make_actions = lambda: [
+            create_basic_action(90),
+            create_basic_action(60),
+            create_basic_action(30),
+            create_basic_action(5),
+        ]
+
+        self.expected_rows = {
+            0: [90, 60, 30, 5],
+            1: [87, 58, 29, 4],
+            2: [84, 56, 28, 4],
+            3: [81, 54, 27, 4],
+            4: [78, 52, 26, 4],
+            5: [75, 50, 25, 4],
+            6: [72, 48, 24, 4],
+            7: [69, 46, 23, 3],
+            8: [66, 44, 22, 3],
+            9: [63, 42, 21, 3],
+            10: [60, 40, 20, 3],
+            11: [57, 38, 19, 3],
+            12: [54, 36, 18, 3],
+            13: [51, 34, 17, 2],
+            14: [48, 32, 16, 2],
+            15: [45, 30, 15, 2],
+            16: [42, 28, 14, 2],
+            17: [39, 26, 13, 2],
+            18: [36, 24, 12, 2],
+            19: [33, 22, 11, 1],
+            20: [30, 20, 10, 1],
+            21: [27, 18, 9, 1],
+            22: [24, 16, 8, 1],
+            23: [21, 14, 7, 1],
+            24: [18, 12, 6, 1],
+            25: [15, 10, 5, 0],
+            26: [15, 10, 5, 0],
+            27: [15, 10, 5, 0],
+            28: [15, 10, 5, 0],
+            29: [15, 10, 5, 0],
+            30: [15, 10, 5, 0],
+        }
+
+    def test_gives_correct_boost_at_level_0(self):
+        actions = self.ag.apply_speed_boost(self.make_actions(), 0)
+
+        cost_amounts = [action.cost_amount for action in actions]
+
+        self.assertEqual(cost_amounts, self.expected_rows[0])
+
+    def test_gives_correct_boost_at_level_1(self):
+        actions = self.ag.apply_speed_boost(self.make_actions(), 1)
+
+        cost_amounts = [action.cost_amount for action in actions]
+
+        self.assertEqual(cost_amounts, self.expected_rows[1])
+
+    def test_gives_correct_boost_at_level_25(self):
+        actions = self.ag.apply_speed_boost(self.make_actions(), 25)
+
+        cost_amounts = [action.cost_amount for action in actions]
+
+        self.assertEqual(cost_amounts, self.expected_rows[25])
+
+    def test_gives_correct_boost_at_level_30(self):
+        actions = self.ag.apply_speed_boost(self.make_actions(), 30)
+
+        cost_amounts = [action.cost_amount for action in actions]
+
+        self.assertEqual(cost_amounts, self.expected_rows[30])
+
+    def test_gives_correct_boost_at_all_levels(self):
+        for boost_level in range(30):
+            with self.subTest(boost_level=boost_level):
+                print(boost_level)
+                actions = self.ag.apply_speed_boost(self.make_actions(), boost_level)
+
+                cost_amounts = [action.cost_amount for action in actions]
+
+                self.assertEqual(cost_amounts, self.expected_rows[boost_level])

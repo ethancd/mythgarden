@@ -1,6 +1,7 @@
 import random
 import math
 import json
+from fractions import Fraction
 
 from .models import Bridge, Action, Place, Building, Session, VillagerState, Item, ItemToken, \
     DialogueLine, ScheduledEvent, PlaceState, MerchSlot
@@ -8,7 +9,7 @@ from .models._constants import SEED, SPROUT, CROP, COMMON, UNCOMMON, RARE, EPIC,
     WILD_TYPES, FOREST, MOUNTAIN, BEACH, LOVE, LIKE, NEUTRAL, DISLIKE, HATE, FIRST_DAY, DAWN, FISHING_DESCRIPTION, \
     DIGGING_DESCRIPTION, FORAGING_DESCRIPTION, SUNSET, TALK_MINUTES_PER_FRIENDLINESS, MAX_BOOST_LEVEL, \
     BOOST_DENOMINATOR, KYS_MESSAGE, EXIT_DESCRIPTION, DAYS_OF_WEEK, MAX_ITEMS, DAY_TO_INDEX, MAX_LUCK_LEVEL, \
-    LUCK_DENOMINATOR
+    LUCK_DENOMINATOR, TIME_TYPE
 from .static_helpers import guard_type, guard_types
 
 
@@ -397,10 +398,12 @@ class ActionGenerator:
         if not boost_level or boost_level == 0:
             return actions
 
-        boost_fraction = 1 - (min(boost_level, MAX_BOOST_LEVEL) / BOOST_DENOMINATOR)
+        boost_numerator = BOOST_DENOMINATOR - min(boost_level, MAX_BOOST_LEVEL)
+
+        boost_fraction = Fraction(boost_numerator, BOOST_DENOMINATOR)
 
         for action in actions:
-            if not action.is_cost_in_money() and action.cost_amount is not None:
+            if action.cost_type == TIME_TYPE and action.cost_amount is not None:
                 action.cost_amount = math.floor(action.cost_amount * boost_fraction)
 
         return actions

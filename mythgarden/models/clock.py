@@ -11,7 +11,6 @@ class Clock(models.Model):
     time = models.IntegerField(default=DAWN, validators=[MinValueValidator(0), MaxValueValidator(MINUTES_IN_A_DAY - 1)])
     is_new_day = models.BooleanField(default=False)
 
-    # last_triggered_day_number = models.IntegerField(null=True, validators=[MinValueValidator(0), MaxValueValidator(6)])
     last_triggered_day = models.CharField(default=FIRST_DAY, max_length=9, choices=DAYS_OF_WEEK)
     last_triggered_time = models.IntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(MINUTES_IN_A_DAY - 1)])
 
