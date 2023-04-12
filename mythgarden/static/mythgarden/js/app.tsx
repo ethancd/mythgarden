@@ -28,6 +28,7 @@ import {ArrowsList} from "./arrowsList";
 import {ActivitiesList} from "./activitiesList";
 import {GiftPreview} from "./draggableGift";
 import RainbowText from "./rainbowText";
+import {AchievementData, AchievementsList} from "./achievementsList";
 
 const TALK_ACTION = 'TALK'
 const TRAVEL_ACTION = 'TRAVEL'
@@ -219,6 +220,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
 
   render (): JSX.Element {
     const {
+      achievements,
       hero,
       portraitUrls,
       clock,
@@ -252,6 +254,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
           <Section id="top-bar" baseColor={colors.skyBlue}>
             <Hero {...hero}></Hero>
             <Gallery {...{show: showGallery, currentPortraitUrl: hero.imageUrl, portraitUrls} }></Gallery>
+            <AchievementsList achievements={achievements}></AchievementsList>
             <h1 id="logo"><RainbowText text={'Mythgarden'}></RainbowText></h1>
             <Clock display={clock.display} time={clock.time} boostLevel={hero.boostLevel} luckPercent={hero.luckPercent}></Clock>
             <div id='sky-container'>
@@ -325,6 +328,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
 type ActionRecord = Record<string, ActionPillProps>
 
 interface AppProps {
+  achievements: AchievementData[]
   actions: ActionData[]
   buildings: BuildingData[]
   clock: ClockData

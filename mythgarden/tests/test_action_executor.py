@@ -221,7 +221,7 @@ class ExecuteTalkActionTests(TestCase):
         execute_talk_action marks the villager as talked to
         """
         self.villager_state.has_been_talked_to = False
-        self.villager_state.has_ever_been_talked_to = False
+        self.villager_state.has_ever_been_interacted_with = False
         self.villager_state.save()
 
         self.ae.execute_talk_action(self.action, self.session)
@@ -229,7 +229,7 @@ class ExecuteTalkActionTests(TestCase):
         self.villager_state.refresh_from_db()
 
         self.assertTrue(self.villager_state.has_been_talked_to)
-        self.assertTrue(self.villager_state.has_ever_been_talked_to)
+        self.assertTrue(self.villager_state.has_ever_been_interacted_with)
 
     def test_hero_gains_hearts(self):
         """

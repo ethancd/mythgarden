@@ -23,5 +23,8 @@ from .event import ScheduledEvent, PopulateShopEvent, VillagerAppearsEvent
 # imports from .item_type_preference, .place, and .dialogue
 from .villager import Villager, VillagerState
 
+# imports from .villager
+from .achievement import Achievement
+
 # imports from .hero, .place, and .villager
 from .session import Session

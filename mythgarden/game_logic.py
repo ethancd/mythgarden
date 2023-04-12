@@ -3,15 +3,14 @@ import math
 import json
 from fractions import Fraction
 
-from .models import Bridge, Action, Place, Building, Session, VillagerState, Item, ItemToken, \
+from .models import Achievement, Bridge, Action, Place, Building, Session, VillagerState, Item, ItemToken, \
     DialogueLine, ScheduledEvent, PlaceState, MerchSlot
 from .models._constants import SEED, SPROUT, CROP, COMMON, UNCOMMON, RARE, EPIC, RARITIES, RARITY_WEIGHTS, FARM, SHOP, \
     WILD_TYPES, FOREST, MOUNTAIN, BEACH, LOVE, LIKE, NEUTRAL, DISLIKE, HATE, FIRST_DAY, DAWN, FISHING_DESCRIPTION, \
-    DIGGING_DESCRIPTION, FORAGING_DESCRIPTION, SUNSET, TALK_MINUTES_PER_FRIENDLINESS, MAX_BOOST_LEVEL, \
+    MINING_DESCRIPTION, FORAGING_DESCRIPTION, SUNSET, TALK_MINUTES_PER_FRIENDLINESS, MAX_BOOST_LEVEL, \
     BOOST_DENOMINATOR, KYS_MESSAGE, EXIT_DESCRIPTION, DAYS_OF_WEEK, MAX_ITEMS, DAY_TO_INDEX, MAX_LUCK_LEVEL, \
-    LUCK_DENOMINATOR, TIME_TYPE
+    LUCK_DENOMINATOR, TIME_TYPE, HARVEST, GATHER, EARN_MONEY, TALK_TO_VILLAGERS, GAIN_HEARTS, GAIN_ACHIEVEMENT
 from .static_helpers import guard_type, guard_types
-
 
 def can_afford_action(wallet, requested_action):
     if requested_action.is_cost_in_money() and requested_action.action_type != Action.SELL:
@@ -129,7 +128,7 @@ class ActionGenerator:
         if place.place_type == FOREST:
             actions.append(self.gen_foraging_action())
         elif place.place_type == MOUNTAIN:
-            actions.append(self.gen_digging_action())
+            actions.append(self.gen_mining_action())
         elif place.place_type == BEACH:
             actions.append(self.gen_fishing_action())
 
@@ -361,11 +360,11 @@ class ActionGenerator:
             log_statement='You caught a {result}!',
         )
 
-    def gen_digging_action(self):
+    def gen_mining_action(self):
         """Returns an action that digs for minerals, gems, fossils, etc"""
         cost_amount = 90
         return Action(
-            description=DIGGING_DESCRIPTION,
+            description=MINING_DESCRIPTION,
             action_type=Action.GATHER,
             cost_amount=cost_amount,
             cost_unit=Action.MIN,
@@ -418,14 +417,12 @@ class ActionExecutor:
         ex = f'execute_{action.get_action_type_display().lower()}_action'
 
         if hasattr(self, ex) and callable(getattr(self, ex)):
-            updated_models = getattr(self, ex)(action, session)
+            getattr(self, ex)(action, session)
         else:
             raise ValueError(f'Unknown action type: {action.get_action_type_display().lower()}')
 
         if session.is_fresh('clock'):
             EventOperator().react_to_time_passing(session.clock, session)
-
-        return updated_models
 
     def execute_travel_action(self, action, session):
         """Executes a travel action, which updates the current location and ticks the clock"""
@@ -443,29 +440,38 @@ class ActionExecutor:
     def execute_talk_action(self, action, session):
         """Executes a talk action, which displays some dialogue, adds to the villager's affinity, and ticks the clock"""
 
+        # grab villager & villager_state
         villager = action.target_villager
         villager_state = session.get_villager_state(villager)
 
+        # get and set dialogue
         dialogue = self.__get_dialogue_for_talk_action(villager_state, villager)
+        session.current_dialogue = dialogue
+        session.save()
+
+        # calculate and add affinity
         affinity_amount = self.__calc_talk_affinity_change(villager_state.affinity_tier, villager.friendliness)
         hearts_gained = self.__update_affinity(villager_state, affinity_amount)
-
-        session.current_dialogue = dialogue
         session.hero_state.hearts_earned += hearts_gained
-        villager_state.mark_as_talked_to()
-        affinity_message = self.__make_affinity_message_if_any(hearts_gained, villager)
+        session.hero_state.save()
 
+        # update villager_state and save
+        villager_state.mark_as_talked_to().save()
+
+        # check for achievements
+        self.__check_talk_to_villagers_achievements(session, villager_state)
+        if hearts_gained > 0:
+            self.__check_gain_hearts_achievements(session, villager_state)
+
+        # create messages
         log_statement = self.__add_emoji(action, action.log_statement)
         session.messages.create(text=log_statement)
-
+        affinity_message = self.__make_affinity_message_if_any(hearts_gained, villager)
         if affinity_message:
             session.messages.create(text=affinity_message)
 
+        # update clock and save
         session.clock.advance(action.cost_amount).save()
-
-        villager_state.save()
-        session.hero_state.save()
-        session.save()
 
         session.mark_fresh('clock', 'dialogue', 'hero', 'messages', 'speaker')
 
@@ -473,40 +479,49 @@ class ActionExecutor:
         """Executes a give action, which removes an item from the hero's inventory
         and adds to the villager's affinity"""
 
+        # grab villager, gift, villager_state
         villager = action.target_villager
         gift = action.target_item
-        valence = villager.gift_valence(gift)
-        affinity_amount = self.__calc_gift_affinity_change(valence, gift.rarity)
-
         villager_state = session.occupant_states.filter(villager=villager).first()
-        villager_state.has_been_given_gift = True
-        hearts_gained = self.__update_affinity(villager_state, affinity_amount)
 
-        session.hero_state.hearts_earned += hearts_gained
+        # remove gift from inventory
+        session.inventory.item_tokens.remove(gift)
 
+        # calculate reaction
+        valence = villager.gift_valence(gift)
+
+        # get and set dialogue
         trigger = self.__get_gift_dialogue_trigger(valence)
         dialogue = villager.get_dialogue(trigger)
         session.current_dialogue = dialogue
+        session.save()
 
-        session.inventory.item_tokens.remove(gift)
+        # calculate and add affinity
+        affinity_amount = self.__calc_gift_affinity_change(valence, gift.rarity)
+        hearts_gained = self.__update_affinity(villager_state, affinity_amount)
+        session.hero_state.hearts_earned += hearts_gained
+        session.hero_state.save()
 
+        # update villager_state and save
+        villager_state.mark_as_given_gift().save()
+
+        # check for achievements
+        if hearts_gained > 0:
+            self.__check_gain_hearts_achievements(session, villager_state)
+
+        # create messages
         valence_text = self.__get_valence_text(valence)
-        formatted_log_statement = action.log_statement.format(item_name=gift.name, villager_name=villager.name,
-                                                    valence_text=valence_text)
-
-        affinity_message = self.__make_affinity_message_if_any(hearts_gained, villager)
-
+        formatted_log_statement = action.log_statement.format(
+            item_name=gift.name, villager_name=villager.name, valence_text=valence_text
+        )
         log_statement = self.__add_emoji(action, formatted_log_statement)
         session.messages.create(text=log_statement)
-
+        affinity_message = self.__make_affinity_message_if_any(hearts_gained, villager)
         if affinity_message:
             session.messages.create(text=affinity_message)
 
+        # update clock and save
         session.clock.advance(action.cost_amount).save()
-
-        session.hero_state.save()
-        villager_state.save()
-        session.save()
 
         session.mark_fresh('clock', 'dialogue', 'hero', 'inventory', 'messages', 'speaker')
 
@@ -534,8 +549,11 @@ class ActionExecutor:
 
         session.wallet.money += action.cost_amount
         if not item.bought_from_store:
-            session.hero_state.koin_earned += action.cost_amount
+            session.hero_state.increment_koin_earned(action.cost_amount, item.item_type)
             session.hero_state.save()
+
+            self.__check_earn_money_achievements(session)
+
 
         log_statement = self.__add_emoji(action, action.log_statement)
         session.messages.create(text=log_statement)
@@ -637,7 +655,12 @@ class ActionExecutor:
         log_statement = self.__add_emoji(action, action.log_statement)
         session.messages.create(text=log_statement)
 
+        session.hero_state.farming_intake += action.target_item.price
+        session.hero_state.save()
+
         session.clock.advance(action.cost_amount).save()
+
+        self.__check_harvest_achievements(session)
 
         session.mark_fresh('clock', 'inventory', 'localItemTokens', 'messages')
 
@@ -652,7 +675,12 @@ class ActionExecutor:
         log_statement = self.__add_emoji(action, action.log_statement.format(result=item.name))
         session.messages.create(text=log_statement)
 
+        session.hero_state.increment_gathering_intake(item)
+        session.hero_state.save()
+
         session.clock.advance(action.cost_amount).save()
+
+        self.__check_gather_achievements(session)
 
         session.mark_fresh('clock', 'inventory', 'messages')
 
@@ -674,7 +702,7 @@ class ActionExecutor:
         return f'{action.emoji} {log_statement}'
 
     def __get_dialogue_for_talk_action(self, villager_state, villager):
-        if villager_state.has_ever_been_talked_to:
+        if villager_state.has_ever_been_interacted_with:
             trigger = DialogueLine.TALKED_TO
             affinity_tier = villager_state.affinity_tier
         else:
@@ -804,7 +832,7 @@ class ActionExecutor:
 
     def __get_talk_dialogue_trigger(self, villager_state):
         """Returns a dialogue trigger for a talk action based on whether they've been talked to before or not"""
-        if villager_state.has_ever_been_talked_to:
+        if villager_state.has_ever_been_interacted_with:
             return DialogueLine.TALKED_TO
         else:
             return DialogueLine.FIRST_MEETING
@@ -822,11 +850,61 @@ class ActionExecutor:
 
         return VALENCE_TO_DIALOGUE_TRIGGER_MAP[valence]
 
+    def __check_talk_to_villagers_achievements(self, session, villager_state):
+        newly_notched_count = Achievement.check_triggered_achievements(
+            TALK_TO_VILLAGERS, session, villager_state=villager_state
+        )
+
+        if newly_notched_count > 0:
+            self.__check_gain_achievement_achievements(session)
+            session.mark_fresh('achievements')
+
+    def __check_gain_hearts_achievements(self, session, villager_state):
+        newly_notched_count = Achievement.check_triggered_achievements(
+            GAIN_HEARTS, session, villager_state=villager_state,
+            villager_states=session.villager_states.all(), clock=session.clock
+        )
+
+        if newly_notched_count > 0:
+            self.__check_gain_achievement_achievements(session)
+            session.mark_fresh('achievements')
+
+    def __check_earn_money_achievements(self, session):
+        newly_notched_count = Achievement.check_triggered_achievements(
+            EARN_MONEY, session, hero_state=session.hero_state, clock=session.clock
+        )
+
+        if newly_notched_count > 0:
+            session.mark_fresh('achievements')
+
+    def __check_harvest_achievements(self, session):
+        newly_notched_count = Achievement.check_triggered_achievements(
+            HARVEST, session, hero_state=session.hero_state
+        )
+
+        if newly_notched_count > 0:
+            session.mark_fresh('achievements')
+
+    def __check_gather_achievements(self, session):
+        newly_notched_count = Achievement.check_triggered_achievements(
+            GATHER, session, hero_state=session.hero_state
+        )
+
+        if newly_notched_count > 0:
+            session.mark_fresh('achievements')
+
+    def __check_gain_achievement_achievements(self, session):
+        Achievement.check_triggered_achievements(
+            GAIN_ACHIEVEMENT, session, hero=session.hero
+        )
+
+
 class EventOperator:
     def react_to_time_passing(self, clock, session):
         # check for game over and short circuit if so
         if self.__is_game_over(clock):
-            session.update(game_over=True)
+            session.game_over = True
+            session.save()
             return
 
         # run scheduled events (from yesterday & today)

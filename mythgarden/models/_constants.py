@@ -200,6 +200,16 @@ PLACE_TYPES = [
     (HOME, 'Home'),
 ]
 
+MINING_ITEM_TYPES = [MINERAL, FOSSIL, TECH, MAGIC]
+FISHING_ITEM_TYPES = [FISH]
+FORAGING_ITEM_TYPES = [HERB, FLOWER, BERRY]
+
+ITEM_POOL_TYPE_MAP = {
+    MOUNTAIN: MINING_ITEM_TYPES,
+    BEACH: FISHING_ITEM_TYPES,
+    FOREST: FORAGING_ITEM_TYPES,
+}
+
 ITEM_ENTITY = 'item'
 VILLAGER_ENTITY = 'villager'
 PLACE_ENTITY = 'place'
@@ -225,7 +235,7 @@ ACTIVITY_ICON_PATHS = {
 }
 
 FISHING_DESCRIPTION = 'Go fishing'
-DIGGING_DESCRIPTION = 'Dig for something interesting'
+MINING_DESCRIPTION = 'Dig for something interesting'
 FORAGING_DESCRIPTION = 'Forage for plants'
 EXIT_DESCRIPTION = 'Exit'
 
@@ -240,3 +250,66 @@ LUCK_DENOMINATOR = 200  # means that every level of luck will be worth 0.5%, ie 
 MAX_LUCK_LEVEL = 130  # max luck level will reduce common item rate to 0
 
 KYS_MESSAGE = 'Whether out of despair, boredom, tactical necessity, or a whimsical fit of pique, you hurl yourself off a nearby cliff to your death. A few moments later, you brush the dirt off your dauntless shoulders and enter the time loop to begin the week again.'
+
+ALL_VILLAGERS_HEARTS = 'ALL_VILLAGERS_HEARTS'
+MULTIPLE_BEST_FRIENDS = 'MULTIPLE_BEST_FRIENDS'
+BEST_FRIENDS = 'BEST_FRIENDS'
+FAST_FRIENDS = 'FAST_FRIENDS'
+STEADFAST_FRIENDS = 'STEADFAST_FRIENDS'
+BESTEST_FRIENDS = 'BESTEST_FRIENDS'
+FASTEST_FRIENDS = 'FASTEST_FRIENDS'
+STEADFASTEST_FRIENDS = 'STEADFASTEST_FRIENDS'
+GROSS_INCOME = 'GROSS_INCOME'
+BALANCED_INCOME = 'BALANCED_INCOME'
+FARMING_INTAKE = 'FARMING_INTAKE'
+MINING_INTAKE = 'MINING_INTAKE'
+FISHING_INTAKE = 'FISHING_INTAKE'
+FORAGING_INTAKE = 'FORAGING_INTAKE'
+FAST_CASH = 'FAST_CASH'
+
+ACHIEVEMENT_TYPES = [
+    (ALL_VILLAGERS_HEARTS, 'All villagers hearts'),
+    (MULTIPLE_BEST_FRIENDS, 'Multiple best friends'),
+    (BEST_FRIENDS, 'Best friends'),
+    (FAST_FRIENDS, 'Fast friends'),
+    (STEADFAST_FRIENDS, 'Steadfast friends'),
+    (BESTEST_FRIENDS, 'Bestest friends'),
+    (FASTEST_FRIENDS, 'Fastest friends'),
+    (STEADFASTEST_FRIENDS, 'Steadfastest friends'),
+    (GROSS_INCOME, 'Gross income'),
+    (BALANCED_INCOME, 'Balanced income'),
+    (FARMING_INTAKE, 'Farming intake'),
+    (MINING_INTAKE, 'Mining intake'),
+    (FISHING_INTAKE, 'Fishing intake'),
+    (FORAGING_INTAKE, 'Foraging intake'),
+    (FAST_CASH, 'Fast cash'),
+]
+
+GAIN_HEARTS = 'GAIN_HEARTS'
+TALK_TO_VILLAGERS = 'TALK_TO_VILLAGERS'
+GAIN_ACHIEVEMENT = 'GAIN_ACHIEVEMENT'
+EARN_MONEY = 'EARN_MONEY'
+HARVEST = 'HARVEST'
+GATHER = 'GATHER'
+
+ACHIEVEMENT_TRIGGER_TYPES = [
+    (GAIN_HEARTS, 'Gain hearts'),
+    (TALK_TO_VILLAGERS, 'Talk to villagers'),
+    (GAIN_ACHIEVEMENT, 'Gain achievement'),
+    (EARN_MONEY, 'Earn money'),
+    (HARVEST, 'Harvest'),
+    (GATHER, 'Gather'),
+]
+
+ACHIEVEMENT_EMOJIS = {
+    GAIN_HEARTS: '❤️',
+    TALK_TO_VILLAGERS: '💬',
+    GAIN_ACHIEVEMENT: '🏆',
+    EARN_MONEY: '⚜️',
+    HARVEST: '🌾',
+    GATHER: {
+        FISHING_INTAKE: '🎣',
+        MINING_INTAKE: '⛏',
+        FORAGING_INTAKE: '🌲',
+    },
+}

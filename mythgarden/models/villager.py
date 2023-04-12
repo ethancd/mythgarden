@@ -85,8 +85,10 @@ class VillagerState(models.Model):
     location_state = models.ForeignKey(PlaceState, on_delete=models.SET_NULL, related_name='occupants', null=True, blank=True)
 
     has_been_talked_to = models.BooleanField(default=False)
-    has_ever_been_talked_to = models.BooleanField(default=False)
+    has_ever_been_interacted_with = models.BooleanField(default=False)
     has_been_given_gift = models.BooleanField(default=False)
+
+    talked_to_count = models.IntegerField(default=0)
 
     def __str__(self):
         return f'{self.villager} state ' + self.session.abbr_key_tag()
@@ -102,7 +104,7 @@ class VillagerState(models.Model):
             'name': self.villager.name,
             'imageUrl': self.villager.image_url,
             'description': self.villager.description,
-            'id': self.villager.id,
+            'id': self.villager.id
         }
 
     @property
@@ -120,6 +122,10 @@ class VillagerState(models.Model):
     def affinity_tier(self):
         return self.affinity // self.AFFINITY_TIER_SIZE
 
+    @property
+    def is_bestie(self):
+        return self.affinity == self.MAX_AFFINITY
+
     def add_affinity(self, amount):
         self.affinity += amount
 
@@ -129,13 +135,20 @@ class VillagerState(models.Model):
         if self.affinity < 0:
             self.affinity = 0
 
-        self.save()
-        return self.affinity
+        return self  # for chaining
 
     def mark_as_talked_to(self):
         self.has_been_talked_to = True
-        self.has_ever_been_talked_to = True
-        self.save()
+        self.has_ever_been_interacted_with = True
+        self.talked_to_count += 1
+
+        return self  # for chaining
+
+    def mark_as_given_gift(self):
+        self.has_been_given_gift = True
+        self.has_ever_been_interacted_with = True
+
+        return self  # for chaining
 
     class Meta:
         ordering = ['villager__name']

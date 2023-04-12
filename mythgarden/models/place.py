@@ -2,8 +2,8 @@ from django.db import models
 from django.templatetags.static import static
 from django.core.validators import MinValueValidator, MaxValueValidator
 
-from ._constants import PLACE_TYPES, FARM, TOWN, MOUNTAIN, FOREST, BEACH, HOME, MINERAL, FOSSIL, FISH, HERB, FLOWER, \
-    BERRY, TECH, MAGIC, IMAGE_PREFIX, PLACE_IMAGE_DIR, SHOP, ACTIVITY_ICON_PATHS, WILD_TYPES
+from ._constants import PLACE_TYPES, FARM, TOWN, MOUNTAIN, FOREST, BEACH, HOME, \
+    IMAGE_PREFIX, PLACE_IMAGE_DIR, SHOP, ACTIVITY_ICON_PATHS, WILD_TYPES, ITEM_POOL_TYPE_MAP
 from .item import Item
 from .action import Action
 
@@ -16,12 +16,6 @@ class PlaceManager(models.Manager):
 class Place(models.Model):
     name = models.CharField(max_length=255, unique=True)
     image_path = models.CharField(max_length=255, default='farm-unsplash.jpeg')
-
-    ITEM_POOL_TYPE_MAP = {
-        MOUNTAIN: [MINERAL, FOSSIL, TECH, MAGIC],
-        BEACH: [FISH],
-        FOREST: [HERB, FLOWER, BERRY],
-    }
 
     place_type = models.CharField(max_length=8, choices=PLACE_TYPES, default=TOWN)
     has_inventory = models.BooleanField(default=False)
@@ -125,7 +119,7 @@ class Place(models.Model):
 
     def populate_item_pool(self):
         """ Populates the item pool by filtering on item types based on this place type. """
-        item_types = self.ITEM_POOL_TYPE_MAP.get(self.place_type)
+        item_types = ITEM_POOL_TYPE_MAP.get(self.place_type)
         if item_types is None:
             return
 

@@ -1,6 +1,6 @@
 from django.db import models
 
-from ._constants import DIRECTIONS, KOIN_SIGN, FISHING_DESCRIPTION, DIGGING_DESCRIPTION, FORAGING_DESCRIPTION, \
+from ._constants import DIRECTIONS, KOIN_SIGN, FISHING_DESCRIPTION, MINING_DESCRIPTION, FORAGING_DESCRIPTION, \
     EXIT_DESCRIPTION, ITEM_ENTITY, VILLAGER_ENTITY, PLACE_ENTITY, GIFT_ENTITY, MONEY_TYPE, TIME_TYPE
 
 
@@ -22,7 +22,7 @@ class Action(models.Model):
     EXIT = 'EXIT'
 
     FISHING = 'FISHING'
-    DIGGING = 'DIGGING'
+    MINING = 'MINING'
     FORAGING = 'FORAGING'
 
     ACTION_EMOJIS = {
@@ -42,7 +42,7 @@ class Action(models.Model):
         RETRIEVE: '🎒',
         GATHER: {
             FISHING: '🎣',
-            DIGGING: '⛏',
+            MINING: '⛏',
             FORAGING: '🌲',
         },
         SLEEP: '💤',
@@ -162,7 +162,7 @@ class Action(models.Model):
     def get_gather_type_of_action(self):
         GATHER_DESCRIPTION_MAP = {
             FISHING_DESCRIPTION: self.FISHING,
-            DIGGING_DESCRIPTION: self.DIGGING,
+            MINING_DESCRIPTION: self.MINING,
             FORAGING_DESCRIPTION: self.FORAGING,
         }
 

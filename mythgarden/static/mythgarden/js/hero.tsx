@@ -4,6 +4,7 @@ import React, {useContext} from 'react'
 import TypeableName from "./typeableName";
 import {ImageFilterContext} from "./lightColorLogic";
 import RainbowText from "./rainbowText";
+import {AchievementData} from "./achievementsList";
 
 export default function Hero ({ name, isDefaultName, imageUrl, score, highScore, luckPercent, koinEarned, heartsEarned }: HeroProps): JSX.Element {
   const { backgroundColor, opacity } = useContext(ImageFilterContext)

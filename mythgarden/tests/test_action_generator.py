@@ -910,14 +910,14 @@ class GenGatherActionsTests(TestCase):
 
         self.assertEqual(actions[0].action_type, Action.GATHER)
 
-    @patch('mythgarden.game_logic.ActionGenerator.gen_digging_action')
-    def test_calls_gen_digging_action_for_mountains(self, mock_gen_digging_action):
+    @patch('mythgarden.game_logic.ActionGenerator.gen_mining_action')
+    def test_calls_gen_mining_action_for_mountains(self, mock_gen_mining_action):
         """
-        Calls gen_digging_action for mountains
+        Calls gen_mining_action for mountains
         """
         self.ag.gen_gather_actions(self.mountains)
 
-        mock_gen_digging_action.assert_called()
+        mock_gen_mining_action.assert_called()
 
     def test_returns_action_with_correct_description_for_mountains(self):
         """

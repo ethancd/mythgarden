@@ -7,6 +7,7 @@ from .models import Session, FarmerPortrait
 
 
 MODEL_LAMBDAS = {
+    'achievements': lambda session: session.hero.achievements.all(),
     'actions': lambda session: ActionGenerator().get_actions_for_session(session),
     'buildings': lambda session: session.location.buildings.all(),
     'clock': lambda session: session.clock,
@@ -73,17 +74,18 @@ def get_home_models(session):
     """Returns a dictionary of models that are needed to render the home page."""
 
     home_model_keys = [
+        'achievements',
         'actions',
-        'portraitUrls',
-        'hero',
+        'buildings',
         'clock',
-        'wallet',
+        'hero',
+        'inventory',
+        'localItemTokens',
         'messages',
         'place',
-        'inventory',
-        'buildings',
-        'localItemTokens',
+        'portraitUrls',
         'villagerStates',
+        'wallet',
     ]
 
     return get_models(home_model_keys, session)
