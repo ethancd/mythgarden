@@ -4,7 +4,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 from ._constants import PLACE_TYPES, FARM, TOWN, MOUNTAIN, FOREST, BEACH, HOME, MINERAL, FOSSIL, FISH, HERB, FLOWER, \
     BERRY, TECH, MAGIC, IMAGE_PREFIX, PLACE_IMAGE_DIR, SHOP, ACTIVITY_ICON_PATHS, WILD_TYPES
-from .item import Item, ItemToken
+from .item import Item
 from .action import Action
 
 

@@ -2,10 +2,8 @@ import random
 import math
 import json
 
-from django.db import transaction
-
 from .models import Bridge, Action, Place, Building, Session, VillagerState, Item, ItemToken, \
-    DialogueLine, ScheduledEvent, ScheduledEventState, PlaceState, MerchSlot
+    DialogueLine, ScheduledEvent, PlaceState, MerchSlot
 from .models._constants import SEED, SPROUT, CROP, COMMON, UNCOMMON, RARE, EPIC, RARITIES, RARITY_WEIGHTS, FARM, SHOP, \
     WILD_TYPES, FOREST, MOUNTAIN, BEACH, LOVE, LIKE, NEUTRAL, DISLIKE, HATE, FIRST_DAY, DAWN, FISHING_DESCRIPTION, \
     DIGGING_DESCRIPTION, FORAGING_DESCRIPTION, SUNSET, TALK_MINUTES_PER_FRIENDLINESS, MAX_BOOST_LEVEL, \
@@ -969,15 +967,11 @@ class EventOperator:
 
     def reset_for_new_day(self, session):
         self.reset_villager_states(session.villager_states.all(), session)
-        self.reset_daily_events(session.event_states.all())
         self.grow_crops(session.place_states.all(), session)
 
     def reset_villager_states(self, villager_states, session):
         villager_states.update(has_been_talked_to=False, has_been_given_gift=False)
         session.mark_fresh('villagerStates')
-
-    def reset_daily_events(self, event_states):
-        event_states.filter(event__is_daily=True).update(has_occurred=False)
 
     def grow_crops(self, place_states, session):
         """Find all seeds/sprouts in the farm and "grow" them if they've been watered –

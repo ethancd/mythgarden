@@ -63,12 +63,3 @@ class VillagerAppearsEvent(ScheduledEvent):
 
     def __str__(self):
         return f'Event: {self.villager.name} {self.place_display} at {self.time / 60} {self.day_display}'
-
-
-class ScheduledEventState(models.Model):
-    event = models.ForeignKey('ScheduledEvent', on_delete=models.CASCADE, related_name='states')
-    session = models.ForeignKey('Session', on_delete=models.CASCADE, related_name='scheduled_event_states')
-    has_occurred = models.BooleanField(default=False)
-
-    def __str__(self):
-        return str(self.event) + ' ' + self.session.abbr_key_tag()

@@ -1,9 +1,8 @@
 from django.db import models
 
-from .event import ScheduledEvent, ScheduledEventState
+from .villager import Villager, VillagerState
 from .hero import Hero
-from .place import Place
-from .villager import VillagerState
+from .place import Place, PlaceState
 from ..static_helpers import generate_uuid
 
 from ._constants import WELCOME_MESSAGE
@@ -11,7 +10,7 @@ from ._constants import WELCOME_MESSAGE
 
 class Session(models.Model):
     key = models.CharField(max_length=32, primary_key=True, default=generate_uuid)
-    location = models.ForeignKey(Place, on_delete=models.CASCADE, null=True, default=Place.get_default_pk)
+    _location = models.ForeignKey(Place, on_delete=models.SET_NULL, null=True, default=Place.get_default_pk)
     hero = models.ForeignKey('Hero', on_delete=models.CASCADE, related_name='current_session', null=True, default=Hero.get_default_pk)
     current_dialogue = models.ForeignKey('DialogueLine', on_delete=models.SET_NULL, null=True)
 
@@ -27,7 +26,6 @@ class Session(models.Model):
             self.fresh[arg] = True
 
     def is_fresh(self, key):
-        print(self.fresh)
         return self.fresh.get(key)
 
     def clear_fresh(self):
@@ -35,6 +33,18 @@ class Session(models.Model):
 
     def get_fresh_keys(self):
         return [key for key, value in self.fresh.items() if value]
+
+    @property
+    def location(self):
+        if not self._location:
+            self._location = Place.objects.get(pk=Place.get_default_pk())
+            print(self._location)
+
+        return self._location
+
+    @location.setter
+    def location(self, value):
+        self._location = value
 
     @property
     def location_state(self):
@@ -60,6 +70,8 @@ class Session(models.Model):
         if not villager:
             return None
 
+        print(self.villager_states.all())
+
         for villager_state in self.villager_states.all():
             if villager_state.villager == villager:
                 return villager_state
@@ -67,10 +79,6 @@ class Session(models.Model):
     @property
     def local_item_tokens(self):
         return self.location_state.item_tokens.all()
-
-    @property
-    def event_states(self):
-        return self.scheduled_event_states.all()
 
     @property
     def high_score(self):
@@ -91,6 +99,29 @@ class Session(models.Model):
         self.delete()
 
         return Session.objects.create(key=key, hero=hero, initial_message_text=end_of_game_message)
+
+    def populate_place_states(self):
+        place_states = []
+
+        for place in list(Place.objects.all()):
+            place_states.append(PlaceState(session=self, place=place))
+
+        return PlaceState.objects.bulk_create(place_states)
+
+    def populate_villager_states(self, place_states):
+        villager_states = []
+        place_to_state_dict = {state.place.pk: state for state in place_states}
+
+        for villager in list(Villager.objects.all()):
+            if villager.home:
+                location_state = place_to_state_dict.get(villager.home.pk, None)
+                villager_state = VillagerState(session=self, villager=villager, location_state=location_state)
+            else:
+                villager_state = VillagerState(session=self, villager=villager)
+
+            villager_states.append(villager_state)
+
+        return VillagerState.objects.bulk_create(villager_states)
 
     def abbr_key_tag(self):
         return f'({self.key[:8]}...)'
