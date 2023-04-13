@@ -21,6 +21,8 @@ $aqua: #05d0eb;
 $maple: #edc078;
 $candle-light: #e09d37;
 $burnished-gold: #e6c200;
+$warning-yellow: #ffc107;
+$mustard-brown: #cd7a00;
 
 $dark-text: #333;
 $light-text: #eee;
@@ -202,12 +204,16 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
 }
 
 @mixin non-clickable-disabled {
-  cursor: default;
-
-  filter: grayscale(100%);
+  filter: grayscale(100%) !important; // disabled overrides all other filters, eg drop shadow and highlights
 
   &:hover, &:active {
-    filter: grayscale(100%);
+    filter: grayscale(100%) !important;
+  }
+}
+
+@mixin gray-on-hover {
+  &:hover, &:active {
+    filter: grayscale(100%) !important;
   }
 }
 
@@ -311,6 +317,10 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
       .building {
         border-color: #ddd;
       }
+    }
+
+    .message.error {
+      color: $warning-yellow;
     }
   }
 }
@@ -948,6 +958,10 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
     box-sizing: border-box;
     overflow: hidden;
 
+    &.inactive {
+      @include non-clickable-disabled;
+    }
+
     &.over-1 {
       left: $edge-distance;
     }
@@ -1089,7 +1103,7 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
     }
 
     &.error {
-      color: darkred;
+      color: $mustard-brown;
     }
   }
 }
@@ -1135,8 +1149,8 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
       @include non-clickable-disabled;
     }
 
-    &.no-hover-filter {
-      @include non-clickable;
+    &.gray-on-hover {
+      @include gray-on-hover;
     }
 
     .description {

@@ -43,12 +43,15 @@ const RETRIEVE_ACTION = 'RETRIEVE'
 
 const ITEM_ACTIONS = [WATER_ACTION, PLANT_ACTION, HARVEST_ACTION, BUY_ACTION, SELL_ACTION, STOW_ACTION, RETRIEVE_ACTION]
 
+const EPHEMEREAL_MSG_ID = 0
+
 class App extends React.Component<Partial<AppProps>, AppState> {
   constructor (props: AppProps) {
     super(props)
     this.state = {
       combinedProps: props,
       showGallery: false,
+      ephemerealMessage: undefined
     }
   }
 
@@ -172,42 +175,68 @@ class App extends React.Component<Partial<AppProps>, AppState> {
     if (target == null) return
 
     if (this.hasClass(target, 'hero-portrait')) {
-      // click hero-portrait = toggle gallery open/closed
       if (!this.state.showGallery) {
         this.showGallery()
       }
     }
 
-    if (this.hasClass(target, 'villager')) {
+    else if (this.hasClass(target, 'villager')) {
+      if (this.hasClass(target, 'gray-on-hover')) {
+        this.printVillagerTalkedToWarning(this.grabId(target.dataset) as number)
+      }
       this.fireActionIfAvailable(TALK_ACTION, target)
     }
 
-    if (this.hasClass(target, 'building')) {
-      this.fireActionIfAvailable(TRAVEL_ACTION, target)
-    }
-
-    if (this.hasClass(target, 'arrow')) {
-      this.fireActionIfAvailable(TRAVEL_ACTION, target)
-    }
-
-    if (this.hasClass(target, 'local-activity')) {
-      const { actionType, entityId} = this.marshalActivityClickData(target.dataset)
-
-      if (actionType == null || entityId == null) return
-
-      if (entityId == '') {  // expect these location activities to often have no entity id
-        this.fireActionWithEmptyIdIfAvailable(actionType)
+    else if (this.hasClass(target, 'building')) {
+      if (this.hasClass(target, 'inactive')) {
+        this.printBuildingClosedWarning(this.grabId(target.dataset) as number)
       } else {
-        this.fireActionIfAvailable(actionType, target)
+        this.fireActionIfAvailable(TRAVEL_ACTION, target)
       }
     }
 
-    if (this.hasClass(target, 'item')) {
+    else if (this.hasClass(target, 'arrow')) {
+      this.fireActionIfAvailable(TRAVEL_ACTION, target)
+    }
+
+    else if (this.hasClass(target, 'local-activity')) {
+      if (this.hasClass(target, 'inactive') && this.hasClass(target, 'sleep')) {
+        this.printNoSleepTillWarning()
+      } else {
+        const {actionType, entityId} = this.marshalActivityClickData(target.dataset)
+
+        if (actionType == null || entityId == null) return
+
+        if (entityId == '') {  // expect these location activities to often have no entity id
+          this.fireActionWithEmptyIdIfAvailable(actionType)
+        } else {
+          this.fireActionIfAvailable(actionType, target)
+        }
+      }
+    }
+
+    else if (this.hasClass(target, 'item')) {
       // relying on assumption that any item has only ONE action available at a time (excluding gift actions)
       ITEM_ACTIONS.forEach(actionType => {
         this.fireActionIfAvailable(actionType, target)
       })
     }
+  }
+  printVillagerTalkedToWarning(entityId: number) {
+    const villager = this.state.combinedProps.villagerStates.find(villager => villager.id === entityId) as VillagerData
+    const warning = `⚠️ You already talked to ${villager.name} today. But they'll be happy to talk again tomorrow!`
+    this.setState({ ephemerealMessage: warning })
+  }
+
+  printBuildingClosedWarning(entityId: number) {
+    const building = this.state.combinedProps.buildings.find(building => building.id === entityId) as BuildingData
+    const warning = `⚠️ ${building.name} is closed right now. It's open from ${building.openingTimeDisplay} to ${building.closingTimeDisplay}`
+    this.setState({ ephemerealMessage: warning })
+  }
+
+  printNoSleepTillWarning() {
+    const warning = `⚠️ Hang on, you're not tired! You can go to bed any time after 6:00pm`
+    this.setState({ ephemerealMessage: warning })
   }
 
   showGallery (): void {
@@ -215,7 +244,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
   }
 
   clearActiveUX (): void {
-    this.setState({ showGallery: false })
+    this.setState({ showGallery: false, ephemerealMessage: undefined })
   }
 
   render (): JSX.Element {
@@ -236,7 +265,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
       speaker
     } = this.state.combinedProps
 
-    const { showGallery } = this.state
+    const { showGallery, ephemerealMessage } = this.state
 
     const colorFilter = getColorFilterByTime(clock.time)
     const imageFilter = getImageFilter(colorFilter)
@@ -289,6 +318,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
                 <BuildingsList
                   buildings={buildings}
                   actionDictionary={actionDictionary}
+                  time={clock.time}
                 ></BuildingsList>
               </Location>
 
@@ -306,6 +336,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
               <section id='footer'>
                 <List id='message-log' baseColor={colors.parchment}>
                   {messages?.map(message => Message({ ...message }))}
+                  {ephemerealMessage ? Message({text: ephemerealMessage, isError: true, id: EPHEMEREAL_MSG_ID}) : null}
                 </List>
               </section>
             </section>
@@ -347,6 +378,7 @@ interface AppProps {
 interface AppState {
   combinedProps: AppProps
   showGallery: boolean
+  ephemerealMessage?: string
 }
 
 export { App, type AppProps }

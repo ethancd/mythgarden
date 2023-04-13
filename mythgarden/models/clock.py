@@ -24,6 +24,17 @@ class Clock(models.Model):
             'dayNumber': self.day_index
         }
 
+    @classmethod
+    def convert_time_to_display(cls, time):
+        """ Returns the time as a string in the format 'hh:mmam' or 'hh:mmpm' """
+        hours = (time % MINUTES_IN_A_HALF_DAY) // 60
+        if hours == 0:
+            hours = 12
+        minutes = time % 60
+        suffix = 'pm' if time >= MINUTES_IN_A_HALF_DAY else 'am'
+
+        return f"{hours}:{minutes:02d}{suffix}"
+
     @property
     def display(self):
         return self.get_day_display() + ' ' + self.get_time_display()
@@ -34,13 +45,7 @@ class Clock(models.Model):
 
     def get_time_display(self):
         """ Returns the time as a string in the format 'hh:mmam' or 'hh:mmpm' """
-        hours = (self.time % MINUTES_IN_A_HALF_DAY) // 60
-        if hours == 0:
-            hours = 12
-        minutes = self.time % 60
-        suffix = 'pm' if self.time >= MINUTES_IN_A_HALF_DAY else 'am'
-
-        return f"{hours}:{minutes:02d}{suffix}"
+        return Clock.convert_time_to_display(self.time)
 
     def advance(self, amount_in_minutes):
         """ Updates the day and time by the given amount of time,

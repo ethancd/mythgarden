@@ -78,9 +78,12 @@ class Action(models.Model):
 
     TRIVIAL = 'TRIVIAL'
     TRIVIAL_PLUS = 'TRIVIAL_PLUS'
+    TRIVIAL_PLUS_PLUS = 'TRIVIAL_PLUS_PLUS'
     SMALL_MINUS = 'SMALL_MINUS'
+    SMALLISH = 'SMALLISH'
     SMALL = 'SMALL'
     SMALL_PLUS = 'SMALL_PLUS'
+    SMALL_PLUS_PLUS = 'SMALL_PLUS_PLUS'
     MEDIUM_MINUS = 'MEDIUM_MINUS'
     MEDIUM = 'MEDIUM'
     MEDIUM_PLUS = 'MEDIUM_PLUS'
@@ -90,9 +93,12 @@ class Action(models.Model):
     MINUTES_TO_WAIT_CLASS = {
         5: TRIVIAL,
         10: TRIVIAL_PLUS,
+        15: TRIVIAL_PLUS_PLUS,
         20: SMALL_MINUS,
+        25: SMALLISH,
         30: SMALL,
         40: SMALL_PLUS,
+        45: SMALL_PLUS_PLUS,
         50: MEDIUM_MINUS,
         60: MEDIUM,
         70: MEDIUM_PLUS,
@@ -103,9 +109,12 @@ class Action(models.Model):
     WAIT_CLASSES = [
         (TRIVIAL, 'trivial'),
         (TRIVIAL_PLUS, 'trivialPlus'),
+        (TRIVIAL_PLUS_PLUS, 'trivialPlusPlus'),
         (SMALL_MINUS, 'smallMinus'),
+        (SMALLISH, 'smallish'),
         (SMALL, 'small'),
         (SMALL_PLUS, 'smallPlus'),
+        (SMALL_PLUS_PLUS, 'smallPlusPlus'),
         (MEDIUM_MINUS, 'mediumMinus'),
         (MEDIUM, 'medium'),
         (MEDIUM_PLUS, 'mediumPlus'),
@@ -121,7 +130,7 @@ class Action(models.Model):
 
     cost_amount = models.IntegerField(null=True, blank=True)
     cost_unit = models.CharField(max_length=6, choices=COST_UNITS, null=True, blank=True)
-    cost_wait_class = models.CharField(max_length=12, choices=WAIT_CLASSES, null=True, blank=True)
+    cost_wait_class = models.CharField(max_length=17, choices=WAIT_CLASSES, null=True, blank=True)
 
     target_item = models.ForeignKey('ItemToken', on_delete=models.CASCADE, null=True, blank=True)
     target_villager = models.ForeignKey('Villager', on_delete=models.CASCADE, null=True, blank=True)

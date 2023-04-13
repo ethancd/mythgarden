@@ -2,10 +2,11 @@ from django.db import models
 from django.templatetags.static import static
 from django.core.validators import MinValueValidator, MaxValueValidator
 
-from ._constants import PLACE_TYPES, FARM, TOWN, MOUNTAIN, FOREST, BEACH, HOME, \
+from ._constants import PLACE_TYPES, FARM, TOWN, MOUNTAIN, FOREST, BEACH, HOME, MINUTES_IN_A_DAY, \
     IMAGE_PREFIX, PLACE_IMAGE_DIR, SHOP, ACTIVITY_ICON_PATHS, WILD_TYPES, ITEM_POOL_TYPE_MAP
-from .item import Item
 from .action import Action
+from .clock import Clock
+from .item import Item
 
 
 class PlaceManager(models.Manager):
@@ -133,11 +134,21 @@ class Building(Place):
     over = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(3)], default=2)
     down = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(3)], default=2)
 
+    opening_time = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(MINUTES_IN_A_DAY - 1)])
+    closing_time = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(MINUTES_IN_A_DAY - 1)])
+
+
     def __str__(self):
         return super().__str__()
 
     def serialize(self):
-        building_data = {'coords': self.coordinates}
+        building_data = {
+            'coords': self.coordinates,
+            'openingTime': self.opening_time,
+            'closingTime': self.closing_time,
+            'openingTimeDisplay': self.get_time_display(self.opening_time),
+            'closingTimeDisplay': self.get_time_display(self.closing_time)
+        }
         combined_data = building_data | super().serialize()
 
         return combined_data
@@ -148,6 +159,18 @@ class Building(Place):
             'over': self.over,
             'down': self.down
         }
+
+    def is_open(self, time):
+        if not self.opening_time or not self.closing_time:
+            return True
+        else:
+            return self.opening_time <= time < self.closing_time
+
+    def get_time_display(self, time):
+        if not time:
+            return ""
+
+        return Clock.convert_time_to_display(time)
 
     class Meta:
         ordering = ['name']

@@ -80,6 +80,8 @@ ul {
         filter: brightness(50%) drop-shadow(0 0 0.5rem #fff); }
     #page.dark-mode #location .building {
       border-color: #ddd; }
+    #page.dark-mode .message.error {
+      color: #ffc107; }
 
 .action-pill {
   display: flex;
@@ -548,10 +550,9 @@ ul {
   width: 40%;
   height: 40%; }
   #activities .local-activity.inactive img {
-    cursor: default;
-    filter: grayscale(100%); }
+    filter: grayscale(100%) !important; }
     #activities .local-activity.inactive img:hover, #activities .local-activity.inactive img:active {
-      filter: grayscale(100%); }
+      filter: grayscale(100%) !important; }
   #activities .local-activity.gather {
     left: 50%;
     top: 50%;
@@ -612,6 +613,10 @@ ul {
     filter: brightness(90%) drop-shadow(0.5rem 0.5rem 0.25rem #000); }
   #buildings .building:active {
     filter: brightness(50%) drop-shadow(0.5rem 0.5rem 0.25rem #000); }
+  #buildings .building.inactive {
+    filter: grayscale(100%) !important; }
+    #buildings .building.inactive:hover, #buildings .building.inactive:active {
+      filter: grayscale(100%) !important; }
   #buildings .building.over-1 {
     left: 2%; }
   #buildings .building.over-2 {
@@ -741,7 +746,7 @@ ul {
     #message-log .message:last-child {
       border: none; }
     #message-log .message.error {
-      color: darkred; }
+      color: #cd7a00; }
 
 /* right-sidebar elements, villagers and dialogue*/
 #far-sidebar {
@@ -775,14 +780,11 @@ ul {
       box-shadow: 0 0 0.5rem 0 #ccac00;
       border-color: #ccac00; }
     #villagers .villager.inactive {
-      cursor: default;
-      filter: grayscale(100%); }
+      filter: grayscale(100%) !important; }
       #villagers .villager.inactive:hover, #villagers .villager.inactive:active {
-        filter: grayscale(100%); }
-    #villagers .villager.no-hover-filter {
-      cursor: default; }
-      #villagers .villager.no-hover-filter:hover, #villagers .villager.no-hover-filter:active {
-        filter: none; }
+        filter: grayscale(100%) !important; }
+    #villagers .villager.gray-on-hover:hover, #villagers .villager.gray-on-hover:active {
+      filter: grayscale(100%) !important; }
     #villagers .villager .description {
       font-size: 0.75rem; }
 

@@ -54,7 +54,7 @@ class ActionGenerator:
             available_actions += self.gen_travel_actions(place, bridges)
 
         if len(buildings) > 0:
-            available_actions += self.gen_enter_actions(buildings)
+            available_actions += self.gen_enter_actions(buildings, clock)
 
         if place.place_type == FARM:
             available_actions += self.gen_farming_actions(contents, inventory)
@@ -134,14 +134,15 @@ class ActionGenerator:
 
         return actions
 
-    def gen_enter_actions(self, buildings):
-        """Returns a list of enter actions: what buildings can be entered"""
+    def gen_enter_actions(self, buildings, clock):
+        """Returns a list of enter actions: what buildings can be entered, based on the time of day"""
         guard_types(buildings, Building)
 
         actions = []
 
         for building in buildings:
-            actions.append(self.gen_enter_action(building))
+            if building.is_open(clock.time):
+                actions.append(self.gen_enter_action(building))
 
         return actions
 
@@ -297,7 +298,8 @@ class ActionGenerator:
 
     def gen_plant_action(self, seed_token):
         """Returns an action that plants given seed"""
-        cost_amount = 30
+        cost_amount = seed_token.item.effort_time
+
         return Action(
             description=f'Plant {seed_token.name}',
             action_type=Action.PLANT,
@@ -310,7 +312,8 @@ class ActionGenerator:
 
     def gen_water_action(self, plant_token):
         """Returns an action that waters given seed/sprout"""
-        cost_amount = 30
+        cost_amount = plant_token.item.effort_time
+
         return Action(
             description=f'Water {plant_token.name}',
             action_type=Action.WATER,
@@ -323,7 +326,8 @@ class ActionGenerator:
 
     def gen_harvest_action(self, crop_token):
         """Returns an action that harvests given crop"""
-        cost_amount = 30
+        cost_amount = crop_token.item.effort_time
+
         return Action(
             description=f'Harvest {crop_token.name}',
             action_type=Action.HARVEST,
@@ -407,6 +411,7 @@ class ActionGenerator:
 
         return actions
 
+
 class ActionExecutor:
     def execute(self, action, session):
         """Executes the given action, modifying relevant models in the session, and returns updated
@@ -450,7 +455,7 @@ class ActionExecutor:
         session.save()
 
         # calculate and add affinity
-        affinity_amount = self.__calc_talk_affinity_change(villager_state.affinity_tier, villager.friendliness)
+        affinity_amount = self.__calc_talk_affinity_change(villager_state.talked_to_count, villager.friendliness)
         hearts_gained = self.__update_affinity(villager_state, affinity_amount)
         session.hero_state.hearts_earned += hearts_gained
         session.hero_state.save()
@@ -623,6 +628,7 @@ class ActionExecutor:
         """Executes a plant action, which moves a seed from the hero's inventory into the session contents"""
 
         session.inventory.item_tokens.remove(action.target_item)
+        action.target_item.days_growing = 1
         session.location_state.item_tokens.add(action.target_item)
 
         log_statement = self.__add_emoji(action, action.log_statement)
@@ -761,20 +767,11 @@ class ActionExecutor:
         return modified_weight
 
 
-    def __calc_talk_affinity_change(self, affinity_tier, friendliness):
-        """Calculates the change in affinity for a talk action based on the affinity tier the villager is already at
+    def __calc_talk_affinity_change(self, talked_to_count, friendliness):
+        """Calculates the change in affinity for a talk action based on how many times you've talked to the villager
         and their base friendliness"""
 
-    #    0aff -> 1x
-    #    1aff -> 1.5x
-    #    2aff -> 2x
-    #    3aff -> 2.5x
-    #    4aff+ -> 3x
-
-        base_value = friendliness
-        multiplier = 1
-
-        return int(base_value * multiplier)
+        return talked_to_count + friendliness
 
     def __calc_gift_affinity_change(self, valence, rarity):
         """Calculates the change in affinity for a gift based on valence of villager's reaction,
@@ -1070,8 +1067,10 @@ class EventOperator:
                 new_contents.append(token)
                 continue
 
-            new_item = token.item.get_next_growth_stage()
-            new_item_token = ItemToken.objects.create(session=farm_state.session, item=new_item)
+            new_item = token.item.get_next_growth_stage(token.days_growing)
+            new_item_token = ItemToken.objects.create(
+                session=session, item=new_item, days_growing=token.days_growing + 1
+            )
             new_contents.append(new_item_token)
 
         farm_state.item_tokens.set(new_contents)

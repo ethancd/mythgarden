@@ -4,9 +4,12 @@ import colors from './_colors';
 enum WaitClass {
   Trivial = 'trivial',
   TrivialPlus = 'trivialPlus',
+  TrivialPlusPlus = 'trivialPlusPlus',
   SmallMinus = 'smallMinus',
+  Smallish = 'smallish',
   Small = 'small',
   SmallPlus = 'smallPlus',
+  SmallPlusPlus = 'smallPlusPlus',
   MediumMinus = 'mediumMinus',
   Medium = 'medium',
   MediumPlus = 'mediumPlus',
@@ -15,12 +18,15 @@ enum WaitClass {
 }
 
 const WAIT_TO_COLOR = {
-  [WaitClass.Trivial]: '#4d0',
-  [WaitClass.TrivialPlus]: '#8d0',
-  [WaitClass.SmallMinus]: '#ad0',
+  [WaitClass.Trivial]: '#3d0',
+  [WaitClass.TrivialPlus]: '#5d0',
+  [WaitClass.TrivialPlusPlus]: '#7d0',
+  [WaitClass.SmallMinus]: '#9d0',
+  [WaitClass.Smallish]: '#bd0',
   [WaitClass.Small]: '#dd0',
   [WaitClass.SmallPlus]: '#db0',
-  [WaitClass.MediumMinus]: '#da0',
+  [WaitClass.SmallPlusPlus]: '#da0',
+  [WaitClass.MediumMinus]: '#d90',
   [WaitClass.Medium]: '#d80',
   [WaitClass.MediumPlus]: '#d60',
   [WaitClass.LongMinus]: '#d30',

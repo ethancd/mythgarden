@@ -15,7 +15,7 @@ export default function Villager ({ name, imageUrl, affinity, description, id, a
   const [{isDragging}, dropRef] = useDrop(() => ({
     accept: 'GIFT',
     drop: (item: DraggableGiftProps, monitor) => {
-      if (!isGiftReceiver) return
+      if (!isGiftReceiver) return // this is getting memoized to w/e it is when the villager is first rendered
 
       const digest = GIFT_DIGEST_TEMPLATE.replace('giftId', `${item.giftData.id}`).replace('villagerId',  `${id}`)
       void postAction(digest)
@@ -31,7 +31,7 @@ export default function Villager ({ name, imageUrl, affinity, description, id, a
 
   return (
     <li
-      className={`villager ${highlight ? 'highlighted' : ''} ${grayOut ? 'inactive' : ''} ${ignore ? 'no-hover-filter': ''}`}
+      className={`villager ${highlight ? 'highlighted' : ''} ${grayOut ? 'inactive' : ''} ${ignore ? 'gray-on-hover': ''}`}
       key={id}
       data-entity-id={id}
       ref={dropRef}>
