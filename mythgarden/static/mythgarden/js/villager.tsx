@@ -15,15 +15,15 @@ export default function Villager ({ name, imageUrl, affinity, description, id, a
   const [{isDragging}, dropRef] = useDrop(() => ({
     accept: 'GIFT',
     drop: (item: DraggableGiftProps, monitor) => {
-      if (!isGiftReceiver) return // this is getting memoized to w/e it is when the villager is first rendered
+      if (!isGiftReceiver) return
 
       const digest = GIFT_DIGEST_TEMPLATE.replace('giftId', `${item.giftData.id}`).replace('villagerId',  `${id}`)
       void postAction(digest)
     },
     collect: (monitor) => ({
-      isDragging: monitor.getItem() != null
+      isDragging: monitor.getItem() != null,
     })
-  }))
+  }), [isGiftReceiver])
 
   const highlight = isDragging && isGiftReceiver
   const grayOut = isDragging && !isGiftReceiver

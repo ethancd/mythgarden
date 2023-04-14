@@ -45,8 +45,10 @@ class Item(models.Model):
         next_price = self.get_next_price(next_type)
 
         instance, created = Item.objects.get_or_create(
-                            name=next_name, item_type=next_type, price=next_price,
-                            rarity=self.rarity, icon=self.icon)
+                                name=next_name, item_type=next_type, price=next_price,
+                                rarity=self.rarity, icon=self.icon,
+                                growth_days=self.growth_days, effort_time=self.effort_time
+                            )
 
         return instance
 

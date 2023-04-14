@@ -629,6 +629,7 @@ class ActionExecutor:
 
         session.inventory.item_tokens.remove(action.target_item)
         action.target_item.days_growing = 1
+        action.target_item.save()
         session.location_state.item_tokens.add(action.target_item)
 
         log_statement = self.__add_emoji(action, action.log_statement)
