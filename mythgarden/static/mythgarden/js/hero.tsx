@@ -17,9 +17,9 @@ export default function Hero ({ name, isDefaultName, imageUrl, score, highScore,
       </div>
       <div className="column">
         <TypeableName {...{ name, isDefaultName }}></TypeableName>
+        {highScore > 0 ? <span id='high-score'> High Score: {highScore}</span> : null }
         <div id="score">
           <span>{score}</span> <span>(⚜️{koinEarned} x {heartsEarned}❤️)</span>
-          {highScore > 0 ? <span id='high-score'> High Score: {highScore}</span> : null }
         </div>
       </div>
     </div>

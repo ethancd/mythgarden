@@ -171,6 +171,15 @@ $hot-red: #fd1892;
   border-image-slice: 1;
 }
 
+@mixin subdued-rainbow-gradient($amount) {
+  background: linear-gradient(to right,
+    desaturate($fuschia, $amount) 0%,
+    desaturate($electric-blue, $amount) 25%,
+    desaturate($bright-green, $amount) 50%,
+    desaturate($light-orange, $amount) 75%,
+    desaturate($hot-red, $amount) 100%);
+}
+
 
 @mixin filter-brightness($percent) {
   filter: brightness($percent);
@@ -246,6 +255,14 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
                 opacity $transition-time linear;
 
     border-radius: $portrait-radius;
+}
+
+@mixin action-filter {
+    @include portrait-filter;
+    z-index: 11;
+    border-radius: $small-curve;
+    padding: $pen-thinnish;
+    top: -$pen-thinnish;
 }
 
 @mixin rarity-indicators {
@@ -327,16 +344,16 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
 
 .action-pill {
   @include row;
+  @include subdued-rainbow-gradient(60);
   position: absolute;
   bottom: 0;
   right: 0;
   font-size: $med-small-text;
   border-radius: $small-curve;
-  background-color: #4682b4;
   gap: $small-gutter;
   align-items: baseline;
   height: 2rem;
-  border: $pen-thinnish solid darken(#4682b4, 20%);
+  border: $pen-thinnish solid rgba(255, 255, 255, 0.25);
   min-width: 4rem;
   justify-content: center;
   opacity: 0.9;
@@ -513,6 +530,9 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
 #high-score {
   font-size: $small-text;
   opacity: $meta-element-opacity;
+  font-style: italic;
+  position: relative;
+  top: 10%;
 
   @media only screen and (max-width: 900px) {
     font-size: $fine-text;
@@ -548,6 +568,13 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
   opacity: $meta-element-opacity;
   font-size: $smallish-text;
   text-align: right;
+  font-style: italic;
+  position: relative;
+  top: -10%;
+
+  strong {
+    font-weight: bold;
+  }
 
   @media only screen and (max-width: 900px) {
     font-size: $small-text;
@@ -646,6 +673,64 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
   height: 100%;
 }
 
+@mixin inventory-item {
+  @include clickable;
+  @include row;
+  word-wrap: break-word;
+  align-items: center;
+  gap: $small-gutter;
+  position: relative;
+  border: $pen-thinnish solid transparent;
+  border-radius: $pen-thinnish;
+  max-width: 100%;
+  z-index: 10;
+  box-sizing: border-box;
+
+  &.empty-slot {
+    @include non-clickable;
+    opacity: 0.5;
+    flex-grow: 1;
+  }
+
+  .item-filter {
+    @include portrait-filter;
+    border-radius: $pen-thinnish;
+  }
+
+  @include rarity-indicators;
+
+  .type {
+    font-size: $medium-text;
+    position: relative;
+
+    @media only screen and (max-width: 900px) {
+      font-size: $med-small-text;
+    }
+
+    &:after {
+      content: '';
+      position: absolute;
+      font-size: $medium-text;
+      bottom: calc(0% - 2rem); // 2rem == $medium-text
+      left: 0;
+
+      @media only screen and (max-width: 900px) {
+        font-size: $med-small-text;
+      }
+    }
+  }
+
+  .name {
+    font-size: $med-small-text;
+    display: inline-block;
+    max-width: 80%;
+
+    @media only screen and (max-width: 900px) {
+      font-size: $small-text;
+    }
+  }
+}
+
 #inventory .item, #inventory + .item {
   @include clickable;
   @include row;
@@ -663,6 +748,11 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
     @include non-clickable;
     opacity: 0.5;
     flex-grow: 1;
+  }
+
+  .item-filter {
+    @include portrait-filter;
+    border-radius: $pen-thinnish;
   }
 
   @include rarity-indicators;
@@ -702,6 +792,10 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
 #inventory .item {
   &.common {
     border-radius: 0;
+
+    .item-filter {
+      border-radius: 0;
+    }
   }
 }
 
@@ -728,14 +822,13 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
   @include column;
   height: 100%;
   width: 70%;
-  justify-content: space-between;
+  justify-content: flex-start;
 }
 
 #location {
-  height: 70%;
+  height: calc(100% - 3rem); // want to be courteous of message-log
   position: relative;
   width: 100%;
-  flex-grow: 0;
 
   h2.name {
     font-size: $med-large-text;
@@ -781,8 +874,9 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
 
   .landscape {
     width: 100%;
-    height: auto;
+    height: 100%;
     filter: grayscale(50%);
+    object-fit: cover;
   }
 
 }
@@ -901,6 +995,7 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
     &.travel, &.sleep {
       bottom: $edge-distance;
       height: 50%;
+      width: 20%;
 
       img {
         margin: 0;
@@ -911,9 +1006,8 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
       left: $edge-distance;
 
       .action-pill {
-        right: 50%;
+        right: 0;
         bottom: 0;
-        transform: translateX(50%);
       }
     }
 
@@ -924,7 +1018,7 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
         float: right;
       }
 
-      .action-pill {
+      .action-pill { // need to fix this once we have a permanent bed image :D
         right: 24%;
         bottom: unset;
         top: -10%;
@@ -1013,15 +1107,22 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
   }
 }
 
-
 #local-items {
   @include row;
   background-color: $sandy-brown;
-  height: 20%;
-  justify-content: space-between;
+  height: 40%;
+  justify-content: space-evenly;
+  align-content: space-around;
   overflow: hidden;
-  width: 100%;
-  position: relative;
+  width: 40%;
+  position: absolute;
+  z-index: 2;
+  top: 55%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  flex-wrap: wrap;
+  border: $pen-thinnish solid desaturate(darken($sandy-brown, 30%), 50%);
+  border-radius: $small-curve;
 
   .item {
     @include clickable;
@@ -1029,11 +1130,13 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
     position: relative;
     display: flex;
     flex-direction: column;
-    width: 15%;
+    width: 30%;
+    height: 45%;
     box-sizing: border-box;
     overflow: hidden;
     word-wrap: break-word;
     border-radius: $pen-thinnish;
+    border: $pencil-thin dashed darken($sandy-brown, 20%);
 
     &.empty-slot {
       @include non-clickable;
@@ -1075,19 +1178,11 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
   }
 }
 
-
-#footer {
-  height: 10%;
-  flex-grow: 1;
-  width: 100%;
-  position: relative;
-}
-
 #message-log {
   background-color: $parchment;
   display: block;
   width: 100%;
-  height: 100%;
+  height: 3rem;
   overflow-y: auto;
 
   .message {
@@ -1143,6 +1238,14 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
           border-color: darken(gold, 10%);
         }
       }
+    }
+
+    .action-pill {
+      z-index: 10;
+    }
+
+    .action-filter {
+      @include action-filter;
     }
 
     &.inactive {

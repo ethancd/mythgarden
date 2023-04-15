@@ -1,10 +1,13 @@
 'use strict'
 
-import React from 'react'
+import React, {useContext} from 'react'
 
 import ActionPill, {ActionPillProps} from "./action";
+import {ImageFilterContext} from "./lightColorLogic";
 
 export default function Item ({ name, emoji, id, rarity, hasBeenWatered, quantity, actionPill, style}: ItemProps): JSX.Element {
+  const { backgroundColor, opacity } = useContext(ImageFilterContext)
+
   return (
         <li
             className={`item ${rarity}${hasBeenWatered ? ' watered' : ''}`}
@@ -19,6 +22,7 @@ export default function Item ({ name, emoji, id, rarity, hasBeenWatered, quantit
               ? <ActionPill {...actionPill}></ActionPill>
               : null
             }
+            <div className='item-filter' style={{backgroundColor, opacity}}></div>
         </li>
   )
 }

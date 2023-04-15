@@ -112,7 +112,7 @@ def get_requested_action(request, session):
     try:
         return [a for a in available_actions if a.unique_digest == action_digest][0]
     except IndexError:
-        raise ValidationError('requested action not available')
+        raise ValidationError("⚠️ Oops, that action isn't available")
 
 
 def get_serialized_messages(session):
@@ -121,7 +121,7 @@ def get_serialized_messages(session):
 
 def validate_action(session, requested_action):
     if not can_afford_action(session.wallet, requested_action):
-        raise ValidationError('hero cannot afford requested action')
+        raise ValidationError("⚠️ You don't have enough fleurs to afford that right now")
 
 
 def custom_serialize(obj):

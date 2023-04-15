@@ -1096,7 +1096,7 @@ class EventOperator:
             is_error = False
         else:
             clock.advance(clock.minutes_to_overslept_time)
-            sleep_message = "You passed out at midnight and overslept! You're just now waking up."
+            sleep_message = "⚠️ You passed out at midnight and overslept! You're just now waking up."
             is_error = True
 
         clock.is_new_day = False

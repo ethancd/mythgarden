@@ -2,7 +2,7 @@ import React from 'react'
 import Duration, { WaitClass } from "./duration";
 import PriceTag from "./priceTag";
 
-export default function ActionPill ({ emoji, costAmount, costType, waitClass }: ActionPillProps): JSX.Element {
+export default function ActionPill ({ emoji, costAmount, costType, waitClass, backgroundColor, opacity }: ActionPillProps): JSX.Element {
   if (costAmount == null || costType == null) {
     return (
       <div className='action-pill'>
@@ -18,6 +18,10 @@ export default function ActionPill ({ emoji, costAmount, costType, waitClass }: 
                 <Duration amount={costAmount} waitClass={waitClass}></Duration>
               </>
             : <PriceTag amount={costAmount}></PriceTag>
+          }
+          { backgroundColor != null
+            ? <div className='action-filter' style={{ backgroundColor, opacity }}></div>
+            : null
           }
       </div>
     )
@@ -48,6 +52,12 @@ interface ActionData {
   uniqueDigest: string
 }
 
-type ActionPillProps = Pick<ActionData, 'costAmount'|'costType'|'emoji'|'waitClass'>
+interface ActionExtras {
+  backgroundColor?: string
+  opacity?: number
+}
+
+type ActionPillProps = Pick<ActionData, 'costAmount'|'costType'|'emoji'|'waitClass'> & ActionExtras;
+
 
 export { ActionPill, type ActionPillProps, type ActionData, WaitClass }

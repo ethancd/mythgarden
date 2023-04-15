@@ -23,7 +23,7 @@ export default function Clock ({ display, time, boostLevel, luckPercent }: Clock
       <div id="clock">
         <div className={lateness}>{display}</div>
         { boostLevel > 0
-          ? <div id="boost">lvl.{boostLevel}</div>
+          ? <div id="boost">Time Boost lvl <strong>{boostLevel}</strong></div>
           : null }
         { luckPercent != ''
           ? <div id='luck-percent'>{`+${luckPercent}`} <RainbowText text={'luck'} shading={0.35}></RainbowText></div>

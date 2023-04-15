@@ -39,7 +39,7 @@ export default function Villager ({ name, imageUrl, affinity, description, id, a
         <div className="portrait">
           <img src={imageUrl}></img>
           { actionPill != null
-            ? <ActionPill {...actionPill}></ActionPill>
+            ? <ActionPill {...{...actionPill, backgroundColor, opacity}}></ActionPill>
             : null
           }
           <div className='portrait-filter' style={{ backgroundColor, opacity }}></div>

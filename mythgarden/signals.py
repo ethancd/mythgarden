@@ -16,13 +16,13 @@ from .models.wallet import Wallet
 @receiver(m2m_changed, sender=Inventory.item_tokens.through)
 def inventory_items_changed(sender, instance, action, **kwargs):
     if action == 'post_add' and instance.item_tokens.count() > MAX_ITEMS:
-        raise ValidationError(f'Inventory cannot hold more than {MAX_ITEMS} items.')
+        raise ValidationError(f'⚠️ Inventory cannot hold more than {MAX_ITEMS} items.')
 
 
 @receiver(m2m_changed, sender=PlaceState.item_tokens.through)
 def local_items_changed(sender, instance, action, **kwargs):
     if action == 'post_add' and instance.item_tokens.count() > MAX_ITEMS:
-        raise ValidationError(f'{instance.place.name} cannot hold more than {MAX_ITEMS} items.')
+        raise ValidationError(f'⚠️ {instance.place.name} cannot hold more than {MAX_ITEMS} items.')
 
 
 @receiver(post_save, sender=Session)

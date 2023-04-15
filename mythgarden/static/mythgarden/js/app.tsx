@@ -320,25 +320,23 @@ class App extends React.Component<Partial<AppProps>, AppState> {
                   actionDictionary={actionDictionary}
                   time={clock.time}
                 ></BuildingsList>
+
+                {place.hasInventory
+                  ? <ItemsList
+                    id='local-items'
+                    baseColor={colors.sandyBrown}
+                    items={localItemTokens}
+                    actionDictionary={actionDictionary}
+                    giftable={false}
+                  ></ItemsList>
+                  : null
+                }
               </Location>
 
-              {place.hasInventory
-                ? <ItemsList
-                  id='local-items'
-                  baseColor={colors.sandyBrown}
-                  items={localItemTokens}
-                  actionDictionary={actionDictionary}
-                  giftable={false}
-                ></ItemsList>
-                : null
-              }
-
-              <section id='footer'>
-                <List id='message-log' baseColor={colors.parchment}>
-                  {messages?.map(message => Message({ ...message }))}
-                  {ephemerealMessage ? Message({text: ephemerealMessage, isError: true, id: EPHEMEREAL_MSG_ID}) : null}
-                </List>
-              </section>
+              <List id='message-log' baseColor={colors.parchment}>
+                {messages?.map(message => Message({ ...message }))}
+                {ephemerealMessage ? Message({text: ephemerealMessage, isError: true, id: EPHEMEREAL_MSG_ID}) : null}
+              </List>
             </section>
             <section id='far-sidebar'>
               <VillagersList villagers={villagerStates}
