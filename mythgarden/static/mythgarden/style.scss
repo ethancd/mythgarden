@@ -532,7 +532,7 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
   opacity: $meta-element-opacity;
   font-style: italic;
   position: relative;
-  top: 10%;
+  top: -15%;
 
   @media only screen and (max-width: 900px) {
     font-size: $fine-text;

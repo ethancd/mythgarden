@@ -252,7 +252,7 @@ ul {
   opacity: 0.6;
   font-style: italic;
   position: relative;
-  top: 10%; }
+  top: -15%; }
   @media only screen and (max-width: 900px) {
     #high-score {
       font-size: 0.75rem; } }

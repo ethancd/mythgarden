@@ -51,6 +51,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
     this.state = {
       combinedProps: props,
       showGallery: false,
+      showDialogue: false,
       ephemerealMessage: undefined
     }
   }
@@ -63,15 +64,26 @@ class App extends React.Component<Partial<AppProps>, AppState> {
      */
     const combinedProps = { ...this.state.combinedProps, dialogue: null, ...this.props }
 
+    this.resetDialogueAsNeeded(combinedProps)
+    this.scrollToMessageBottom()
+
     if (!isDeepEqual(combinedProps, this.state.combinedProps)) {
       this.setState({ combinedProps })
     }
-
-    this.scrollToMessageBottom()
   }
 
   componentDidMount (): void {
     this.scrollToMessageBottom()
+  }
+
+
+  resetDialogueAsNeeded (combinedProps: Partial<AppProps>) {
+    const prevId = this.state.combinedProps.dialogue?.id
+    const newId = combinedProps.dialogue?.id
+
+    if (newId != null && prevId != newId) {
+      this.setState({showDialogue: true})
+    }
   }
 
   // might be nice to move this to a MessagesList component and just do it on render there
@@ -244,7 +256,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
   }
 
   clearActiveUX (): void {
-    this.setState({ showGallery: false, ephemerealMessage: undefined })
+    this.setState({ showGallery: false, showDialogue: false, ephemerealMessage: undefined })
   }
 
   render (): JSX.Element {
@@ -265,7 +277,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
       speaker
     } = this.state.combinedProps
 
-    const { showGallery, ephemerealMessage } = this.state
+    const { showGallery, showDialogue, ephemerealMessage } = this.state
 
     const colorFilter = getColorFilterByTime(clock.time)
     const imageFilter = getImageFilter(colorFilter)
@@ -343,7 +355,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
                            actionDictionary={actionDictionary}
                            giftReceiverIds={giftReceiverIds}
               ></VillagersList>
-              {(dialogue != null ? <Dialogue {...dialogue} affinity={speaker?.affinity} key={dialogue.id}></Dialogue> : null)}
+              {(showDialogue && dialogue != null) ? <Dialogue {...dialogue} affinity={speaker?.affinity} key={dialogue.id}></Dialogue> : null}
             </section>
           </div>
         </Section>
@@ -376,6 +388,7 @@ interface AppProps {
 interface AppState {
   combinedProps: AppProps
   showGallery: boolean
+  showDialogue: boolean
   ephemerealMessage?: string
 }
 
