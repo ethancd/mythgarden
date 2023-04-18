@@ -44,14 +44,11 @@ async function postAction (uniqueDigest: string): Promise<void> {
 async function postUserData (userData: UserData): Promise<void> {
   await post('/user_data', { userData })
     .then((response: any) => {
-      // console.log(response)
-
       if (response.error != null) {
         throw response
       }
       renderApp({ hero: response.hero as HeroData, messages: response.messages as MessageProps[] })
     }).catch((response: any) => {
-      // console.log(response)
       renderApp({ messages: response.messages as MessageProps[] })
     })
 }

@@ -10,7 +10,7 @@ from django.urls import reverse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.conf import settings
 
-from .view_helpers import retrieve_session, get_home_models, get_fresh_models, get_requested_action, get_serialized_messages, \
+from .view_helpers import retrieve_session, ensure_state_objects_created, get_home_models, get_fresh_models, get_requested_action, get_serialized_messages, \
     validate_action, custom_serialize, set_user_data, load_session_with_related_data
 from .game_logic import ActionGenerator, ActionExecutor, EventOperator
 from .models import Session
@@ -50,8 +50,9 @@ def action(request):
 
     if session.game_over:
         with transaction.atomic():
-            EventOperator().trigger_game_over(session)
+            session = EventOperator().trigger_game_over(session)
 
+        session = ensure_state_objects_created(session)
         home_models = get_home_models(session)
         results = {model_name: custom_serialize(data) for model_name, data in home_models.items()}
         return JsonResponse(results)

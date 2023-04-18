@@ -55,21 +55,15 @@ function Sky ({ time, dayNumber }: Pick<ClockData, 'time' | 'dayNumber'>): JSX.E
       gameTimeToDock *= 36
     }
 
-    console.log(`gameTimeToDock ${gameTimeToDock}`)
-
     let newTime = gameTime - gameTimeToDock
     if (newTime < 0) {
       setGameDay(gameDay - 1)
       newTime += TIME_IN_24_HOURS
     }
 
-    console.log(`newTime ${newTime}`)
-
     if (dayNumber < gameDay) {
       setGameTime(newTime)
     } else {
-
-      console.log(`setting to ${Math.max(newTime, time)}`)
       setGameTime(Math.max(newTime, time))
     }
   }
@@ -85,7 +79,6 @@ function Sky ({ time, dayNumber }: Pick<ClockData, 'time' | 'dayNumber'>): JSX.E
     }
 
     if (dayNumber < gameDay || (sameDay && time < gameTime)) {
-      console.log(dayNumber, gameDay, time, gameTime)
       tickTimeBackward(deltaInMs)
     }
 

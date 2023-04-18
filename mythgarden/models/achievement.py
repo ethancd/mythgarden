@@ -21,6 +21,10 @@ class Achievement(models.Model):
         else:
             return ACHIEVEMENT_EMOJIS[self.trigger_type]
 
+    @property
+    def unlocked_message(self):
+        return f"🎉 Achievement Unlocked: {self.name}!"
+
     @classmethod
     def check_triggered_achievements(cls, trigger_type, session, *args, **kwargs):
         achievements = cls.objects.filter(trigger_type=trigger_type)
@@ -40,6 +44,7 @@ class Achievement(models.Model):
 
             if achieved:
                 session.hero.achievements.add(achievement)
+                session.messages.create(achievement.unlocked_message)
                 notched_count += 1
 
         return notched_count

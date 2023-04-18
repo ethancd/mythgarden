@@ -1122,8 +1122,7 @@ class EventOperator:
 
         end_of_game_message = self.get_end_of_game_message(hero_state, is_new_high_score)
 
-        session.reset_session_state(end_of_game_message)
-        session.save()
+        return session.reset_session_state(end_of_game_message)
 
     def trigger_kys(self, session):
         days_completed = DAY_TO_INDEX[session.clock.day]
