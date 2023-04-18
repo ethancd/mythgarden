@@ -1,10 +1,12 @@
 'use strict'
 
-import React from 'react'
+import React, {useState} from 'react'
 import { type ClockData } from './clock'
+import useAnimationFrame from "./useAnimationFrame";
 
 const SUNRISE = 6 * 60
 const SUNSET = 18 * 60
+const TIME_IN_2_HOURS = 2 * 60
 const TIME_IN_12_HOURS = SUNSET - SUNRISE
 const TIME_IN_24_HOURS = 24 * 60
 
@@ -18,92 +20,78 @@ const MOON_BYE = SUNRISE
 const PHASE_WIDTH_STEP = 0.08 // ~ 1 / 14 – aka how big of steps to take to move from 1 to 0 in 14 days
 const INITIAL_PHASE_WIDTH = PHASE_WIDTH_STEP * 6 // this way, the final day will have phase-width = 0 aka half moon
 
+const MS_TO_GAME_MINUTES_RATIO = 0.12
 
-// this equation brought to you by wolfram alpha:
-// solving for the parabola with points at (0,0), (.5, 1), and (1, 0)
-// (aka sunrise, noon, and sunset)
-const parabola = (x: number): number => (4 * x) - (4 * x * x)
+function Sky ({ time, dayNumber }: Pick<ClockData, 'time' | 'dayNumber'>): JSX.Element | null {
+  const [gameTime, setGameTime] = useState(time)
+  const [gameDay, setGameDay] = useState(dayNumber)
 
+  useAnimationFrame(deltaInMs => {
+    if (time == gameTime && dayNumber == gameDay) return
+
+    const speedUp = (dayNumber > gameDay || time > gameTime + TIME_IN_2_HOURS) ? 6 : 1
+    const gameTimeToAdd = deltaInMs * MS_TO_GAME_MINUTES_RATIO * speedUp
+
+    let newTime = gameTime + gameTimeToAdd
+    if (newTime > TIME_IN_24_HOURS) {
+      setGameDay(gameDay + 1)
+      newTime -= TIME_IN_24_HOURS
+    }
+
+    if (dayNumber > gameDay) {
+      setGameTime(newTime)
+    } else {
+      setGameTime(Math.min(newTime, time))
+    }
+  }, [time, gameTime, dayNumber, gameDay])
+
+  return (
+    <div id='sky-container'>
+        <Sun time={gameTime}></Sun>
+        <Moon time={gameTime} dayNumber={dayNumber}></Moon>
+    </div>
+  )
+}
+
+const getThetaFromTime = (time: number, zeroPoint: number): number => (zeroPoint + 2 - time/TIME_IN_12_HOURS) % 2 * Math.PI
+const getX = (theta: number): number => Math.cos(theta)/2 + 0.5
+const getY = (theta: number): number => Math.sin(theta)
 const getPercent = (n: number): string => `${n * 100}%`
 
 function Sun ({ time }: Pick<ClockData, 'time'>): JSX.Element | null {
-  const isSunVisible = time > TRUE_DAWN && time < TRUE_NIGHT
-  const isSunUp = time >= SUNRISE && time <= SUNSET
+  const isSunVisible = (time: number) => time > TRUE_DAWN && time < TRUE_NIGHT
 
-  function getX (time: number): number {
-    if (isSunUp) {
-      const timePastSunrise = time - SUNRISE
-      return timePastSunrise / TIME_IN_12_HOURS
-    } else {
-      const timeUntilSunrise = (SUNRISE + TIME_IN_24_HOURS - time) % TIME_IN_24_HOURS
-      return timeUntilSunrise / TIME_IN_12_HOURS
-    }
-  }
+  const theta = getThetaFromTime(time, 3/2)
+  const x = getX(theta)
+  const y = getY(theta)
 
-  function getY (x: number): number {
-    if (isSunUp) {
-      return parabola(x)
-    } else {
-      return -parabola(x)
-    }
-  }
-
-  const x = getX(time)
-  const y = getY(x)
-
-  if (isSunVisible) {
-    return (
-      <div id="sun" style={{ left: getPercent(x), bottom: getPercent(y) }}></div>
-    )
-  } else {
-    return null
-  }
+  return (isSunVisible(time))
+    ? <div id="sun" style={{ left: getPercent(x), bottom: getPercent(y) }}></div>
+    : null
 }
 
 function Moon ({ time, dayNumber }: Pick<ClockData, 'time' | 'dayNumber'>): JSX.Element | null {
-  const isMoonVisible = time < MOON_BYE || time > MOON_HI
-
-  const isMoonUp = time <= SUNRISE || time >= SUNSET
-
-  function getX (time: number): number {
-    if (isMoonUp) {
-      const timePastSunset = (time + TIME_IN_24_HOURS - SUNSET) % TIME_IN_24_HOURS
-      return timePastSunset / TIME_IN_12_HOURS
-    } else {
-      const timeUntilSunset = SUNSET - time
-      return timeUntilSunset / TIME_IN_12_HOURS
-    }
-  }
-
-  function getY (x: number): number {
-    if (isMoonUp) {
-      return parabola(x)
-    } else {
-      return -parabola(x)
-    }
-  }
+  const isMoonVisible = (time: number) => time < MOON_BYE || time > MOON_HI
 
   function getPhaseWidth (dayNumber: number): number {
     return INITIAL_PHASE_WIDTH - (PHASE_WIDTH_STEP * dayNumber)
   }
 
-  const x = getX(time)
-  const y = getY(x)
+  const theta = getThetaFromTime(time, 1/2)
+  const x = getX(theta)
+  const y = getY(theta)
   const phaseWidth = getPhaseWidth(dayNumber)
 
-  if (isMoonVisible) {
-    return (
-      <div id="moon" style={{ left: getPercent(x), bottom: getPercent(y) }}>
+  return (isMoonVisible(time))
+    ? <div id="moon" style={{ left: getPercent(x), bottom: getPercent(y) }}>
         <div id="darkside"></div>
         <div id="ellipse" style={{ width: getPercent(phaseWidth) }}></div>
       </div>
-    )
-  } else {
-    return null
-  }
+    : null
 }
 
 export {
+  Sky,
   Sun,
   Moon
 }

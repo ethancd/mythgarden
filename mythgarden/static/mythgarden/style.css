@@ -173,6 +173,26 @@ ul {
       pointer-events: none;
       transition: background-color 1s linear, opacity 1s linear;
       border-radius: 25%; }
+  #hero .achievements-pill {
+    background: linear-gradient(to right, #b03de6 0%, #4191e7 25%, #b1e848 50%, #eabf4b 75%, #e62f90 100%);
+    cursor: pointer;
+    position: absolute;
+    right: -0.2rem;
+    bottom: -0.2rem;
+    font-size: 1rem;
+    border-radius: 0.5rem;
+    border: 0.2rem solid rgba(255, 255, 255, 0.25);
+    z-index: 10;
+    color: #333; }
+    #hero .achievements-pill:hover {
+      filter: brightness(90%); }
+    #hero .achievements-pill:active {
+      filter: brightness(50%); }
+    #hero .achievements-pill *:first-child {
+      font-size: 1.5rem; }
+      @media only screen and (max-width: 900px) {
+        #hero .achievements-pill *:first-child {
+          font-size: 1.25rem; } }
   #hero .column {
     justify-content: space-between; }
   #hero .name {
@@ -219,6 +239,48 @@ ul {
     #gallery .portrait img {
       height: 100%;
       width: auto; }
+
+#achievements {
+  display: flex;
+  flex-direction: column;
+  border: 0.3rem solid transparent;
+  border-image: linear-gradient(to bottom right, #b827fc 0%, #2c90fc 25%, #b8fd33 50%, #fec837 75%, #fd1892 100%);
+  border-image-slice: 1;
+  top: 5vh;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50%;
+  z-index: 100;
+  background-color: rgba(51, 51, 51, 0.95);
+  overflow-y: auto;
+  height: 95vh;
+  box-sizing: border-box;
+  box-shadow: 0 0 10rem 5rem #333;
+  gap: 0.5rem;
+  position: absolute; }
+  #achievements h2 {
+    font-size: 2rem;
+    text-align: center;
+    color: #eee; }
+  #achievements .achievement {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    gap: 0.125rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 0.1rem solid #666;
+    align-items: center;
+    color: #eee; }
+    #achievements .achievement.empty-slot {
+      color: #999; }
+    #achievements .achievement .row {
+      gap: 0.125rem; }
+    #achievements .achievement .icon {
+      font-size: 2rem; }
+    #achievements .achievement .title {
+      font-size: 1.5rem; }
+    #achievements .achievement .description {
+      font-size: 1rem; }
 
 #logo {
   z-index: 2;

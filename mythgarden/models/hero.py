@@ -2,6 +2,7 @@ from django.db import models
 
 from ._constants import DEFAULT_PORTRAIT, LUCK_DENOMINATOR, CROP, MINING_ITEM_TYPES, FISHING_ITEM_TYPES, \
     FORAGING_ITEM_TYPES
+from .achievement import Achievement
 from .farmer_portrait import FarmerPortrait
 
 
@@ -110,7 +111,7 @@ class HeroState(models.Model):
             'isDefaultPortrait': self.hero.is_default_portrait,
             'imageUrl': self.hero.image_url,
             'boostLevel': self.hero.boost_level,
-            'luckPercent': self.hero.luck_percent
+            'luckPercent': self.hero.luck_percent,
         }
 
     @property

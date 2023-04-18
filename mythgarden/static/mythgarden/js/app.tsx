@@ -12,7 +12,7 @@ import List from './list'
 import {Location, type LocationData} from './location'
 import { Message, type MessageProps } from './message'
 import Section from './section'
-import { Sun, Moon } from './sky'
+import {Sky} from './sky'
 import {Villager, VillagerData } from './villager'
 import {VillagersList} from "./villagersList";
 import Wallet from './wallet'
@@ -45,6 +45,8 @@ const ITEM_ACTIONS = [WATER_ACTION, PLANT_ACTION, HARVEST_ACTION, BUY_ACTION, SE
 
 const EPHEMEREAL_MSG_ID = 0
 
+const TOTAL_ACHIEVEMENTS = 93  // should we be getting this from the db somehow? probably. will we? no.
+
 class App extends React.Component<Partial<AppProps>, AppState> {
   constructor (props: AppProps) {
     super(props)
@@ -52,6 +54,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
       combinedProps: props,
       showGallery: false,
       showDialogue: false,
+      showAchievementsList: false,
       ephemerealMessage: undefined
     }
   }
@@ -126,7 +129,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
   }
 
   getComponentTarget(e: React.SyntheticEvent) {
-    const componentClasses = ['action', 'local-activity', 'item', 'villager', 'building', 'hero-portrait', 'gallery', 'arrow']
+    const componentClasses = ['action', 'local-activity', 'item', 'villager', 'building', 'hero-portrait', 'achievements-pill', 'gallery', 'arrow']
     const componentClassSelector = componentClasses.map(c => '.' + c).join(', ')
     const componentDomNode = (e.target as HTMLElement).closest(componentClassSelector) as HTMLElement
 
@@ -192,6 +195,10 @@ class App extends React.Component<Partial<AppProps>, AppState> {
       }
     }
 
+    else if (this.hasClass(target, 'achievements-pill')) {
+      this.showAchievementsList()
+    }
+
     else if (this.hasClass(target, 'villager')) {
       if (this.hasClass(target, 'gray-on-hover')) {
         this.printVillagerTalkedToWarning(this.grabId(target.dataset) as number)
@@ -255,8 +262,12 @@ class App extends React.Component<Partial<AppProps>, AppState> {
     this.setState({ showGallery: true })
   }
 
+  showAchievementsList (): void {
+    this.setState({ showAchievementsList: true })
+  }
+
   clearActiveUX (): void {
-    this.setState({ showGallery: false, showDialogue: false, ephemerealMessage: undefined })
+    this.setState({ showGallery: false, showDialogue: false, showAchievementsList: false, ephemerealMessage: undefined })
   }
 
   render (): JSX.Element {
@@ -277,7 +288,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
       speaker
     } = this.state.combinedProps
 
-    const { showGallery, showDialogue, ephemerealMessage } = this.state
+    const { showGallery, showDialogue, showAchievementsList, ephemerealMessage } = this.state
 
     const colorFilter = getColorFilterByTime(clock.time)
     const imageFilter = getImageFilter(colorFilter)
@@ -293,15 +304,12 @@ class App extends React.Component<Partial<AppProps>, AppState> {
         <Section id="page" baseColor={colors.whiteYellow} handleClick={this.handleClick.bind(this)}>
 
           <Section id="top-bar" baseColor={colors.skyBlue}>
-            <Hero {...hero}></Hero>
+            <Hero {...hero} achievementsCount={achievements.length} totalAchievements={TOTAL_ACHIEVEMENTS}></Hero>
             <Gallery {...{show: showGallery, currentPortraitUrl: hero.imageUrl, portraitUrls} }></Gallery>
-            <AchievementsList achievements={achievements}></AchievementsList>
+            <AchievementsList show={showAchievementsList} achievements={achievements} totalAchievements={TOTAL_ACHIEVEMENTS}></AchievementsList>
             <h1 id="logo"><RainbowText text={'Mythgarden'}></RainbowText></h1>
             <Clock display={clock.display} time={clock.time} boostLevel={hero.boostLevel} luckPercent={hero.luckPercent}></Clock>
-            <div id='sky-container'>
-                <Sun time={clock.time}></Sun>
-                <Moon time={clock.time} dayNumber={clock.dayNumber}></Moon>
-            </div>
+            <Sky time={clock.time} dayNumber={clock.dayNumber}></Sky>
           </Section>
 
           <div id="main-area">
@@ -389,6 +397,7 @@ interface AppState {
   combinedProps: AppProps
   showGallery: boolean
   showDialogue: boolean
+  showAchievementsList: boolean
   ephemerealMessage?: string
 }
 

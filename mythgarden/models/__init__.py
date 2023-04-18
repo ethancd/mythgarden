@@ -11,7 +11,7 @@ from .item import Item, ItemToken
 from .item_type_preference import ItemTypePreference
 from .wallet import Wallet
 
-# imports from just .farmer_portrait
+# imports from .farmer_portrait
 from .hero import Hero, HeroState
 # imports from .action, .clock, and .item
 from .place import Place, PlaceState, Building

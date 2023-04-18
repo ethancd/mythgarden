@@ -6,7 +6,7 @@ import {ImageFilterContext} from "./lightColorLogic";
 import RainbowText from "./rainbowText";
 import {AchievementData} from "./achievementsList";
 
-export default function Hero ({ name, isDefaultName, imageUrl, score, highScore, luckPercent, koinEarned, heartsEarned }: HeroProps): JSX.Element {
+export default function Hero ({ name, isDefaultName, imageUrl, score, highScore, koinEarned, heartsEarned, achievementsCount, totalAchievements }: HeroProps): JSX.Element {
   const { backgroundColor, opacity } = useContext(ImageFilterContext)
 
   return (
@@ -14,6 +14,7 @@ export default function Hero ({ name, isDefaultName, imageUrl, score, highScore,
       <div className="portrait hero-portrait">
         <img src={imageUrl}></img>
         <div className='portrait-filter' style={{ backgroundColor, opacity }}></div>
+        <div className='achievements-pill'><span>🏆</span> <span>({achievementsCount}/{totalAchievements})</span></div>
       </div>
       <div className="column">
         <TypeableName {...{ name, isDefaultName }}></TypeableName>
@@ -36,8 +37,13 @@ interface HeroData {
   heartsEarned: number
   boostLevel: number
   luckPercent: string
+  achievementsCount: number
 }
 
-type HeroProps = Omit<HeroData, 'boostLevel'>
+interface HeroExtras {
+  totalAchievements: number
+}
+
+type HeroProps = Omit<HeroData, 'boostLevel'|'luckPercent'> & HeroExtras
 
 export { Hero, type HeroData, type HeroProps }

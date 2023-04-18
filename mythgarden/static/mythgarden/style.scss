@@ -441,6 +441,27 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
     }
   }
 
+  .achievements-pill{
+    @include subdued-rainbow-gradient(20);
+    @include clickable;
+    position: absolute;
+    right: -$pen-thinnish;
+    bottom: -$pen-thinnish;
+    font-size: $small-text;
+    border-radius: $small-curve;
+    border: $pen-thinnish solid rgba(255, 255, 255, 0.25);
+    z-index: 10;
+    color: $dark-text;
+
+    *:first-child {
+      font-size: $med-small-text;
+
+      @media only screen and (max-width: 900px) {
+        font-size: $smallish-text;
+      }
+    }
+  }
+
   .column {
     justify-content: space-between;
   }
@@ -490,6 +511,60 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
     }
   }
 }
+
+#achievements {
+  @include column;
+  @include rainbow-border;
+  top: 5vh;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50%;
+  z-index: 100;
+  background-color: fade-out($off-black-gray, 0.05);
+  overflow-y: auto;
+  height: 95vh;
+  box-sizing: border-box;
+  box-shadow: 0 0 $huge-shadow-distance $large-shadow-distance $off-black-gray;
+  gap: $small-gutter;
+  position: absolute;
+
+  h2 {
+    font-size: $medium-text;
+    text-align: center;
+    color: $light-text;
+  }
+
+  .achievement {
+    @include row;
+    width: 100%;
+    gap: $fine-gutter;
+    padding-bottom: $small-gutter;
+    border-bottom: $pencil-thin solid #666;
+    align-items: center;
+    color: $light-text;
+
+    &.empty-slot {
+      color: #999;
+    }
+
+    .row {
+      gap: $fine-gutter;
+    }
+
+    .icon {
+      font-size: $medium-text;
+    }
+
+    .title {
+      font-size: $med-small-text;
+
+    }
+    .description {
+      font-size: $small-text;
+    }
+  }
+}
+
 
 #logo {
   @include game-element;

@@ -26,7 +26,7 @@ async function post (url: string, data: object): Promise<Response> {
 }
 
 async function postAction (uniqueDigest: string): Promise<void> {
-  await post('action', { uniqueDigest })
+  await post('/action', { uniqueDigest })
     .then((response: any) => {
       console.log(response)
 
@@ -47,7 +47,7 @@ async function postAction (uniqueDigest: string): Promise<void> {
 }
 
 async function postUserData (userData: UserData): Promise<void> {
-  await post('user_data', { userData })
+  await post('/user_data', { userData })
     .then((response: any) => {
       // console.log(response)
 

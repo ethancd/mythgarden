@@ -60,6 +60,9 @@ class InventoryAdmin(admin.ModelAdmin):
         super().save_related(request, obj, form, change)
         obj.save()
 
+class HeroAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'high_score', 'boost_level', 'name')
+
 
 admin.site.register(Session, SessionAdmin)
 admin.site.register(Place, PlaceAdmin)
@@ -68,7 +71,7 @@ admin.site.register(Building)
 admin.site.register(Clock)
 admin.site.register(Wallet)
 admin.site.register(HeroState)
-admin.site.register(Hero)
+admin.site.register(Hero, HeroAdmin)
 admin.site.register(Inventory, InventoryAdmin)
 admin.site.register(PlaceState)
 admin.site.register(Villager)
