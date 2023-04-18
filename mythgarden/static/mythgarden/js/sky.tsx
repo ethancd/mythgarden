@@ -26,11 +26,15 @@ function Sky ({ time, dayNumber }: Pick<ClockData, 'time' | 'dayNumber'>): JSX.E
   const [gameTime, setGameTime] = useState(time)
   const [gameDay, setGameDay] = useState(dayNumber)
 
-  useAnimationFrame(deltaInMs => {
-    if (time == gameTime && dayNumber == gameDay) return
+  const shouldSpeedUp = (time: number, gameTime: number, dayNumber: number, gameDay: number) => {
+    return (dayNumber != gameDay) || Math.abs(time - gameTime) >= TIME_IN_2_HOURS
+  }
 
-    const speedUp = (dayNumber > gameDay || time > gameTime + TIME_IN_2_HOURS) ? 6 : 1
-    const gameTimeToAdd = deltaInMs * MS_TO_GAME_MINUTES_RATIO * speedUp
+  const tickTimeForward = (deltaInMs: number) => {
+    let gameTimeToAdd = deltaInMs * MS_TO_GAME_MINUTES_RATIO
+    if (shouldSpeedUp(time, gameTime, dayNumber, gameDay)) {
+      gameTimeToAdd *= 6
+    }
 
     let newTime = gameTime + gameTimeToAdd
     if (newTime > TIME_IN_24_HOURS) {
@@ -43,6 +47,48 @@ function Sky ({ time, dayNumber }: Pick<ClockData, 'time' | 'dayNumber'>): JSX.E
     } else {
       setGameTime(Math.min(newTime, time))
     }
+  }
+
+  const tickTimeBackward = (deltaInMs: number) => {
+    let gameTimeToDock = deltaInMs * MS_TO_GAME_MINUTES_RATIO
+    if (shouldSpeedUp(time, gameTime, dayNumber, gameDay)) {
+      gameTimeToDock *= 36
+    }
+
+    console.log(`gameTimeToDock ${gameTimeToDock}`)
+
+    let newTime = gameTime - gameTimeToDock
+    if (newTime < 0) {
+      setGameDay(gameDay - 1)
+      newTime += TIME_IN_24_HOURS
+    }
+
+    console.log(`newTime ${newTime}`)
+
+    if (dayNumber < gameDay) {
+      setGameTime(newTime)
+    } else {
+
+      console.log(`setting to ${Math.max(newTime, time)}`)
+      setGameTime(Math.max(newTime, time))
+    }
+  }
+
+  useAnimationFrame(deltaInMs => {
+    const sameDay = dayNumber == gameDay
+    const sameTime = time == gameTime
+
+    if (sameDay && sameTime) return
+
+    if (dayNumber > gameDay || (sameDay && time > gameTime)) {
+      tickTimeForward(deltaInMs)
+    }
+
+    if (dayNumber < gameDay || (sameDay && time < gameTime)) {
+      console.log(dayNumber, gameDay, time, gameTime)
+      tickTimeBackward(deltaInMs)
+    }
+
   }, [time, gameTime, dayNumber, gameDay])
 
   return (

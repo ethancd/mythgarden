@@ -51,7 +51,10 @@ def action(request):
     if session.game_over:
         with transaction.atomic():
             EventOperator().trigger_game_over(session)
-        return JsonResponse({'gameOver': True})
+
+        home_models = get_home_models(session)
+        results = {model_name: custom_serialize(data) for model_name, data in home_models.items()}
+        return JsonResponse(results)
     else:
         session.mark_fresh('actions')
         updated_models = get_fresh_models(session)
@@ -90,7 +93,7 @@ def user_data(request):
     return JsonResponse({'hero': custom_serialize(session.hero_state), 'messages': get_serialized_messages(session)})
 
 
-def test_time(request, time):
+def test_time(request, time, day):
     if not settings.DEBUG:
         return HttpResponseNotFound()
 
@@ -99,6 +102,7 @@ def test_time(request, time):
         home_models = get_home_models(session)
 
     session.clock.time = time
+    session.clock.day = day
     session.clock.save()
 
     context = {'ctx': {model_name: custom_serialize(data) for model_name, data in home_models.items()}}

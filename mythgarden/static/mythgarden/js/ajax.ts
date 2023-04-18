@@ -34,11 +34,6 @@ async function postAction (uniqueDigest: string): Promise<void> {
         throw response
       }
 
-      if (response.gameOver != null) {
-        window.location.href = '/'
-        return
-      }
-
       renderApp(response)
     }).catch((response: any) => {
       console.log(response)
