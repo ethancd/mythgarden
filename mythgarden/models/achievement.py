@@ -44,7 +44,7 @@ class Achievement(models.Model):
 
             if achieved:
                 session.hero.achievements.add(achievement)
-                session.messages.create(achievement.unlocked_message)
+                session.messages.create(text=achievement.unlocked_message)
                 notched_count += 1
 
         return notched_count

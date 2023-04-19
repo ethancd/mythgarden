@@ -463,17 +463,17 @@ class ActionExecutor:
         # update villager_state and save
         villager_state.mark_as_talked_to().save()
 
-        # check for achievements
-        self.__check_talk_to_villagers_achievements(session, villager_state)
-        if hearts_gained > 0:
-            self.__check_gain_hearts_achievements(session, villager_state)
-
         # create messages
         log_statement = self.__add_emoji(action, action.log_statement)
         session.messages.create(text=log_statement)
         affinity_message = self.__make_affinity_message_if_any(hearts_gained, villager)
         if affinity_message:
             session.messages.create(text=affinity_message)
+
+        # check for achievements
+        self.__check_talk_to_villagers_achievements(session, villager_state)
+        if hearts_gained > 0:
+            self.__check_gain_hearts_achievements(session, villager_state)
 
         # update clock and save
         session.clock.advance(action.cost_amount).save()
@@ -510,10 +510,6 @@ class ActionExecutor:
         # update villager_state and save
         villager_state.mark_as_given_gift().save()
 
-        # check for achievements
-        if hearts_gained > 0:
-            self.__check_gain_hearts_achievements(session, villager_state)
-
         # create messages
         valence_text = self.__get_valence_text(valence)
         formatted_log_statement = action.log_statement.format(
@@ -524,6 +520,10 @@ class ActionExecutor:
         affinity_message = self.__make_affinity_message_if_any(hearts_gained, villager)
         if affinity_message:
             session.messages.create(text=affinity_message)
+
+        # check for achievements
+        if hearts_gained > 0:
+            self.__check_gain_hearts_achievements(session, villager_state)
 
         # update clock and save
         session.clock.advance(action.cost_amount).save()
@@ -537,6 +537,11 @@ class ActionExecutor:
         item = action.target_item
 
         session.inventory.item_tokens.remove(item)
+        session.wallet.money += action.cost_amount
+        session.wallet.save()
+
+        log_statement = self.__add_emoji(action, action.log_statement)
+        session.messages.create(text=log_statement)
 
         #  if the item should get repopulated into the store, do that
         if item.bought_from_store and item.item_type != SEED:
@@ -552,18 +557,12 @@ class ActionExecutor:
                 item.save()
                 session.location_state.item_tokens.add(item)
 
-        session.wallet.money += action.cost_amount
+        # if the item isn't being "returned", then increment hero's koin earned
         if not item.bought_from_store:
             session.hero_state.increment_koin_earned(action.cost_amount, item.item_type)
             session.hero_state.save()
 
             self.__check_earn_money_achievements(session)
-
-
-        log_statement = self.__add_emoji(action, action.log_statement)
-        session.messages.create(text=log_statement)
-
-        session.wallet.save()
 
         session.mark_fresh('hero', 'inventory', 'localItemTokens', 'messages', 'wallet')
 
