@@ -1,11 +1,18 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+
+from .knowledge import Knowledge
 from ._constants import ACHIEVEMENT_TYPES, ACHIEVEMENT_TRIGGER_TYPES, GATHER, ACHIEVEMENT_EMOJIS, BEST_FRIENDS, \
     FAST_FRIENDS, STEADFAST_FRIENDS
 
 
+class AchievementManager(models.Manager):
+    def get_by_natural_key(self, name):
+        return self.get(name=name)
+
+
 class Achievement(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     description = models.CharField(max_length=255)
     achievement_type = models.CharField(max_length=24, choices=ACHIEVEMENT_TYPES)
     trigger_type = models.CharField(max_length=24, choices=ACHIEVEMENT_TRIGGER_TYPES)
@@ -13,6 +20,20 @@ class Achievement(models.Model):
     threshold_day_number = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(6)])
 
     villager = models.ForeignKey('Villager', on_delete=models.CASCADE, null=True, blank=True)
+
+    objects = AchievementManager()
+
+    def __str__(self):
+        return f"{self.name}: {self.description}"
+
+    def serialize(self):
+        return {
+            'name': self.name,
+            'description': self.description,
+            'emoji': self.emoji,
+            'id': self.id,
+            'unlockedKnowledge': self.unlocked_knowledge_names
+        }
 
     @property
     def emoji(self):
@@ -25,6 +46,15 @@ class Achievement(models.Model):
     def unlocked_message(self):
         return f"🎉 Achievement Unlocked: {self.name}!"
 
+    @property
+    def unlocked_knowledge_names(self):
+        if self.unlocked_knowledge.count() == 0:
+            return
+
+        unlocked_knowledge_names = self.unlocked_knowledge.all().values_list('display_name', flat=True)
+
+        return list(set(unlocked_knowledge_names))
+
     @classmethod
     def check_triggered_achievements(cls, trigger_type, session, *args, **kwargs):
         achievements = cls.objects.filter(trigger_type=trigger_type)
@@ -34,7 +64,7 @@ class Achievement(models.Model):
     @classmethod
     def check_achievements(cls, achievements, session, *args, **kwargs):
         already_earned = session.hero.achievements.select_related('villager').all()
-        notched_count = 0
+        notched_achievements = []
 
         for achievement in achievements:
             if achievement in already_earned:
@@ -45,15 +75,22 @@ class Achievement(models.Model):
             if achieved:
                 session.hero.achievements.add(achievement)
                 session.messages.create(text=achievement.unlocked_message)
-                notched_count += 1
+                notched_achievements.append(achievement)
 
-        return notched_count
+        new_knowledge = Knowledge.objects.filter(unlocking_achievement__in=notched_achievements)
+        session.hero.knowledge.add(*new_knowledge)
+
+        return len(notched_achievements)
 
     def check_if_completed(self, *args, **kwargs):
         ck = f'check_{self.achievement_type.lower()}'
 
         if hasattr(self, ck) and callable(getattr(self, ck)):
             return getattr(self, ck)(*args, **kwargs)
+
+    # trigger_type SCORE_POINTS
+    def check_score_points(self, hero):
+        return hero.score >= self.threshold
 
     # trigger_type GAIN_HEARTS
     def check_all_villagers_hearts(self, villager_states, *args, **kwargs):
@@ -133,14 +170,3 @@ class Achievement(models.Model):
 
     def check_foraging_intake(self, hero_state):
         return hero_state.foraging_intake >= self.threshold
-
-    def __str__(self):
-        return f"{self.name}: {self.description}"
-
-    def serialize(self):
-        return {
-            'name': self.name,
-            'description': self.description,
-            'emoji': self.emoji,
-            'id': self.id
-        }

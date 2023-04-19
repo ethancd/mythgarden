@@ -9,8 +9,10 @@ from .models._constants import SEED, SPROUT, CROP, COMMON, UNCOMMON, RARE, EPIC,
     WILD_TYPES, FOREST, MOUNTAIN, BEACH, LOVE, LIKE, NEUTRAL, DISLIKE, HATE, FIRST_DAY, DAWN, FISHING_DESCRIPTION, \
     MINING_DESCRIPTION, FORAGING_DESCRIPTION, SUNSET, TALK_MINUTES_PER_FRIENDLINESS, MAX_BOOST_LEVEL, \
     BOOST_DENOMINATOR, KYS_MESSAGE, EXIT_DESCRIPTION, DAYS_OF_WEEK, MAX_ITEMS, DAY_TO_INDEX, MAX_LUCK_LEVEL, \
-    LUCK_DENOMINATOR, TIME_TYPE, HARVEST, GATHER, EARN_MONEY, TALK_TO_VILLAGERS, GAIN_HEARTS, GAIN_ACHIEVEMENT
+    LUCK_DENOMINATOR, TIME_TYPE, HARVEST, GATHER, EARN_MONEY, TALK_TO_VILLAGERS, GAIN_HEARTS, GAIN_ACHIEVEMENT, MYTHIC, \
+    SCORE_POINTS
 from .static_helpers import guard_type, guard_types
+
 
 def can_afford_action(wallet, requested_action):
     if requested_action.is_cost_in_money() and requested_action.action_type != Action.SELL:
@@ -474,11 +476,12 @@ class ActionExecutor:
         self.__check_talk_to_villagers_achievements(session, villager_state)
         if hearts_gained > 0:
             self.__check_gain_hearts_achievements(session, villager_state)
+            self.__check_score_points_achievements(session)
 
         # update clock and save
         session.clock.advance(action.cost_amount).save()
 
-        session.mark_fresh('clock', 'dialogue', 'hero', 'messages', 'speaker')
+        session.mark_fresh('clock', 'dialogue', 'hero', 'messages', 'speaker', 'villagerStates')
 
     def execute_give_action(self, action, session):
         """Executes a give action, which removes an item from the hero's inventory
@@ -524,11 +527,12 @@ class ActionExecutor:
         # check for achievements
         if hearts_gained > 0:
             self.__check_gain_hearts_achievements(session, villager_state)
+            self.__check_score_points_achievements(session)
 
         # update clock and save
         session.clock.advance(action.cost_amount).save()
 
-        session.mark_fresh('clock', 'dialogue', 'hero', 'inventory', 'messages', 'speaker')
+        session.mark_fresh('clock', 'dialogue', 'hero', 'inventory', 'messages', 'speaker', 'villagerStates')
 
     def execute_sell_action(self, action, session):
         """Executes a sell action, which removes an item from the hero's inventory
@@ -563,6 +567,7 @@ class ActionExecutor:
             session.hero_state.save()
 
             self.__check_earn_money_achievements(session)
+            self.__check_score_points_achievements(session)
 
         session.mark_fresh('hero', 'inventory', 'localItemTokens', 'messages', 'wallet')
 
@@ -756,7 +761,8 @@ class ActionExecutor:
             COMMON: -1,
             UNCOMMON: 4 / 7,
             RARE: 2 / 7,
-            EPIC: 1 / 7
+            EPIC: 1 / 7,
+            MYTHIC: 0,
         }
 
         luck_factor = LUCK_GROWTH_BY_RARITY[rarity]
@@ -790,6 +796,7 @@ class ActionExecutor:
             UNCOMMON: 2,
             RARE: 3,
             EPIC: 4,
+            MYTHIC: 5
         }
 
         base_value = VALENCE_VALUE_MAP[valence]
@@ -854,6 +861,14 @@ class ActionExecutor:
 
         if newly_notched_count > 0:
             self.__check_gain_achievement_achievements(session)
+            session.mark_fresh('achievements')
+
+    def __check_score_points_achievements(self, session):
+        newly_notched_count = Achievement.check_triggered_achievements(
+            SCORE_POINTS, session, hero=session.hero
+        )
+
+        if newly_notched_count > 0:
             session.mark_fresh('achievements')
 
     def __check_gain_hearts_achievements(self, session, villager_state):

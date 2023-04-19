@@ -6,7 +6,7 @@ import {FilterizeColorContext} from "./lightColorLogic";
 
 export default function Wallet ({ value }: WalletProps): JSX.Element {
   const filterizeColor = useContext(FilterizeColorContext)
-  const backgroundColor = filterizeColor(colors.walletLeather)
+  const backgroundColor = filterizeColor(colors.whiteYellow)
 
   return (
         <div id="wallet" style={{

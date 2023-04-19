@@ -10,7 +10,7 @@ import {ImageFilterContext} from "./lightColorLogic";
 
 const GIFT_DIGEST_TEMPLATE = `GIVE-giftId-villagerId`
 
-export default function Villager ({ name, imageUrl, affinity, description, id, actionPill, isGiftReceiver}: VillagerProps): JSX.Element {
+export default function Villager ({ name, imageUrl, affinity, description, preferences, id, actionPill, isGiftReceiver}: VillagerProps): JSX.Element {
   const { backgroundColor, opacity } = useContext(ImageFilterContext)
   const [{isDragging}, dropRef] = useDrop(() => ({
     accept: 'GIFT',
@@ -48,7 +48,15 @@ export default function Villager ({ name, imageUrl, affinity, description, id, a
           <Affinity {...affinity}></Affinity>
         </div>
       </div>
-      <span className="name">{name}</span>
+      <div className="column">
+        {preferences?.lovedGifts != null
+          ? <div className='loved emoji'>{preferences.lovedGifts}</div>
+          : null}
+        <span className="name">{name}</span>
+        {preferences?.likedGifts != null
+          ? <div className='liked emoji'>{preferences.likedGifts}</div>
+          : null}
+      </div>
       <span className="description">{description}</span>
     </li>
   )
@@ -60,6 +68,10 @@ interface VillagerData {
   name: string
   imageUrl: string
   description: string
+  preferences?: {
+    lovedGifts?: string[]
+    likedGifts?: string[]
+  }
   id: number
   affinity: AffinityProps
 }

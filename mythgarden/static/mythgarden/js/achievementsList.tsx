@@ -1,4 +1,5 @@
 import React from 'react'
+import RainbowText from "./rainbowText";
 
 function AchievementsList ({ achievements, totalAchievements, show }: AchievementsListProps): JSX.Element {
   if (show) {
@@ -21,14 +22,27 @@ function AchievementsList ({ achievements, totalAchievements, show }: Achievemen
   }
 }
 
-function Achievement({name, description, emoji}: AchievementProps): JSX.Element {
+function Achievement({name, description, emoji, unlockedKnowledge}: AchievementProps): JSX.Element {
   return (
       <li className='achievement'>
-        <div className='icon'>{emoji}</div>
-        <div className='column'>
-          <span className='title'>{name}</span>
-          <span className='description'>{description}</span>
+        <div className='row'>
+          <div className='icon'>{emoji}</div>
+          <div className='column'>
+            <span className='title'>{name}</span>
+            <span className='description'>{description}</span>
+          </div>
         </div>
+        { unlockedKnowledge != null
+          ? <div className='column knowledge'>
+              <span className='title'>
+                <RainbowText text={'knowledge granted:'} shading={0.2}></RainbowText>
+              </span>
+            {unlockedKnowledge.map((knowledge) => {
+              return <span className='knowledge-description'>{knowledge}</span>
+            })}
+            </div>
+          : null
+        }
       </li>
   )
 }
@@ -36,10 +50,12 @@ function Achievement({name, description, emoji}: AchievementProps): JSX.Element 
 function EmptyAchievement (): JSX.Element {
   return (
     <li className="achievement empty-slot">
-      <div className="icon">❓</div>
-      <div className='column'>
-        <span className="title">Unknown</span>
-        <span className="description">Not yet unlocked...</span>
+      <div className='row'>
+        <div className="icon">❓</div>
+        <div className='column'>
+          <span className="title">Unknown</span>
+          <span className="description">Not yet unlocked...</span>
+        </div>
       </div>
     </li>
   )
@@ -52,6 +68,7 @@ interface AchievementData {
   description: string
   emoji: string
   id: number
+  unlockedKnowledge?: string[]
 }
 
 interface AchievementsListProps {

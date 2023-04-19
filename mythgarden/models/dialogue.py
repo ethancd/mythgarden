@@ -38,4 +38,4 @@ class DialogueLine(models.Model):
 
     @property
     def abbr_text(self):
-        return f"{self.full_text[:50]}{'...' if len(self.full_text) > 50 else ''}"
+        return f"{self.full_text[:20]}{'...' if len(self.full_text) > 20 else ''}"

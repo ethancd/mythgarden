@@ -540,6 +540,7 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
     gap: $fine-gutter;
     padding-bottom: $small-gutter;
     border-bottom: $pencil-thin solid #666;
+    justify-content: space-between;
     align-items: center;
     color: $light-text;
 
@@ -559,8 +560,13 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
       font-size: $med-small-text;
 
     }
+
     .description {
       font-size: $small-text;
+    }
+
+    .knowledge {
+      align-items: flex-end;
     }
   }
 }
@@ -733,7 +739,7 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
 
 #inventory {
   @include column;
-  background-color: $yellow-leather;
+  background-color: $white-yellow;
   height: 80%;
   justify-content: space-between;
   width: 100%;
@@ -795,13 +801,25 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
     }
   }
 
-  .name {
+.name {
     font-size: $med-small-text;
     display: inline-block;
     max-width: 80%;
 
     @media only screen and (max-width: 900px) {
       font-size: $small-text;
+    }
+
+    &.long {
+      font-size: $smallish-text;
+    }
+
+    &.very-long {
+      font-size: $small-text;
+
+      @media only screen and (max-width: 900px) {
+        font-size: $fine-text;
+      }
     }
   }
 }
@@ -828,6 +846,18 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
   .item-filter {
     @include portrait-filter;
     border-radius: $pen-thinnish;
+  }
+
+  .price-pill {
+    @include subdued-rainbow-gradient(60);
+    @include clickable;
+    position: absolute;
+    right: -$pen-thinnish;
+    bottom: -$pen-thinnish;
+    font-size: $smallish-text;
+    border-radius: $small-curve;
+    border: $pen-thinnish solid rgba(255, 255, 255, 0.25);
+    color: $dark-text;
   }
 
   @include rarity-indicators;
@@ -861,6 +891,18 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
     @media only screen and (max-width: 900px) {
       font-size: $small-text;
     }
+
+    &.long {
+      font-size: $smallish-text;
+    }
+
+    &.very-long {
+      font-size: $small-text;
+
+      @media only screen and (max-width: 900px) {
+        font-size: $fine-text;
+      }
+    }
   }
 }
 
@@ -877,14 +919,12 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
 
 #wallet {
   @include column;
-  background-color: #624a2e;
   font-size: $large-text;
   text-align: center;
   overflow: hidden;
   height: 20%;
-  border: $pen-thinnish dashed $dollar-bill-green;
-  color: gold;
   justify-content: center;
+  width: calc(100% + 0.5rem);
 
   @media only screen and (max-width: 900px) {
     font-size: $med-large-text;
@@ -1188,7 +1228,6 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
   height: 40%;
   justify-content: space-evenly;
   align-content: space-around;
-  overflow: hidden;
   width: 40%;
   position: absolute;
   z-index: 2;
@@ -1198,6 +1237,7 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
   flex-wrap: wrap;
   border: $pen-thinnish solid desaturate(darken($sandy-brown, 30%), 50%);
   border-radius: $small-curve;
+  row-gap: $medium-gutter;
 
   .item {
     @include clickable;
@@ -1208,7 +1248,6 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
     width: 30%;
     height: 45%;
     box-sizing: border-box;
-    overflow: hidden;
     word-wrap: break-word;
     border-radius: $pen-thinnish;
     border: $pencil-thin dashed darken($sandy-brown, 20%);
@@ -1249,7 +1288,7 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
 
   .action-pill {
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, 50%);
   }
 }
 
@@ -1333,6 +1372,17 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
 
     .description {
       font-size: $fine-text;
+    }
+
+    .emoji {
+      align-self: center;
+      width: fit-content;
+      text-align: center;
+    }
+
+    .loved.emoji {
+      font-size: $med-small-text;
+      filter: drop-shadow(0 0 $fine-shadow-distance #fff);
     }
   }
 }

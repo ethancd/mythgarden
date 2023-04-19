@@ -269,6 +269,7 @@ ul {
     gap: 0.125rem;
     padding-bottom: 0.5rem;
     border-bottom: 0.1rem solid #666;
+    justify-content: space-between;
     align-items: center;
     color: #eee; }
     #achievements .achievement.empty-slot {
@@ -281,6 +282,8 @@ ul {
       font-size: 1.5rem; }
     #achievements .achievement .description {
       font-size: 1rem; }
+    #achievements .achievement .knowledge {
+      align-items: flex-end; }
 
 #logo {
   z-index: 2;
@@ -410,7 +413,7 @@ ul {
 #inventory {
   display: flex;
   flex-direction: column;
-  background-color: #e1a836;
+  background-color: #fff5e5;
   height: 80%;
   justify-content: space-between;
   width: 100%; }
@@ -454,6 +457,20 @@ ul {
     transition: background-color 1s linear, opacity 1s linear;
     border-radius: 25%;
     border-radius: 0.2rem; }
+  #inventory .item .price-pill, #inventory + .item .price-pill {
+    background: linear-gradient(to right, #a069ba 0%, #6c92bc 25%, #a4bf71 50%, #c2ac73 75%, #b75e8d 100%);
+    cursor: pointer;
+    position: absolute;
+    right: -0.2rem;
+    bottom: -0.2rem;
+    font-size: 1.25rem;
+    border-radius: 0.5rem;
+    border: 0.2rem solid rgba(255, 255, 255, 0.25);
+    color: #333; }
+    #inventory .item .price-pill:hover, #inventory + .item .price-pill:hover {
+      filter: brightness(90%); }
+    #inventory .item .price-pill:active, #inventory + .item .price-pill:active {
+      filter: brightness(50%); }
   #inventory .item.common, #inventory + .item.common {
     background-color: rgba(225, 168, 54, 0.5); }
   #inventory .item.uncommon, #inventory + .item.uncommon {
@@ -498,6 +515,13 @@ ul {
     @media only screen and (max-width: 900px) {
       #inventory .item .name, #inventory + .item .name {
         font-size: 1rem; } }
+    #inventory .item .name.long, #inventory + .item .name.long {
+      font-size: 1.25rem; }
+    #inventory .item .name.very-long, #inventory + .item .name.very-long {
+      font-size: 1rem; }
+      @media only screen and (max-width: 900px) {
+        #inventory .item .name.very-long, #inventory + .item .name.very-long {
+          font-size: 0.75rem; } }
 
 #inventory .item.common {
   border-radius: 0; }
@@ -507,14 +531,12 @@ ul {
 #wallet {
   display: flex;
   flex-direction: column;
-  background-color: #624a2e;
   font-size: 4rem;
   text-align: center;
   overflow: hidden;
   height: 20%;
-  border: 0.2rem dashed #85bb65;
-  color: gold;
-  justify-content: center; }
+  justify-content: center;
+  width: calc(100% + 0.5rem); }
   @media only screen and (max-width: 900px) {
     #wallet {
       font-size: 3rem; } }
@@ -738,7 +760,6 @@ ul {
   height: 40%;
   justify-content: space-evenly;
   align-content: space-around;
-  overflow: hidden;
   width: 40%;
   position: absolute;
   z-index: 2;
@@ -747,7 +768,8 @@ ul {
   transform: translate(-50%, -50%);
   flex-wrap: wrap;
   border: 0.2rem solid #b17f53;
-  border-radius: 0.5rem; }
+  border-radius: 0.5rem;
+  row-gap: 1rem; }
   #local-items .item {
     cursor: pointer;
     position: relative;
@@ -756,7 +778,6 @@ ul {
     width: 30%;
     height: 45%;
     box-sizing: border-box;
-    overflow: hidden;
     word-wrap: break-word;
     border-radius: 0.2rem;
     border: 0.1rem dashed #f39644; }
@@ -814,7 +835,7 @@ ul {
         filter: none; }
   #local-items .action-pill {
     left: 50%;
-    transform: translateX(-50%); }
+    transform: translate(-50%, 50%); }
 
 #message-log {
   background-color: #fcf5ef;
@@ -888,6 +909,13 @@ ul {
       filter: grayscale(100%) !important; }
     #villagers .villager .description {
       font-size: 0.75rem; }
+    #villagers .villager .emoji {
+      align-self: center;
+      width: fit-content;
+      text-align: center; }
+    #villagers .villager .loved.emoji {
+      font-size: 1.5rem;
+      filter: drop-shadow(0 0 0.5rem #fff); }
 
 #villagers .villager .portrait, #dialogue .speaker .portrait {
   border: 2px solid #ff9ead;

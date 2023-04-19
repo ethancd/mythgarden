@@ -7,7 +7,7 @@ import Affinity, {AffinityProps} from "./affinity";
 
 export default function Dialogue ({ name, imageUrl, fullText, affinity }: DialogueProps): JSX.Element {
   const filterizeColor = useContext(FilterizeColorContext)
-  const backgroundColor = filterizeColor(colors.parchment)
+  const backgroundColor = filterizeColor(colors.whiteYellow)
 
   const imageFilterStyle = useContext(ImageFilterContext)
 

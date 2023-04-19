@@ -1,6 +1,8 @@
 from django.db import models
+from django.templatetags.static import static
 
-from ._constants import ITEM_EMOJIS, COMMON, GIFT, ITEM_TYPES, RARITY_CHOICES, SEED, SPROUT, CROP, CROP_PROFIT_MULTIPLIER
+from ._constants import ITEM_EMOJIS, COMMON, GIFT, ITEM_TYPES, RARITY_CHOICES, SEED, SPROUT, CROP, \
+    CROP_PROFIT_MULTIPLIER, MYTHLING_TYPES, MYTHLING_GROWTH_STAGES, IMAGE_PREFIX, MYTHLING_PORTRAIT_DIR
 
 
 class ItemManager(models.Manager):
@@ -10,13 +12,12 @@ class ItemManager(models.Manager):
 
 class Item(models.Model):
     name = models.CharField(max_length=255, unique=True)
-    icon = models.ImageField(upload_to='items/', null=True, blank=True)
     item_type = models.CharField(max_length=8, choices=ITEM_TYPES, default=GIFT)
     price = models.IntegerField(default=1)
     rarity = models.CharField(max_length=8, choices=RARITY_CHOICES, default=COMMON)
 
-    growth_days = models.IntegerField(null=True, blank=True)  # only defined for plants (seeds/sprouts/crops)
-    effort_time = models.IntegerField(null=True, blank=True)  # only defined for plants (seeds/sprouts/crops)
+    growth_days = models.IntegerField(null=True, blank=True)  # only defined for plants (seeds/sprouts/crops) & mytheggs
+    effort_time = models.IntegerField(null=True, blank=True)  # only defined for plants (seeds/sprouts/crops) & mytheggs
 
     objects = ItemManager()
 
@@ -26,9 +27,6 @@ class Item(models.Model):
     def serialize(self):
         return {
             'name': self.name,
-            'icon': {
-                'url': self.icon.url if self.icon else None
-            },
             'rarity': self.get_rarity_display(),
         }
 
@@ -46,8 +44,7 @@ class Item(models.Model):
 
         instance, created = Item.objects.get_or_create(
                                 name=next_name, item_type=next_type, price=next_price,
-                                rarity=self.rarity, icon=self.icon,
-                                growth_days=self.growth_days, effort_time=self.effort_time
+                                rarity=self.rarity, growth_days=self.growth_days, effort_time=self.effort_time
                             )
 
         return instance
@@ -99,7 +96,8 @@ class ItemToken(models.Model):
             'emoji': self.emoji,
             'hasBeenWatered': self.has_been_watered,
             'id': self.id,
-            'quantity': self.quantity
+            'quantity': self.quantity,
+            'price': self.get_display_price_if_known()
         }
 
     def make_copy(self):
@@ -121,9 +119,45 @@ class ItemToken(models.Model):
     def price(self):
         return self.item.price
 
+    def get_display_price_if_known(self):
+        is_known = self.session.hero.knowledge.filter(
+            itemknowledge__item_type=self.item_type, itemknowledge__rarity=self.rarity
+        ).exists()
+
+        if is_known:
+            return self.price
+        else:
+            return None
+
     @property
     def emoji(self):
         return self.item.emoji
 
     class Meta:
         ordering = ['pk']
+
+
+class Mythling(Item):
+    favorite_soil = models.OneToOneField('Item', on_delete=models.CASCADE, related_name='favorite_mythegg')
+    special_response_villager = models.OneToOneField('Villager', on_delete=models.CASCADE,
+                                                     related_name='favorite_mythegg')
+
+    image_path = models.CharField(max_length=255, default='default.png', null=True, blank=True)
+
+    mythling_type = models.CharField(max_length=7, choices=MYTHLING_TYPES)
+    growth_stage = models.CharField(max_length=8, choices=MYTHLING_GROWTH_STAGES)
+
+    acquisition_increase_step = models.FloatField(null=True, blank=True)
+
+    @property
+    def image_url(self):
+        if not self.image_path:
+            return None
+
+        return static(f'{IMAGE_PREFIX}/{MYTHLING_PORTRAIT_DIR}/{self.image_path}')
+
+    def save(self, *args, **kwargs):
+        if not self.item_type:
+            self.item_type = self.growth_stage
+
+        return super().save(*args, **kwargs)

@@ -316,7 +316,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
             <section id="sidebar">
               <ItemsList
                 id='inventory'
-                baseColor={colors.yellowLeather}
+                baseColor={colors.whiteYellow}
                 items={inventory}
                 actionDictionary={actionDictionary}
                 giftable={true}

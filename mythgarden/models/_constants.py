@@ -54,6 +54,8 @@ KOIN_SIGN = '⚜️'
 SEED = 'SEED'
 SPROUT = 'SPROUT'
 CROP = 'CROP'
+SOIL = 'SOIL'
+MYTHEGG = 'MYTHEGG'
 GIFT = 'GIFT'
 FISH = 'FISH'
 MINERAL = 'MINERAL'
@@ -68,6 +70,8 @@ ITEM_EMOJIS = {
     SEED: '🌰',
     SPROUT: '🌱',
     CROP: '🌾',
+    SOIL: '🟫',
+    MYTHEGG: '🥚',
     GIFT: '🎁',
     FISH: '🐟',
     MINERAL: '💎',
@@ -83,6 +87,8 @@ ITEM_TYPES = [
     (SEED, 'Seed'),
     (SPROUT, 'Sprout'),
     (CROP, 'Crop'),
+    (SOIL, 'Soil'),
+    (MYTHEGG, 'Mythegg'),
     (GIFT, 'Gift'),
     (FISH, 'Fish'),
     (MINERAL, 'Mineral'),
@@ -98,12 +104,14 @@ COMMON = 'COMMON'
 UNCOMMON = 'UNCOMMON'
 RARE = 'RARE'
 EPIC = 'EPIC'
+MYTHIC = 'MYTHIC'
 
 RARITIES = [
     COMMON,
     UNCOMMON,
     RARE,
-    EPIC
+    EPIC,
+    MYTHIC
 ]
 
 RARITY_CHOICES = [
@@ -111,6 +119,7 @@ RARITY_CHOICES = [
     (UNCOMMON, 'uncommon'),
     (RARE, 'rare'),
     (EPIC, 'epic'),
+    (MYTHIC, 'mythic')
 ]
 
 RARITY_WEIGHTS = {
@@ -118,6 +127,7 @@ RARITY_WEIGHTS = {
     UNCOMMON: 0.2,
     RARE: 0.1,
     EPIC: 0.05,
+    MYTHIC: 0
 }
 
 CROP_PROFIT_MULTIPLIER = 10
@@ -285,6 +295,7 @@ ACHIEVEMENT_TYPES = [
     (FAST_CASH, 'Fast cash'),
 ]
 
+SCORE_POINTS = 'SCORE_POINTS'
 GAIN_HEARTS = 'GAIN_HEARTS'
 TALK_TO_VILLAGERS = 'TALK_TO_VILLAGERS'
 GAIN_ACHIEVEMENT = 'GAIN_ACHIEVEMENT'
@@ -293,6 +304,7 @@ HARVEST = 'HARVEST'
 GATHER = 'GATHER'
 
 ACHIEVEMENT_TRIGGER_TYPES = [
+    (SCORE_POINTS, 'Score points'),
     (GAIN_HEARTS, 'Gain hearts'),
     (TALK_TO_VILLAGERS, 'Talk to villagers'),
     (GAIN_ACHIEVEMENT, 'Gain achievement'),
@@ -313,3 +325,30 @@ ACHIEVEMENT_EMOJIS = {
         FORAGING_INTAKE: '🌲',
     },
 }
+SPOOPY = 'SPOOPY'
+VERDANT = 'VERDANT'
+CORAL = 'CORAL'
+SPARKLY = 'SPARKLY'
+GOLDEN = 'GOLDEN'
+RAINBOW = 'RAINBOW'
+
+MYTHLING_TYPES = [
+    (SPOOPY, 'spoopy'),
+    (VERDANT, 'verdant'),
+    (CORAL, 'coral'),
+    (SPARKLY, 'sparkly'),
+    (GOLDEN, 'golden'),
+    (RAINBOW, 'rainbow'),
+]
+
+MYTHEGG = 'MYTHEGG'
+MYTHLING = 'MYTHLING'
+MYTHIMAL = 'MYTHIMAL'
+
+MYTHLING_GROWTH_STAGES = [
+    (MYTHEGG, 'mythegg'),
+    (MYTHLING, 'mythling'),
+    (MYTHIMAL, 'mythimal'),
+]
+
+MYTHLING_PORTRAIT_DIR = 'portraits/villager'

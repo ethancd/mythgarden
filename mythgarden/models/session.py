@@ -74,6 +74,9 @@ class Session(models.Model):
 
         for villager_state in self.villager_states.all():
             if villager_state.villager == villager:
+                if self.is_fresh('villagerStates') or self.is_fresh('speaker'):
+                    villager_state.refresh_from_db()
+
                 return villager_state
 
     @property

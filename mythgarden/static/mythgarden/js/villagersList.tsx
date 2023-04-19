@@ -6,7 +6,7 @@ import {ActionPillProps} from "./action";
 
 function VillagersList ({ villagers, actionDictionary, giftReceiverIds}: VillagersListProps): JSX.Element {
   return (
-      <List id='villagers' baseColor={colors.dustyPink}>
+      <List id='villagers' baseColor={colors.whiteYellow}>
         {villagers?.map(villager => {
           const actionPill = actionDictionary[`villager-${villager.id}`]
           const isGiftReceiver = giftReceiverIds.has(villager.id)

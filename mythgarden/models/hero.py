@@ -2,7 +2,6 @@ from django.db import models
 
 from ._constants import DEFAULT_PORTRAIT, LUCK_DENOMINATOR, CROP, MINING_ITEM_TYPES, FISHING_ITEM_TYPES, \
     FORAGING_ITEM_TYPES
-from .achievement import Achievement
 from .farmer_portrait import FarmerPortrait
 
 
@@ -10,6 +9,7 @@ class Hero(models.Model):
     name = models.CharField(max_length=16, default='New Farmer')
     portrait = models.ForeignKey(FarmerPortrait, on_delete=models.SET_DEFAULT, default=FarmerPortrait.get_default_pk)
     achievements = models.ManyToManyField('Achievement', blank=True)
+    knowledge = models.ManyToManyField('Knowledge', blank=True)
 
     high_score = models.IntegerField(default=0)
     boost_level = models.IntegerField(default=0)

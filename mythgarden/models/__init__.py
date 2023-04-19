@@ -4,10 +4,11 @@ from .bridge import Bridge
 from .clock import Clock
 from .dialogue import DialogueLine
 from .farmer_portrait import FarmerPortrait
+from .knowledge import Knowledge, ItemKnowledge, VillagerKnowledge, MytheggKnowledge
 from .merch_slot import MerchSlot
 from .message import Message
 from .inventory import Inventory
-from .item import Item, ItemToken
+from .item import Item, ItemToken, Mythling  # should move mythling into own file, yes yes
 from .item_type_preference import ItemTypePreference
 from .wallet import Wallet
 
@@ -21,7 +22,7 @@ from .event import ScheduledEvent, PopulateShopEvent, VillagerAppearsEvent
 # imports from .item_type_preference, .place, and .dialogue
 from .villager import Villager, VillagerState
 
-# imports from .villager
+# imports from .villager and .knowledge
 from .achievement import Achievement
 # imports from .hero, .place, and .villager
 from .session import Session

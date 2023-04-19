@@ -6,7 +6,7 @@ from .item_type_preference import ItemTypePreference
 from .place import Place, PlaceState, Building
 from .dialogue import DialogueLine
 
-from ._constants import NEUTRAL, IMAGE_PREFIX, VILLAGER_PORTRAIT_DIR
+from ._constants import NEUTRAL, IMAGE_PREFIX, VILLAGER_PORTRAIT_DIR, LOVE, LIKE, ITEM_EMOJIS
 
 
 class VillagerManager(models.Manager):
@@ -104,7 +104,8 @@ class VillagerState(models.Model):
             'name': self.villager.name,
             'imageUrl': self.villager.image_url,
             'description': self.villager.description,
-            'id': self.villager.id
+            'id': self.villager.id,
+            'preferences': self.get_display_preferences_if_known()
         }
 
     @property
@@ -125,6 +126,33 @@ class VillagerState(models.Model):
     @property
     def is_bestie(self):
         return self.affinity == self.MAX_AFFINITY
+
+    def get_display_preferences_if_known(self):
+        display_preferences = {}
+
+        loved_gifts_known = self.session.hero.knowledge.filter(
+            villagerknowledge__villager=self.villager, villagerknowledge__valence=LOVE
+        ).exists()
+
+        liked_gifts_known = self.session.hero.knowledge.filter(
+            villagerknowledge__villager=self.villager, villagerknowledge__valence=LIKE
+        ).exists()
+
+        if not loved_gifts_known and not liked_gifts_known:
+            return
+
+        preferences = self.villager.item_type_preferences.all()
+
+        if loved_gifts_known:
+            loved_emoji = [ITEM_EMOJIS[preference.item_type] for preference in preferences if preference.valence == LOVE]
+            display_preferences['lovedGifts'] = loved_emoji
+
+        if liked_gifts_known:
+            liked_emoji = [ITEM_EMOJIS[preference.item_type] for preference in preferences if preference.valence == LIKE]
+            display_preferences['likedGifts'] = liked_emoji
+
+        return display_preferences
+
 
     def add_affinity(self, amount):
         self.affinity += amount

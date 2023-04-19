@@ -62,4 +62,4 @@ class VillagerAppearsEvent(ScheduledEvent):
             return 'disappears'
 
     def __str__(self):
-        return f'Event: {self.villager.name} {self.place_display} at {self.time / 60} {self.day_display}'
+        return f'Event: {self.villager.name} {self.place_display} at {self.time} {self.day_display}'
