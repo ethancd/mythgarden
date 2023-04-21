@@ -180,6 +180,15 @@ $hot-red: #fd1892;
     desaturate($hot-red, $amount) 100%);
 }
 
+@mixin transparent-subdued-rainbow-gradient($fadeout, $desaturate) {
+  background: linear-gradient(to right,
+    fade-out(desaturate($fuschia, $desaturate), $fadeout) 0%,
+    fade-out(desaturate($electric-blue, $desaturate), $fadeout) 25%,
+    fade-out(desaturate($bright-green, $desaturate), $fadeout) 50%,
+    fade-out(desaturate($light-orange, $desaturate), $fadeout) 75%,
+    fade-out(desaturate($hot-red, $desaturate), $fadeout) 100%);
+}
+
 
 @mixin filter-brightness($percent) {
   filter: brightness($percent);
@@ -299,6 +308,17 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
     .type:after {
       content: '***';
       color: rebeccapurple;
+    }
+  }
+
+  &.mythic {
+    @include transparent-subdued-rainbow-gradient(0.5, 0.6);
+    border-color: gold;
+    box-shadow: 0 0 $fine-shadow-distance 0 gold;
+
+    .type:after {
+      content: '****';
+      color: gold;
     }
   }
 }
@@ -571,11 +591,13 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
   }
 }
 
+.rainbow-text {
+  font-family: "Lobster Two", "Times New Roman", serif;
+}
 
 #logo {
   @include game-element;
   animation: sinewave 30s linear infinite;
-  font-family: "Lobster Two", "Times New Roman", serif;
   font-size: $large-text;
   left: 50%;
   opacity: 75%;
@@ -599,7 +621,8 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
 
 #score {
   @include game-element;
-  *:first-child {
+
+  .total-score {
     font-size: $medium-text;
 
     @media only screen and (max-width: 900px) {
@@ -665,7 +688,6 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
 #luck-percent {
   font-size: $med-small-text;
   text-align: right;
-  font-family: "Lobster Two", "Times New Roman", serif;
 
   @media only screen and (max-width: 900px) {
     font-size: $smallish-text;
@@ -947,7 +969,6 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
 
   h2.name {
     font-size: $med-large-text;
-    font-family: "Lobster Two", "Times New Roman", serif;
     font-weight: bold;
     display: inline-block;
     text-align: center;
@@ -1009,8 +1030,6 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
     @include clickable-icon-drop-shadow;
     position: absolute;
     z-index: 2;
-    font-size: $medium-text;
-    font-family: "Lobster Two", "Times New Roman", serif;
 
     .inner-triangle {
       background-color: $maple;

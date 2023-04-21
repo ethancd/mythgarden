@@ -12,7 +12,7 @@ class Session(models.Model):
     key = models.CharField(max_length=32, primary_key=True, default=generate_uuid)
     _location = models.ForeignKey(Place, on_delete=models.SET_NULL, null=True, default=Place.get_default_pk)
     hero = models.ForeignKey('Hero', on_delete=models.CASCADE, related_name='current_session', null=True, default=Hero.get_default_pk)
-    current_dialogue = models.ForeignKey('DialogueLine', on_delete=models.SET_NULL, null=True)
+    current_dialogue = models.ForeignKey('DialogueLine', on_delete=models.SET_NULL, null=True, blank=True)
 
     is_first_session = models.BooleanField(default=False)
     skip_post_save_signal = models.BooleanField(default=False)
@@ -70,8 +70,6 @@ class Session(models.Model):
         if not villager:
             return None
 
-        print(self.villager_states.all())
-
         for villager_state in self.villager_states.all():
             if villager_state.villager == villager:
                 if self.is_fresh('villagerStates') or self.is_fresh('speaker'):
@@ -99,7 +97,8 @@ class Session(models.Model):
         key = self.key
         hero = self.hero
 
-        self.delete()
+        delete_response = self.delete()
+        print(delete_response)
 
         return Session.objects.create(key=key, hero=hero, initial_message_text=end_of_game_message)
 

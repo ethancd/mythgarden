@@ -20,6 +20,7 @@ class Achievement(models.Model):
     threshold_day_number = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(6)])
 
     villager = models.ForeignKey('Villager', on_delete=models.CASCADE, null=True, blank=True)
+    mythegg = models.ForeignKey('Mythling', on_delete=models.CASCADE, null=True, blank=True)
 
     objects = AchievementManager()
 
@@ -89,8 +90,8 @@ class Achievement(models.Model):
             return getattr(self, ck)(*args, **kwargs)
 
     # trigger_type SCORE_POINTS
-    def check_score_points(self, hero):
-        return hero.score >= self.threshold
+    def check_high_score(self, hero_state):
+        return hero_state.score >= self.threshold
 
     # trigger_type GAIN_HEARTS
     def check_all_villagers_hearts(self, villager_states, *args, **kwargs):
@@ -170,3 +171,21 @@ class Achievement(models.Model):
 
     def check_foraging_intake(self, hero_state):
         return hero_state.foraging_intake >= self.threshold
+
+    # trigger_type FIND_MYTHEGG
+
+    def check_discover_mythegg(self, mythegg, mythling_state, *args, **kwargs):
+        is_right_mythegg = mythegg == self.mythegg
+        is_found = mythling_state.has_been_found
+
+        return is_found and is_right_mythegg
+
+    def check_fast_mythegg(self, mythegg, mythling_state, clock, *args, **kwargs):
+        is_right_mythegg = mythegg == self.mythegg or self.mythegg is None
+        is_found = mythling_state.has_been_found
+        fast_enough = clock.day_index <= self.threshold_day_number
+
+        return fast_enough and is_found and is_right_mythegg
+
+    def check_multiple_mytheggs(self, hero_state, *args, **kwargs):
+        return hero_state.mytheggs_found >= self.threshold

@@ -45,7 +45,7 @@ const ITEM_ACTIONS = [WATER_ACTION, PLANT_ACTION, HARVEST_ACTION, BUY_ACTION, SE
 
 const EPHEMEREAL_MSG_ID = 0
 
-const TOTAL_ACHIEVEMENTS = 93  // should we be getting this from the db somehow? probably. will we? no.
+const TOTAL_ACHIEVEMENTS = 114  // should we be getting this from the db somehow? probably. will we? no.
 
 class App extends React.Component<Partial<AppProps>, AppState> {
   constructor (props: AppProps) {

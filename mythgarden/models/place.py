@@ -3,7 +3,7 @@ from django.templatetags.static import static
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 from ._constants import PLACE_TYPES, FARM, TOWN, MOUNTAIN, FOREST, BEACH, HOME, MINUTES_IN_A_DAY, \
-    IMAGE_PREFIX, PLACE_IMAGE_DIR, SHOP, ACTIVITY_ICON_PATHS, WILD_TYPES, ITEM_POOL_TYPE_MAP
+    IMAGE_PREFIX, PLACE_IMAGE_DIR, SHOP, ACTIVITY_ICON_PATHS, WILD_TYPES, ITEM_POOL_TYPE_MAP, MAX_ITEMS
 from .action import Action
 from .clock import Clock
 from .item import Item
@@ -182,6 +182,10 @@ class PlaceState(models.Model):
 
     item_tokens = models.ManyToManyField('ItemToken', blank=True)
     # would be nice to have a validator that said "if placeState.place.has_inventory == False, then item_tokens has to be empty" basically
+
+    @property
+    def is_full(self):
+        return self.item_tokens.count() >= MAX_ITEMS
 
     def __str__(self):
         return f'{self.place} state ' + self.session.abbr_key_tag()

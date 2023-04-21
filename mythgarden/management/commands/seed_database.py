@@ -1,5 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
+from django.core.exceptions import ValidationError
 from django.core.management import call_command
+from django import db
 import sys
 import csv
 import re
@@ -131,6 +133,13 @@ class Command(BaseCommand):
 
                 instance, created = cls.objects.get_or_create(**kwargs)
 
+                # make sure we didn't e.g. input invalid choices for a field
+                try:
+                    instance.full_clean()
+                except ValidationError as e:
+                    raise CommandError(f'full_clean failed on {instance} in row {reader.line_num} with kwargs {kwargs}'
+                                       f'see validation messages: {e.messages}')
+
                 # now we can set the m2m fields
                 if len(m2m_lists) > 0:
                     for m2m_field_name, m2m_instances in m2m_lists:
@@ -158,6 +167,8 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(
             f'Successfully seeded database by creating {self.created_count} and finding {self.found_count} instances')
         )
+
+        db.connections.close_all()
 
     def parse_fk_cell(self, field_name, field_value):
         """

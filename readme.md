@@ -13,15 +13,15 @@ Mythgarden was built using a Django backend and a React frontend with Typescript
 
 ## Code flow / State machine
 - **Initial page load**
-  - [mythgarden.ashkie.com][ashkie] -> [urls.py](mythgarden/urls.py) -> [views.home](mythgarden/views.py#L19) -> [game_logic.py](mythgarden/game_logic.py#L22) -> [home.html](mythgarden/templates/mythgarden/home.html) -> [app.tsx](mythgarden/static/mythgarden/js/app.tsx)
+  - [mythgarden.ashkie.com][ashkie] -> [urls.py](mythgarden/urls.py) -> [views.home](mythgarden/views.py) -> [action_generator.py](mythgarden/game_logic/action_generator.py) -> [home.html](mythgarden/templates/mythgarden/home.html) -> [app.tsx](mythgarden/static/mythgarden/js/app.tsx)
 - **Player requests action**
-  - [action.tsx](mythgarden/js/action.tsx) -> [ajax.tsx](mythgarden/js/ajax.tsx) -> [views.action](mythgarden/views.action#L30)
+  - [action.tsx](mythgarden/js/action.tsx) -> [ajax.tsx](mythgarden/js/ajax.tsx) -> [views.action](mythgarden/views.py)
 - **Server executes player action**
-  - [game_logic.py](mythgarden/game_logic.py#L387)
+  - [action_executor.py](mythgarden/game_logic/action_executor.py)
 - **Server fires any time-based game events**
-  - [signals.py](mythgarden/signals.py#L32) -> [game_logic.py](mythgarden/game_logic.py#L812)
+  - [event_operator.py](mythgarden/game_logic/event_operator.py)
 - **Server updates state in database**
 - **New state is returned to browser**
-  - [views.action](mythgarden/views.action#L57)
+  - [views.action](mythgarden/views.py)
 
 [ashkie]: https://mythgarden.ashkie.com

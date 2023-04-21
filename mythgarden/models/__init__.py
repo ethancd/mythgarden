@@ -4,11 +4,11 @@ from .bridge import Bridge
 from .clock import Clock
 from .dialogue import DialogueLine
 from .farmer_portrait import FarmerPortrait
-from .knowledge import Knowledge, ItemKnowledge, VillagerKnowledge, MytheggKnowledge
+from .knowledge import Knowledge, ItemKnowledge, VillagerKnowledge, MytheggKnowledge, MythlingPowerKnowledge
 from .merch_slot import MerchSlot
 from .message import Message
 from .inventory import Inventory
-from .item import Item, ItemToken, Mythling  # should move mythling into own file, yes yes
+from .item import Item, ItemToken, Mythling, MythlingState  # should move mythling into own file, yes yes
 from .item_type_preference import ItemTypePreference
 from .wallet import Wallet
 

@@ -2,7 +2,7 @@ import json
 from typing import Iterable
 from django.core.validators import ValidationError
 
-from .game_logic import ActionGenerator, can_afford_action
+from .game_logic import ActionGenerator, ActionValidator
 from .models import Session, FarmerPortrait
 
 
@@ -55,7 +55,7 @@ def ensure_state_objects_created(session):
 
 def load_session_with_related_data(session_key):
     one_to_one_session_relations = ['hero', '_location', 'hero_state', 'wallet', 'clock', 'inventory']
-    many_to_many_session_relations = ['villager_states', 'place_states']
+    # many_to_many_session_relations = ['villager_states', 'place_states']
 
     session_data_queryset = Session.objects.select_related(*one_to_one_session_relations)
     session_data_queryset = session_data_queryset.prefetch_related('inventory__item_tokens__item')
@@ -120,7 +120,8 @@ def get_serialized_messages(session):
 
 
 def validate_action(session, requested_action):
-    if not can_afford_action(session.wallet, requested_action):
+    av = ActionValidator()
+    if not av.can_afford_action(session.wallet, requested_action):
         raise ValidationError("⚠️ You don't have enough fleurs to afford that right now")
 
 

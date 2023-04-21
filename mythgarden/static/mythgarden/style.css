@@ -285,10 +285,12 @@ ul {
     #achievements .achievement .knowledge {
       align-items: flex-end; }
 
+.rainbow-text {
+  font-family: "Lobster Two", "Times New Roman", serif; }
+
 #logo {
   z-index: 2;
   animation: sinewave 30s linear infinite;
-  font-family: "Lobster Two", "Times New Roman", serif;
   font-size: 4rem;
   left: 50%;
   opacity: 75%;
@@ -306,10 +308,10 @@ ul {
     opacity: 0.75; } }
 #score {
   z-index: 2; }
-  #score *:first-child {
+  #score .total-score {
     font-size: 2rem; }
     @media only screen and (max-width: 900px) {
-      #score *:first-child {
+      #score .total-score {
         font-size: 1.25rem; } }
 
 #high-score {
@@ -355,8 +357,7 @@ ul {
 
 #luck-percent {
   font-size: 1.5rem;
-  text-align: right;
-  font-family: "Lobster Two", "Times New Roman", serif; }
+  text-align: right; }
   @media only screen and (max-width: 900px) {
     #luck-percent {
       font-size: 1.25rem; } }
@@ -493,6 +494,13 @@ ul {
     #inventory .item.epic .type:after, #inventory + .item.epic .type:after {
       content: '***';
       color: rebeccapurple; }
+  #inventory .item.mythic, #inventory + .item.mythic {
+    background: linear-gradient(to right, rgba(184, 40, 251, 0.5) 0%, rgba(45, 144, 251, 0.5) 25%, rgba(184, 252, 52, 0.5) 50%, rgba(253, 200, 56, 0.5) 75%, rgba(252, 25, 146, 0.5) 100%);
+    border-color: gold;
+    box-shadow: 0 0 0.5rem 0 gold; }
+    #inventory .item.mythic .type:after, #inventory + .item.mythic .type:after {
+      content: '****';
+      color: gold; }
   #inventory .item .type, #inventory + .item .type {
     font-size: 2rem;
     position: relative; }
@@ -555,7 +563,6 @@ ul {
   width: 100%; }
   #location h2.name {
     font-size: 3rem;
-    font-family: "Lobster Two", "Times New Roman", serif;
     font-weight: bold;
     display: inline-block;
     text-align: center;
@@ -602,9 +609,7 @@ ul {
   filter: brightness(100%) drop-shadow(0.5rem 0.5rem 0.25rem #000);
   backdrop-filter: blur(0);
   position: absolute;
-  z-index: 2;
-  font-size: 2rem;
-  font-family: "Lobster Two", "Times New Roman", serif; }
+  z-index: 2; }
   #directions .arrow:hover {
     filter: brightness(90%) drop-shadow(0.5rem 0.5rem 0.25rem #000); }
   #directions .arrow:active {
@@ -807,6 +812,13 @@ ul {
       #local-items .item.epic .type:after {
         content: '***';
         color: rebeccapurple; }
+    #local-items .item.mythic {
+      background: linear-gradient(to right, rgba(184, 40, 251, 0.5) 0%, rgba(45, 144, 251, 0.5) 25%, rgba(184, 252, 52, 0.5) 50%, rgba(253, 200, 56, 0.5) 75%, rgba(252, 25, 146, 0.5) 100%);
+      border-color: gold;
+      box-shadow: 0 0 0.5rem 0 gold; }
+      #local-items .item.mythic .type:after {
+        content: '****';
+        color: gold; }
     #local-items .item.empty-slot {
       cursor: default;
       border-color: beige;

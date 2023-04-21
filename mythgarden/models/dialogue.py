@@ -9,6 +9,7 @@ class DialogueLine(models.Model):
     HATED_GIFT = 'HATED_GIFT'
     FIRST_MEETING = 'FIRST_MEETING'
     TALKED_TO = 'TALKED_TO'
+    GRANTING_MYTHEGG = 'GRANTING_MYTHEGG'
 
     DIALOGUE_TRIGGERS = [
         (LOVED_GIFT, 'Loved Gift'),
@@ -18,11 +19,12 @@ class DialogueLine(models.Model):
         (HATED_GIFT, 'Hated Gift'),
         (FIRST_MEETING, 'First Meeting'),
         (TALKED_TO, 'Talked To'),
+        (GRANTING_MYTHEGG, 'Granting Mythegg')
     ]
 
     speaker = models.ForeignKey('Villager', on_delete=models.CASCADE, related_name='dialogue_lines')
     affinity_tier = models.IntegerField(null=True, blank=True)
-    trigger = models.CharField(max_length=13, choices=DIALOGUE_TRIGGERS, default=TALKED_TO)
+    trigger = models.CharField(max_length=16, choices=DIALOGUE_TRIGGERS, default=TALKED_TO)
     full_text = models.TextField()
 
     def __str__(self):

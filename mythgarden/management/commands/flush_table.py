@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand, CommandError
+from django import db
 import sys
 
 # noinspection PyUnresolvedReferences
@@ -17,3 +18,5 @@ class Command(BaseCommand):
             table_cls = str_to_class(sys.modules[__name__], snakecase_to_titlecase(table))
             table_cls.objects.all().delete()
             self.stdout.write(self.style.SUCCESS(f'Flushed table {table}'))
+
+        db.connections.close_all()

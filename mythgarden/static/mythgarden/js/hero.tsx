@@ -6,7 +6,7 @@ import {ImageFilterContext} from "./lightColorLogic";
 import RainbowText from "./rainbowText";
 import {AchievementData} from "./achievementsList";
 
-export default function Hero ({ name, isDefaultName, imageUrl, score, highScore, koinEarned, heartsEarned, achievementsCount, totalAchievements }: HeroProps): JSX.Element {
+export default function Hero ({ name, isDefaultName, imageUrl, score, highScore, koinEarned, heartsEarned, mytheggsFound, achievementsCount, totalAchievements }: HeroProps): JSX.Element {
   const { backgroundColor, opacity } = useContext(ImageFilterContext)
 
   return (
@@ -20,7 +20,14 @@ export default function Hero ({ name, isDefaultName, imageUrl, score, highScore,
         <TypeableName {...{ name, isDefaultName }}></TypeableName>
         {highScore > 0 ? <span id='high-score'> High Score: {highScore}</span> : null }
         <div id="score">
-          <span>{score}</span> <span>(⚜️{koinEarned} x {heartsEarned}❤️)</span>
+          <span className='total-score'>{score}</span>
+          &nbsp;
+          <span>
+            (⚜️{koinEarned} x {heartsEarned}❤️{mytheggsFound > 0
+              ? <span> +{mytheggsFound *10}%🥚<RainbowText text={'bonus'} shading={0.4}></RainbowText></span>
+              : null
+            })
+          </span>
         </div>
       </div>
     </div>
@@ -35,6 +42,7 @@ interface HeroData {
   highScore: number
   koinEarned: number
   heartsEarned: number
+            mytheggsFound: number
   boostLevel: number
   luckPercent: string
   achievementsCount: number

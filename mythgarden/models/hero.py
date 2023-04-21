@@ -77,6 +77,14 @@ class HeroState(models.Model):
     fishing_intake = models.IntegerField(default=0)
     foraging_intake = models.IntegerField(default=0)
 
+    mining_attempts = models.IntegerField(default=0)
+    fishing_attempts = models.IntegerField(default=0)
+    foraging_attempts = models.IntegerField(default=0)
+
+    depth_weighted_hearts_earned = models.IntegerField(default=0)
+    mytheggs_found = models.IntegerField(default=0)
+
+
     def increment_koin_earned(self, amount, item_type):
         self.koin_earned += amount
 
@@ -92,10 +100,23 @@ class HeroState(models.Model):
     def increment_gathering_intake(self, item):
         if item.item_type in MINING_ITEM_TYPES:
             self.mining_intake += item.price
+            self.mining_attempts += 1
         if item.item_type in FISHING_ITEM_TYPES:
             self.fishing_intake += item.price
+            self.fishing_attempts += 1
         if item.item_type in FORAGING_ITEM_TYPES:
             self.foraging_intake += item.price
+            self.foraging_attempts += 1
+
+    def increment_hearts_earned(self, hearts_gained, affinity_tier):
+        self.hearts_earned += hearts_gained
+
+        i = 0
+        while i < hearts_gained:
+            self.depth_weighted_hearts_earned += (affinity_tier - i)
+            i += 1
+
+        return self
 
     def __str__(self):
         return 'Hero ' + self.session.abbr_key_tag()
@@ -106,6 +127,7 @@ class HeroState(models.Model):
             'highScore': self.hero.high_score,
             'koinEarned': self.koin_earned,
             'heartsEarned': self.hearts_earned,
+            'mytheggsFound': self.mytheggs_found,
             'name': self.hero.name,
             'isDefaultName': self.hero.is_default_name,
             'isDefaultPortrait': self.hero.is_default_portrait,
@@ -116,4 +138,4 @@ class HeroState(models.Model):
 
     @property
     def score(self):
-        return self.koin_earned * self.hearts_earned * 10
+        return round(self.koin_earned * self.hearts_earned * 10 * (1 + self.mytheggs_found / 10))

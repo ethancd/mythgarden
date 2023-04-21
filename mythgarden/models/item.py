@@ -2,7 +2,8 @@ from django.db import models
 from django.templatetags.static import static
 
 from ._constants import ITEM_EMOJIS, COMMON, GIFT, ITEM_TYPES, RARITY_CHOICES, SEED, SPROUT, CROP, \
-    CROP_PROFIT_MULTIPLIER, MYTHLING_TYPES, MYTHLING_GROWTH_STAGES, IMAGE_PREFIX, MYTHLING_PORTRAIT_DIR
+    CROP_PROFIT_MULTIPLIER, MYTHLING_TYPES, MYTHLING_GROWTH_STAGES, IMAGE_PREFIX, MYTHLING_PORTRAIT_DIR, \
+    MYTHLING_TYPE_TO_DRAW_VARIABLE
 
 
 class ItemManager(models.Manager):
@@ -142,6 +143,8 @@ class Mythling(Item):
     special_response_villager = models.OneToOneField('Villager', on_delete=models.CASCADE,
                                                      related_name='favorite_mythegg')
 
+    source_location = models.OneToOneField('Place', on_delete=models.CASCADE, null=True, blank=True, related_name='mythegg')
+
     image_path = models.CharField(max_length=255, default='default.png', null=True, blank=True)
 
     mythling_type = models.CharField(max_length=7, choices=MYTHLING_TYPES)
@@ -161,3 +164,22 @@ class Mythling(Item):
             self.item_type = self.growth_stage
 
         return super().save(*args, **kwargs)
+
+
+class MythlingState(models.Model):
+    session = models.ForeignKey('Session', on_delete=models.CASCADE, related_name='mythling_states')
+    mythling = models.ForeignKey('Mythling', on_delete=models.CASCADE, related_name='states')
+
+    has_been_found = models.BooleanField(default=False)
+    deferred_acquire = models.BooleanField(default=False)
+
+    def mark_found(self):
+        self.has_been_found = True
+        self.deferred_acquire = False
+
+        return self
+
+    def mark_deferred(self):
+        self.deferred_acquire = True
+
+        return self

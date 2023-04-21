@@ -262,58 +262,69 @@ MAX_LUCK_LEVEL = 130  # max luck level will reduce common item rate to 0
 KYS_MESSAGE = 'Whether out of despair, boredom, tactical necessity, or a whimsical fit of pique, you hurl yourself off a nearby cliff to your death. A few moments later, you brush the dirt off your dauntless shoulders and enter the time loop to begin the week again.'
 
 ALL_VILLAGERS_HEARTS = 'ALL_VILLAGERS_HEARTS'
-MULTIPLE_BEST_FRIENDS = 'MULTIPLE_BEST_FRIENDS'
-BEST_FRIENDS = 'BEST_FRIENDS'
-FAST_FRIENDS = 'FAST_FRIENDS'
-STEADFAST_FRIENDS = 'STEADFAST_FRIENDS'
-BESTEST_FRIENDS = 'BESTEST_FRIENDS'
-FASTEST_FRIENDS = 'FASTEST_FRIENDS'
-STEADFASTEST_FRIENDS = 'STEADFASTEST_FRIENDS'
-GROSS_INCOME = 'GROSS_INCOME'
 BALANCED_INCOME = 'BALANCED_INCOME'
+BESTEST_FRIENDS = 'BESTEST_FRIENDS'
+BEST_FRIENDS = 'BEST_FRIENDS'
+DISCOVER_MYTHEGG = 'DISCOVER_MYTHEGG'
 FARMING_INTAKE = 'FARMING_INTAKE'
-MINING_INTAKE = 'MINING_INTAKE'
+FASTEST_FRIENDS = 'FASTEST_FRIENDS'
+FAST_CASH = 'FAST_CASH'
+FAST_FRIENDS = 'FAST_FRIENDS'
+FAST_MYTHEGG = 'FAST_MYTHEGG'
 FISHING_INTAKE = 'FISHING_INTAKE'
 FORAGING_INTAKE = 'FORAGING_INTAKE'
-FAST_CASH = 'FAST_CASH'
+GROSS_INCOME = 'GROSS_INCOME'
+HIGH_SCORE = 'HIGH_SCORE'
+MINING_INTAKE = 'MINING_INTAKE'
+MULTIPLE_BEST_FRIENDS = 'MULTIPLE_BEST_FRIENDS'
+MULTIPLE_MYTHEGGS = 'MULTIPLE_MYTHEGGS'
+STEADFASTEST_FRIENDS = 'STEADFASTEST_FRIENDS'
+STEADFAST_FRIENDS = 'STEADFAST_FRIENDS'
 
 ACHIEVEMENT_TYPES = [
     (ALL_VILLAGERS_HEARTS, 'All villagers hearts'),
-    (MULTIPLE_BEST_FRIENDS, 'Multiple best friends'),
-    (BEST_FRIENDS, 'Best friends'),
-    (FAST_FRIENDS, 'Fast friends'),
-    (STEADFAST_FRIENDS, 'Steadfast friends'),
-    (BESTEST_FRIENDS, 'Bestest friends'),
-    (FASTEST_FRIENDS, 'Fastest friends'),
-    (STEADFASTEST_FRIENDS, 'Steadfastest friends'),
-    (GROSS_INCOME, 'Gross income'),
     (BALANCED_INCOME, 'Balanced income'),
+    (BESTEST_FRIENDS, 'Bestest friends'),
+    (BEST_FRIENDS, 'Best friends'),
+    (DISCOVER_MYTHEGG, 'Discover mythegg'),
     (FARMING_INTAKE, 'Farming intake'),
-    (MINING_INTAKE, 'Mining intake'),
+    (FASTEST_FRIENDS, 'Fastest friends'),
+    (FAST_CASH, 'Fast cash'),
+    (FAST_FRIENDS, 'Fast friends'),
+    (FAST_MYTHEGG, 'Fast mythegg'),
     (FISHING_INTAKE, 'Fishing intake'),
     (FORAGING_INTAKE, 'Foraging intake'),
-    (FAST_CASH, 'Fast cash'),
+    (GROSS_INCOME, 'Gross income'),
+    (HIGH_SCORE, 'High score'),
+    (MINING_INTAKE, 'Mining intake'),
+    (MULTIPLE_BEST_FRIENDS, 'Multiple best friends'),
+    (MULTIPLE_MYTHEGGS, 'Multiple mytheggs'),
+    (STEADFASTEST_FRIENDS, 'Steadfastest friends'),
+    (STEADFAST_FRIENDS, 'Steadfast friends'),
 ]
 
-SCORE_POINTS = 'SCORE_POINTS'
-GAIN_HEARTS = 'GAIN_HEARTS'
-TALK_TO_VILLAGERS = 'TALK_TO_VILLAGERS'
-GAIN_ACHIEVEMENT = 'GAIN_ACHIEVEMENT'
 EARN_MONEY = 'EARN_MONEY'
-HARVEST = 'HARVEST'
+FIND_MYTHEGG = 'FIND_MYTHEGG'
+GAIN_ACHIEVEMENT = 'GAIN_ACHIEVEMENT'
+GAIN_HEARTS = 'GAIN_HEARTS'
 GATHER = 'GATHER'
+HARVEST = 'HARVEST'
+SCORE_POINTS = 'SCORE_POINTS'
+TALK_TO_VILLAGERS = 'TALK_TO_VILLAGERS'
 
 ACHIEVEMENT_TRIGGER_TYPES = [
-    (SCORE_POINTS, 'Score points'),
-    (GAIN_HEARTS, 'Gain hearts'),
-    (TALK_TO_VILLAGERS, 'Talk to villagers'),
-    (GAIN_ACHIEVEMENT, 'Gain achievement'),
     (EARN_MONEY, 'Earn money'),
-    (HARVEST, 'Harvest'),
+    (FIND_MYTHEGG, 'Find mythegg'),
+    (GAIN_ACHIEVEMENT, 'Gain achievement'),
+    (GAIN_HEARTS, 'Gain hearts'),
     (GATHER, 'Gather'),
+    (HARVEST, 'Harvest'),
+    (SCORE_POINTS, 'Score points'),
+    (TALK_TO_VILLAGERS, 'Talk to villagers'),
 ]
 
 ACHIEVEMENT_EMOJIS = {
+    SCORE_POINTS: '💯',
     GAIN_HEARTS: '❤️',
     TALK_TO_VILLAGERS: '💬',
     GAIN_ACHIEVEMENT: '🏆',
@@ -324,6 +335,7 @@ ACHIEVEMENT_EMOJIS = {
         MINING_INTAKE: '⛏',
         FORAGING_INTAKE: '🌲',
     },
+    FIND_MYTHEGG: '🥚'
 }
 SPOOPY = 'SPOOPY'
 VERDANT = 'VERDANT'
@@ -340,6 +352,15 @@ MYTHLING_TYPES = [
     (GOLDEN, 'golden'),
     (RAINBOW, 'rainbow'),
 ]
+
+MYTHLING_TYPE_TO_DRAW_VARIABLE = {
+    SPOOPY: 'mining_attempts',
+    VERDANT: 'foraging_attempts',
+    CORAL: 'fishing_attempts',
+    SPARKLY: 'depth_weighted_hearts_earned',
+    GOLDEN: 'farming_koin_earned',
+    RAINBOW: 'mytheggs_found'
+}
 
 MYTHEGG = 'MYTHEGG'
 MYTHLING = 'MYTHLING'
