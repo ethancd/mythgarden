@@ -17,8 +17,7 @@ class MytheggPowers:
         return self.is_active(GOLDEN, session)
 
     def rainbow_active(self, session):
-        # return self.is_active(RAINBOW, session)
-        return True
+        return self.is_active(RAINBOW, session)
 
     def is_active(self, mythling_type, session):
         mythling_state = session.mythling_states.filter(mythling__mythling_type=mythling_type)

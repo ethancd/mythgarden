@@ -230,7 +230,7 @@ class ActionGenerator:
             target_item=item_token,
             cost_amount=item_token.price,
             cost_unit=Action.KOIN,
-            log_statement=f'You sold {item_token.name} for {item_token.price} fleurs.',
+            log_statement='You sold {name} for {price} fleurs.',
         )
 
     def gen_buy_action(self, item_token):

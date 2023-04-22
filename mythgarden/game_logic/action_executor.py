@@ -164,7 +164,7 @@ class ActionExecutor:
         session.wallet.money += price
         session.wallet.save()
 
-        log_statement = self.__add_emoji(action, action.log_statement)
+        log_statement = self.__add_emoji(action, action.log_statement.format(name=item.name, price=price))
         session.messages.create(text=log_statement)
 
         #  if the item should get repopulated into the store, do that

@@ -359,7 +359,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
                 }
               </Location>
 
-              <List id='message-log' baseColor={colors.parchment}>
+              <List id='message-log' baseColor={colors.whiteYellow}>
                 {messages?.map(message => Message({ ...message }))}
                 {ephemerealMessage ? Message({text: ephemerealMessage, isError: true, id: EPHEMEREAL_MSG_ID}) : null}
               </List>

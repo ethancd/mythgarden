@@ -113,7 +113,8 @@ class ItemToken(models.Model):
             'hasBeenWatered': self.has_been_watered,
             'id': self.id,
             'quantity': self.quantity,
-            'price': self.get_display_price_if_known()
+            'price': self.get_display_price_if_known(),
+            'mythlingType': self.get_mythling_type_if_applicable()
         }
 
     def make_copy(self):
@@ -144,6 +145,12 @@ class ItemToken(models.Model):
             return self.price
         else:
             return None
+
+    def get_mythling_type_if_applicable(self):
+        try:
+            return self.item.mythling.mythling_type
+        except Mythling.DoesNotExist:
+            return
 
     @property
     def emoji(self):

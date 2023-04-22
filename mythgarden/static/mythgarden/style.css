@@ -307,7 +307,10 @@ ul {
   100% {
     opacity: 0.75; } }
 #score {
-  z-index: 2; }
+  display: flex;
+  flex-direction: column;
+  z-index: 2;
+  justify-content: flex-end; }
   #score .total-score {
     font-size: 2rem; }
     @media only screen and (max-width: 900px) {
@@ -519,8 +522,26 @@ ul {
     border-color: gold;
     box-shadow: 0 0 0.5rem 0 gold; }
     #inventory .item.mythic .type:after, #inventory + .item.mythic .type:after {
-      content: '****';
+      content: '*****';
       color: gold; }
+  #inventory .item .spoopy, #inventory + .item .spoopy {
+    filter: sepia(1) saturate(5) hue-rotate(-45deg) brightness(40%); }
+  #inventory .item .verdant, #inventory + .item .verdant {
+    filter: sepia(1) saturate(5) hue-rotate(30deg); }
+  #inventory .item .coral, #inventory + .item .coral {
+    filter: sepia(1) saturate(5) hue-rotate(145deg); }
+  #inventory .item .sparkly, #inventory + .item .sparkly {
+    filter: sepia(1) saturate(5) hue-rotate(200deg); }
+  #inventory .item .golden, #inventory + .item .golden {
+    filter: sepia(1) saturate(5) hue-rotate(0deg); }
+  #inventory .item .rainbow.type, #inventory + .item .rainbow.type {
+    background: linear-gradient(to top, #b828fb 0%, #2d90fb 25%, #b8fc34 50%, #fdc838 75%, #fc1992 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent; }
+    #inventory .item .rainbow.type:after, #inventory + .item .rainbow.type:after {
+      background: linear-gradient(to left, #b827fc 0%, #2c90fc 25%, #b8fd33 50%, #fec837 75%, #fd1892 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent; }
   #inventory .item .type, #inventory + .item .type {
     font-size: 2rem;
     position: relative; }
@@ -568,6 +589,11 @@ ul {
   @media only screen and (max-width: 900px) {
     #wallet {
       font-size: 3rem; } }
+  #wallet.long {
+    font-size: 3rem; }
+    @media only screen and (max-width: 900px) {
+      #wallet.long {
+        font-size: 2rem; } }
 
 /* center-col elements */
 #center-col {
@@ -837,8 +863,26 @@ ul {
       border-color: gold;
       box-shadow: 0 0 0.5rem 0 gold; }
       #local-items .item.mythic .type:after {
-        content: '****';
+        content: '*****';
         color: gold; }
+    #local-items .item .spoopy {
+      filter: sepia(1) saturate(5) hue-rotate(-45deg) brightness(40%); }
+    #local-items .item .verdant {
+      filter: sepia(1) saturate(5) hue-rotate(30deg); }
+    #local-items .item .coral {
+      filter: sepia(1) saturate(5) hue-rotate(145deg); }
+    #local-items .item .sparkly {
+      filter: sepia(1) saturate(5) hue-rotate(200deg); }
+    #local-items .item .golden {
+      filter: sepia(1) saturate(5) hue-rotate(0deg); }
+    #local-items .item .rainbow.type {
+      background: linear-gradient(to top, #b828fb 0%, #2d90fb 25%, #b8fc34 50%, #fdc838 75%, #fc1992 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent; }
+      #local-items .item .rainbow.type:after {
+        background: linear-gradient(to left, #b827fc 0%, #2c90fc 25%, #b8fd33 50%, #fec837 75%, #fd1892 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent; }
     #local-items .item.empty-slot {
       cursor: default;
       border-color: beige;

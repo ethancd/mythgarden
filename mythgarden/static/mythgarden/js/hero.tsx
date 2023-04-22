@@ -21,7 +21,6 @@ export default function Hero ({ name, isDefaultName, imageUrl, score, highScore,
         {highScore > 0 ? <span id='high-score'> High Score: {highScore}</span> : null }
         <div id="score">
           <span className='total-score'>{score}</span>
-          &nbsp;
           <span>
             (⚜️{koinEarned} x {heartsEarned}❤️{mytheggsFound > 0
               ? <span> +{mytheggsFound *10}%🥚<RainbowText text={'bonus'} shading={0.4}></RainbowText></span>

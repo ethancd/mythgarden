@@ -171,8 +171,8 @@ $hot-red: #fd1892;
   border-image-slice: 1;
 }
 
-@mixin subdued-rainbow-gradient($amount) {
-  background: linear-gradient(to right,
+@mixin subdued-rainbow-gradient($amount, $direction: to right) {
+  background: linear-gradient($direction,
     desaturate($fuschia, $amount) 0%,
     desaturate($electric-blue, $amount) 25%,
     desaturate($bright-green, $amount) 50%,
@@ -188,7 +188,6 @@ $hot-red: #fd1892;
     fade-out(desaturate($light-orange, $desaturate), $fadeout) 75%,
     fade-out(desaturate($hot-red, $desaturate), $fadeout) 100%);
 }
-
 
 @mixin filter-brightness($percent) {
   filter: brightness($percent);
@@ -317,10 +316,55 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
     box-shadow: 0 0 $fine-shadow-distance 0 gold;
 
     .type:after {
-      content: '****';
+      content: '*****';
       color: gold;
     }
   }
+}
+
+@mixin mythegg-emoji {
+  .spoopy {
+    @include emoji-darkening-colorizer(-45deg, 40%);
+  }
+
+  .verdant {
+    @include emoji-colorizer(30deg);
+  }
+
+  .coral {
+    @include emoji-colorizer(145deg);
+  }
+
+  .sparkly {
+    @include emoji-colorizer(200deg);
+  }
+
+  .golden {
+    @include emoji-colorizer(0deg);
+  }
+
+  .rainbow {
+    &.type {
+      @include subdued-rainbow-gradient(.5, to top);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+
+      &:after {
+        @include subdued-rainbow-gradient(.3, to left);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+    }
+  }
+
+}
+
+@mixin emoji-colorizer($hueDegrees){
+  filter: sepia(1) saturate(5) hue-rotate($hueDegrees);
+}
+
+@mixin  emoji-darkening-colorizer($hueDegrees, $brightnessPercent) {
+  filter: sepia(1) saturate(5) hue-rotate($hueDegrees) brightness($brightnessPercent);
 }
 
 #page {
@@ -620,7 +664,9 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
 }
 
 #score {
+  @include column;
   @include game-element;
+  justify-content: flex-end;
 
   .total-score {
     font-size: $medium-text;
@@ -923,6 +969,7 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
   }
 
   @include rarity-indicators;
+  @include mythegg-emoji;
 
   .type {
     font-size: $medium-text;
@@ -931,6 +978,7 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
     @media only screen and (max-width: 900px) {
       font-size: $med-small-text;
     }
+
 
     &:after {
       content: '';
@@ -990,6 +1038,14 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
 
   @media only screen and (max-width: 900px) {
     font-size: $med-large-text;
+  }
+
+  &.long {
+    font-size: $med-large-text;
+
+    @media only screen and (max-width: 900px) {
+      font-size: $medium-text;
+    }
   }
 }
 
@@ -1301,6 +1357,7 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
   .item {
     @include clickable;
     @include rarity-indicators;
+    @include mythegg-emoji;
     position: relative;
     display: flex;
     flex-direction: column;
