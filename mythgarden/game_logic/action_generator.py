@@ -2,7 +2,7 @@ import math
 from fractions import Fraction
 
 from ..models import Bridge, Building, ItemToken, Place, VillagerState, Action
-from ..models._constants import FARM, SHOP, WILD_TYPES, SUNSET, SEED, SPROUT, CROP, FOREST, MOUNTAIN, BEACH, \
+from ..models._constants import FARM, SHOP, WILD_TYPES, SUNSET, DAWN, SEED, SPROUT, CROP, FOREST, MOUNTAIN, BEACH, \
     TALK_MINUTES_PER_FRIENDLINESS, EXIT_DESCRIPTION, FISHING_DESCRIPTION, MINING_DESCRIPTION, FORAGING_DESCRIPTION, \
     BOOST_DENOMINATOR, MAX_BOOST_LEVEL, TIME_TYPE, MYTHEGG
 from ..static_helpers import guard_types, guard_type
@@ -60,7 +60,7 @@ class ActionGenerator:
         if place.is_farmhouse:
             available_actions += self.gen_storage_actions(contents, inventory)
 
-            if clock.time >= SUNSET:
+            if clock.time >= SUNSET or clock.time < DAWN:
                 available_actions += [self.gen_sleep_action()]
 
         actions = self.apply_speed_boost(available_actions, boost_level)

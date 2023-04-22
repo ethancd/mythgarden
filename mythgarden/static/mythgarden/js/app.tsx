@@ -3,14 +3,22 @@ import { TouchBackend } from 'react-dnd-touch-backend'
 import { DndProvider } from 'react-dnd'
 
 import {type ActionData, ActionPillProps} from './action'
+import {AchievementData, AchievementsList} from "./achievementsList";
+import {ActivitiesList} from "./activitiesList";
+import {ArrowsList} from "./arrowsList";
+import BonusStats from "./bonusStats";
 import {Building, type BuildingData} from './building'
-import { Clock, type ClockData } from './clock'
-import { Dialogue, type DialogueData} from './dialogue'
-import { Hero, type HeroData } from './hero'
-import { Item, type ItemData } from './item'
+import {BuildingsList} from "./buildingsList";
+import {Clock, type ClockData} from './clock'
+import {Dialogue, type DialogueData} from './dialogue'
+import {GiftPreview} from "./draggableGift";
+import {Hero, type HeroData} from './hero'
+import {Item, type ItemData} from './item'
+import {ItemsList} from "./itemsList";
 import List from './list'
 import {Location, type LocationData} from './location'
-import { Message, type MessageProps } from './message'
+import {Message, type MessageProps} from './message'
+import RainbowText from "./rainbowText";
 import Section from './section'
 import {Sky} from './sky'
 import {Villager, VillagerData } from './villager'
@@ -22,13 +30,7 @@ import { FilterizeColorContext, ImageFilterContext, filterFuncFactory, getImageF
 import colors from './_colors'
 import Gallery from "./gallery";
 import {postAction} from "./ajax";
-import {ItemsList} from "./itemsList";
-import {BuildingsList} from "./buildingsList";
-import {ArrowsList} from "./arrowsList";
-import {ActivitiesList} from "./activitiesList";
-import {GiftPreview} from "./draggableGift";
-import RainbowText from "./rainbowText";
-import {AchievementData, AchievementsList} from "./achievementsList";
+
 
 const TALK_ACTION = 'TALK'
 const TRAVEL_ACTION = 'TRAVEL'
@@ -241,6 +243,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
       })
     }
   }
+
   printVillagerTalkedToWarning(entityId: number) {
     const villager = this.state.combinedProps.villagerStates.find(villager => villager.id === entityId) as VillagerData
     const warning = `⚠️ You already talked to ${villager.name} today. But they'll be happy to talk again tomorrow!`
@@ -308,7 +311,10 @@ class App extends React.Component<Partial<AppProps>, AppState> {
             <Gallery {...{show: showGallery, currentPortraitUrl: hero.imageUrl, portraitUrls} }></Gallery>
             <AchievementsList show={showAchievementsList} achievements={achievements} totalAchievements={TOTAL_ACHIEVEMENTS}></AchievementsList>
             <h1 id="logo"><RainbowText text={'Mythgarden'}></RainbowText></h1>
-            <Clock display={clock.display} time={clock.time} boostLevel={hero.boostLevel} luckPercent={hero.luckPercent}></Clock>
+            <div className='column'>
+              <Clock {...clock}></Clock>
+              <BonusStats boostLevel={hero.boostLevel} luckPercent={hero.luckPercent}></BonusStats>
+            </div>
             <Sky time={clock.time} dayNumber={clock.dayNumber}></Sky>
           </Section>
 

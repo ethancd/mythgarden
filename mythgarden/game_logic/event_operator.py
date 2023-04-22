@@ -2,13 +2,16 @@ import json
 import random
 
 from .mythegg_finder import MytheggFinder
+from .mythegg_powers import MytheggPowers
 from ..models import ScheduledEvent, VillagerState, PlaceState, Item, MerchSlot, ItemToken
-from ..models._constants import SHOP, FARM, SEED, SPROUT, DAWN, DAY_TO_INDEX, KYS_MESSAGE, FIRST_DAY, MAX_ITEMS
+from ..models._constants import SHOP, FARM, SEED, SPROUT, DAWN, DAY_TO_INDEX, KYS_MESSAGE, FIRST_DAY, MAX_ITEMS, \
+    RAINBOW_BONUS_TIME
 
 
 class EventOperator:
     def __init__(self):
         self.mythegg_finder = MytheggFinder()
+        self.mythegg_powers = MytheggPowers()
 
     def react_to_time_passing(self, clock, session):
         # check for game over and short circuit if so
@@ -22,6 +25,13 @@ class EventOperator:
 
         # if start of a new day, run hard-coded events, have the hero go to sleep, then run events
         if clock.is_new_day:
+            # unless you have the rainbow egg!
+            if self.mythegg_powers.rainbow_active(session) \
+                and clock.time < RAINBOW_BONUS_TIME \
+                    and not session.hero_state.is_in_bed:
+
+                return
+
             self.reset_for_new_day(session)
             self.sleep_through_the_night(clock, session)  # advances the clock, sets is_new_day to False
 
@@ -189,13 +199,14 @@ class EventOperator:
 
         item_tokens = farm_state.item_tokens.all()
         new_contents = []
+        golden_mythegg_active = self.mythegg_powers.golden_active(session)
 
         for token in item_tokens:
             if token.item_type not in [SEED, SPROUT] or not token.has_been_watered:
                 new_contents.append(token)
                 continue
 
-            new_item = token.item.get_next_growth_stage(token.days_growing)
+            new_item = token.item.get_next_growth_stage(token.days_growing, golden_mythegg_active)
             new_item_token = ItemToken.objects.create(
                 session=session, item=new_item, days_growing=token.days_growing + 1
             )

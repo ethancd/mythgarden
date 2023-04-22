@@ -327,21 +327,41 @@ ul {
 #clock {
   z-index: 2;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   font-size: 2rem;
   margin: 0.5rem;
   text-align: right;
-  justify-content: space-between; }
+  justify-content: space-between;
+  gap: 0.5rem; }
   @media only screen and (max-width: 900px) {
     #clock {
       font-size: 1.5rem; } }
-  #clock .late {
+  #clock .day {
+    font-family: "Lobster Two", "Times New Roman", serif; }
+    #clock .day.moderate {
+      color: #ffff33; }
+    #clock .day.severe {
+      color: #ff5f1f; }
+    #clock .day.final {
+      color: #ff3131; }
+  #clock .time.late {
     color: #ffff33; }
-  #clock .very-late {
+  #clock .time.very-late {
     color: #ff5f1f; }
-  #clock .very-very-late {
+  #clock .time.very-very-late {
     color: #ff3131; }
+  #clock .time.bonus-warning {
+    animation: sinewave-100 3s infinite; }
+  #clock .time.major-bonus-warning {
+    animation: sinewave-100 2s infinite; }
 
+@keyframes sinewave-100 {
+  0% {
+    opacity: 1; }
+  50% {
+    opacity: 0.25; }
+  100% {
+    opacity: 1; } }
 #boost {
   opacity: 0.6;
   font-size: 1.25rem;

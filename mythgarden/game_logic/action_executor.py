@@ -1,16 +1,20 @@
 import random
 
 from .mythegg_finder import MytheggFinder
+from .mythegg_powers import MytheggPowers
 from ..models import Action, Session, ItemToken, DialogueLine, Achievement
-from ..models._constants import SEED, MAX_ITEMS, MAX_LUCK_LEVEL, LUCK_DENOMINATOR, RARITIES, COMMON, UNCOMMON, RARE, EPIC, \
+from ..models._constants import SEED, MAX_ITEMS, MAX_LUCK_LEVEL, LUCK_DENOMINATOR, RARITIES, COMMON, UNCOMMON, RARE, \
+    EPIC, \
     MYTHIC, RARITY_WEIGHTS, LOVE, LIKE, NEUTRAL, \
-    DISLIKE, HATE, TALK_TO_VILLAGERS, SCORE_POINTS, GAIN_HEARTS, EARN_MONEY, HARVEST, GATHER, GAIN_ACHIEVEMENT, MYTHEGG
+    DISLIKE, HATE, TALK_TO_VILLAGERS, SCORE_POINTS, GAIN_HEARTS, EARN_MONEY, HARVEST, GATHER, GAIN_ACHIEVEMENT, MYTHEGG, \
+    SPOOPY_LUCK_BONUS, CORAL_PRICE_MULTIPLIER, FORAGING_ITEM_TYPES, MOUNTAIN, FISH, SPARKLY_FRIENDLINESS
 from ..static_helpers import guard_type
 
 
 class ActionExecutor:
     def __init__(self):
         self.mythegg_finder = MytheggFinder()
+        self.mythegg_powers = MytheggPowers()
 
     def execute(self, action, session):
         """Executes the given action, modifying relevant models in the session, and returns updated
@@ -49,8 +53,12 @@ class ActionExecutor:
         self.__set_dialogue_for_talk_action(session, villager_state, villager)
 
         # calculate and add affinity
-        # affinity_amount = self.__calc_talk_affinity_change(villager_state.talked_to_count, villager.friendliness)
-        affinity_amount = 100 #REMOVE TESTING
+        friendliness = villager.friendliness
+
+        if self.mythegg_powers.sparkly_active(session):
+            friendliness = SPARKLY_FRIENDLINESS
+
+        affinity_amount = self.__calc_talk_affinity_change(villager_state.talked_to_count, friendliness)
         hearts_gained = self.__update_affinity(villager_state, affinity_amount, session.hero_state)
 
         # update villager_state and save
@@ -95,9 +103,14 @@ class ActionExecutor:
 
         # remove gift from inventory
         session.inventory.item_tokens.remove(gift)
+        if gift.item_type == MYTHEGG:
+            self.mythegg_finder.mark_mythegg_token_given_away(session, gift)
 
         # calculate reaction
         valence = villager.gift_valence(gift)
+
+        if self.mythegg_powers.verdant_active(session) and gift.item_type in FORAGING_ITEM_TYPES:
+            valence = LOVE
 
         # get and set dialogue
         self.__set_dialogue_for_gift_action(session, villager, valence)
@@ -142,9 +155,13 @@ class ActionExecutor:
         and adds the price in koin to the hero's wallet"""
 
         item = action.target_item
+        price = action.cost_amount
+
+        if self.mythegg_powers.coral_active(session) and item.item_type == FISH:
+            price *= CORAL_PRICE_MULTIPLIER
 
         session.inventory.item_tokens.remove(item)
-        session.wallet.money += action.cost_amount
+        session.wallet.money += price
         session.wallet.save()
 
         log_statement = self.__add_emoji(action, action.log_statement)
@@ -286,7 +303,12 @@ class ActionExecutor:
         """Executes a gather action, which finds a random item in the current location's item pool
         and adds a copy to the hero's inventory"""
 
-        luck_percent = min(session.hero.luck_level, MAX_LUCK_LEVEL) / LUCK_DENOMINATOR
+        luck_level = session.hero.luck_level
+
+        if self.mythegg_powers.spoopy_active(session) and session.location.place_type == MOUNTAIN:
+            luck_level += SPOOPY_LUCK_BONUS
+
+        luck_percent = min(luck_level, MAX_LUCK_LEVEL) / LUCK_DENOMINATOR
 
         mythegg, mythling_state = self.mythegg_finder.draw_for_mythegg(session, session.location.mythegg, luck_percent) or (None, None)
 
@@ -318,7 +340,7 @@ class ActionExecutor:
         log_statement = self.__add_emoji(action, action.log_statement)
         session.messages.create(text=log_statement)
 
-        session.clock.advance(session.clock.minutes_to_midnight).save()
+        session.clock.advance_to_end_of_day().save()
 
         session.hero_state.save()
 

@@ -101,3 +101,7 @@ class MytheggFinder:
             session.messages.create(text="During the night, you dream of strange sounds and stranger colors. When you wake up, you find a mythegg waiting for you!")
         else:
             session.messages.create(text="You get the strangest feeling... like there's something magical waiting for you at home.")
+
+    def mark_mythegg_token_given_away(self, session, mythegg_token):
+        mythling_state, created = MythlingState.objects.get_or_create(session=session, mythling=mythegg_token.item)
+        mythling_state.mark_given_away().save()

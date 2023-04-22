@@ -24,5 +24,5 @@ from .villager import Villager, VillagerState
 
 # imports from .villager and .knowledge
 from .achievement import Achievement
-# imports from .hero, .place, and .villager
+# imports from .hero, .place, .villager, and .item (mythling)
 from .session import Session

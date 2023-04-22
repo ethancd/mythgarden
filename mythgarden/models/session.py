@@ -1,5 +1,6 @@
 from django.db import models
 
+from . import Mythling, MythlingState
 from .villager import Villager, VillagerState
 from .hero import Hero
 from .place import Place, PlaceState
@@ -124,6 +125,14 @@ class Session(models.Model):
             villager_states.append(villager_state)
 
         return VillagerState.objects.bulk_create(villager_states)
+
+    def populate_mythling_states(self):
+        mythling_states = []
+
+        for mythling in list(Mythling.objects.all()):
+            mythling_states.append(MythlingState(session=self, mythling=mythling))
+
+        return MythlingState.objects.bulk_create(mythling_states)
 
     def abbr_key_tag(self):
         return f'({self.key[:8]}...)'

@@ -28,13 +28,13 @@ FRIDAY = 'FRI'
 SATURDAY = 'SAT'
 
 DAYS_OF_WEEK = [
-    (MONDAY, 'Mon'),
-    (TUESDAY, 'Tue'),
-    (WEDNESDAY, 'Wed'),
-    (THURSDAY, 'Thu'),
-    (FRIDAY, 'Fri'),
-    (SATURDAY, 'Sat'),
-    (SUNDAY, 'Sun'),
+    (MONDAY, 'Monday'),
+    (TUESDAY, 'Tuesday'),
+    (WEDNESDAY, 'Wednesday'),
+    (THURSDAY, 'Thursday'),
+    (FRIDAY, 'Friday'),
+    (SATURDAY, 'Saturday'),
+    (SUNDAY, 'Sunday'),
 ]
 
 FIRST_DAY = DAYS_OF_WEEK[0][0]
@@ -113,6 +113,14 @@ RARITIES = [
     EPIC,
     MYTHIC
 ]
+
+RARITY_TO_INDEX = {
+    COMMON: 0,
+    UNCOMMON: 1,
+    RARE: 2,
+    EPIC: 3,
+    MYTHIC: 4
+}
 
 RARITY_CHOICES = [
     (COMMON, 'common'),
@@ -373,3 +381,11 @@ MYTHLING_GROWTH_STAGES = [
 ]
 
 MYTHLING_PORTRAIT_DIR = 'portraits/villager'
+
+
+SPOOPY_LUCK_BONUS = 40  # in luck_levels, so equals out to 20%
+CORAL_PRICE_MULTIPLIER = 2
+SPARKLY_FRIENDLINESS = 7
+RAINBOW_BONUS_TIME = 3 * 60  # so 3am
+GOLD_CROP_PREFIX = 'Gold'
+GOLD_CROP_PROFIT_MULTIPLIER = 20

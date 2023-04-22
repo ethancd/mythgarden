@@ -3,7 +3,7 @@ from django.templatetags.static import static
 
 from ._constants import ITEM_EMOJIS, COMMON, GIFT, ITEM_TYPES, RARITY_CHOICES, SEED, SPROUT, CROP, \
     CROP_PROFIT_MULTIPLIER, MYTHLING_TYPES, MYTHLING_GROWTH_STAGES, IMAGE_PREFIX, MYTHLING_PORTRAIT_DIR, \
-    MYTHLING_TYPE_TO_DRAW_VARIABLE
+    MYTHLING_TYPE_TO_DRAW_VARIABLE, GOLD_CROP_PREFIX, GOLD_CROP_PROFIT_MULTIPLIER, RARITY_TO_INDEX, RARITIES
 
 
 class ItemManager(models.Manager):
@@ -35,17 +35,18 @@ class Item(models.Model):
     def emoji(self):
         return ITEM_EMOJIS[self.item_type]
 
-    def get_next_growth_stage(self, days_growing):
+    def get_next_growth_stage(self, days_growing, grow_golden_crops):
         """Get the next item that a seed/sprout grows into, taking into account how long this item takes to grow
         and how many days it's been in the ground"""
         
         next_type = self.get_next_type(days_growing)
-        next_name = self.get_next_name(next_type)
-        next_price = self.get_next_price(next_type)
+        next_name = self.get_next_name(next_type, grow_golden_crops)
+        next_price = self.get_next_price(next_type, grow_golden_crops)
+        next_rarity = self.get_next_rarity(next_type, grow_golden_crops)
 
         instance, created = Item.objects.get_or_create(
                                 name=next_name, item_type=next_type, price=next_price,
-                                rarity=self.rarity, growth_days=self.growth_days, effort_time=self.effort_time
+                                rarity=next_rarity, growth_days=self.growth_days, effort_time=self.effort_time
                             )
 
         return instance
@@ -56,7 +57,7 @@ class Item(models.Model):
         else:
             return SPROUT
 
-    def get_next_name(self, next_type):
+    def get_next_name(self, next_type, grow_golden_crops):
         # could have some Item.name validation that ensures that the name ends with the item type for seed/sprout/crop
         # e.g. Parsnip Seed -> Parsnip Sprout -> Parsnip
 
@@ -64,18 +65,32 @@ class Item(models.Model):
         next_type_name = dict(ITEM_TYPES)[next_type]
         
         if next_type == CROP:
-            return self.name.replace(f' {curr_type_name}', '')
+            crop_name = self.name.replace(f' {curr_type_name}', '')
+            if grow_golden_crops:
+                return f'{GOLD_CROP_PREFIX} {crop_name.split()[-1]}'
+            else:
+                return crop_name
         else:
             return self.name.replace(curr_type_name, next_type_name)
 
-    def get_next_price(self, next_type):
+    def get_next_price(self, next_type, grow_golden_crops):
         # seed -> sprout is mostly irrelevant, so goal is to make seed -> crop hit the CROP_PROFIT_MULTIPLIER
         # let's be ridiculous and say that seeds and sprouts are =, and then you multiply when you get to the crop
 
         if next_type == CROP:
-            return self.price * CROP_PROFIT_MULTIPLIER
+            if grow_golden_crops:
+                return self.price * GOLD_CROP_PROFIT_MULTIPLIER
+            else:
+                return self.price * CROP_PROFIT_MULTIPLIER
         else:
             return self.price
+
+    def get_next_rarity(self, next_type, grow_golden_crops):
+        if next_type == CROP and grow_golden_crops:
+            # rarity += 1
+            return RARITIES[RARITY_TO_INDEX[self.rarity] + 1]
+        else:
+            return self.rarity
 
 
 class ItemToken(models.Model):
@@ -171,15 +186,22 @@ class MythlingState(models.Model):
     mythling = models.ForeignKey('Mythling', on_delete=models.CASCADE, related_name='states')
 
     has_been_found = models.BooleanField(default=False)
+    is_in_possession = models.BooleanField(default=False)
     deferred_acquire = models.BooleanField(default=False)
 
     def mark_found(self):
         self.has_been_found = True
+        self.is_in_possession = True
         self.deferred_acquire = False
 
         return self
 
     def mark_deferred(self):
         self.deferred_acquire = True
+
+        return self
+
+    def mark_given_away(self):
+        self.is_in_possession = False
 
         return self

@@ -643,28 +643,68 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
   }
 }
 
+
 #clock {
   @include game-element;
-  @include column;
+  @include row;
   font-size: $medium-text;
   margin: $small-gutter;
   text-align: right;
   justify-content: space-between;
+  gap: $small-gutter;
 
   @media only screen and (max-width: 900px) {
     font-size: $med-small-text;
   }
 
-  .late {
-    color: $neon-yellow;
+  .day {
+    font-family: "Lobster Two", "Times New Roman", serif;
+
+    &.moderate {
+      color: $neon-yellow;
+    }
+
+    &.severe {
+      color: $neon-orange;
+    }
+
+    &.final {
+      color: $neon-red;
+    }
   }
 
-  .very-late {
-    color: $neon-orange;
-  }
+  .time {
+    &.late {
+      color: $neon-yellow;
+    }
 
-  .very-very-late {
-    color: $neon-red;
+    &.very-late {
+      color: $neon-orange;
+    }
+
+    &.very-very-late {
+      color: $neon-red;
+    }
+
+    &.bonus-warning {
+      animation: sinewave-100 3s infinite;
+    }
+
+    &.major-bonus-warning {
+      animation: sinewave-100 2s infinite;
+    }
+  }
+}
+
+@keyframes sinewave-100 {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+  100% {
+    opacity: 1;
   }
 }
 

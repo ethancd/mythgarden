@@ -5,6 +5,7 @@ const SUNRISE = 6 * 60
 const SUNSET = 18 * 60
 
 const TWILIGHT_LENGTH = 90
+const TRUE_DAWN = SUNRISE - TWILIGHT_LENGTH
 const TRUE_NIGHT = SUNSET + TWILIGHT_LENGTH
 
 const GOLDEN_HOUR_LENGTH = 2 * 60 // might look nicer for golden "hour" to last longer than 60min
@@ -25,6 +26,7 @@ const MIX_RATIO = 0.1
 const MAX_FILTER_OPACITY = 0.5;
 
 enum DaySegment {
+  Predawn = 'predawn',
   Morning = 'morning',
   Midday = 'midday',
   Evening = 'evening',
@@ -92,6 +94,10 @@ function getColorFilterByTime (time: number): ColorFilter {
 function getKelvinByTime (time: number): number {
   const daySegment = getDaySegment(time)
 
+  if (daySegment === DaySegment.Predawn) {
+    throw new Error("Not yet implemented! --thx, sky god")
+  }
+
   if (daySegment === DaySegment.Morning) {
     return pointInRange(DAYLIGHT_KELVIN, HORIZON_KELVIN, (time - SUNRISE) / GOLDEN_HOUR_LENGTH)
   }
@@ -114,6 +120,10 @@ function getKelvinByTime (time: number): number {
 function getLuxByTime (time: number): number {
   const daySegment = getDaySegment(time)
 
+  if (daySegment === DaySegment.Predawn) {
+    throw new Error("Not yet implemented! --thx, sky god")
+  }
+
   if (daySegment === DaySegment.Morning) {
     return pointInRange(DAYLIGHT_LUX, HORIZON_LUX, (time - SUNRISE) / GOLDEN_HOUR_LENGTH)
   }
@@ -134,11 +144,12 @@ function getLuxByTime (time: number): number {
 }
 
 function getDaySegment (time: number): DaySegment {
-  if (time <= END_MORNING_GOLDEN_HOUR) return DaySegment.Morning
-  if (time > END_MORNING_GOLDEN_HOUR && time < START_EVENING_GOLDEN_HOUR) return DaySegment.Midday
-  if (time >= START_EVENING_GOLDEN_HOUR && time <= SUNSET) return DaySegment.Evening
-  if (time > SUNSET && time < TRUE_NIGHT) return DaySegment.Twilight
-  if (time >= TRUE_NIGHT) return DaySegment.Night
+  if (time >= TRUE_DAWN && time < SUNRISE) return DaySegment.Predawn
+  if (time >= SUNRISE && time < END_MORNING_GOLDEN_HOUR) return DaySegment.Morning
+  if (time >= END_MORNING_GOLDEN_HOUR && time < START_EVENING_GOLDEN_HOUR) return DaySegment.Midday
+  if (time >= START_EVENING_GOLDEN_HOUR && time < SUNSET) return DaySegment.Evening
+  if (time >= SUNSET && time < TRUE_NIGHT) return DaySegment.Twilight
+  if (time >= TRUE_NIGHT || time < TRUE_DAWN) return DaySegment.Night
 
   throw new Error('time not caught by getDaySegment conditionals')
 }

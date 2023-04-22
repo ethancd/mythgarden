@@ -50,6 +50,9 @@ def ensure_state_objects_created(session):
     if session.villager_states.count() == 0:
         session.villager_states.set(session.populate_villager_states(session.place_states.all()))
 
+    if session.mythling_states.count() == 0:
+        session.mythling_states.set(session.populate_mythling_states())
+
     return session
 
 

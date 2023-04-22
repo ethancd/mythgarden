@@ -2,7 +2,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
 from ._constants import MINUTES_IN_A_DAY, DAYS_OF_WEEK, FIRST_DAY, DAWN, MINUTES_IN_A_HALF_DAY, \
-    OVERSLEPT_TIME, DAY_TO_INDEX
+    OVERSLEPT_TIME, DAY_TO_INDEX, SUNSET
 
 
 class Clock(models.Model):
@@ -19,7 +19,8 @@ class Clock(models.Model):
 
     def serialize(self):
         return {
-            'display': self.display,
+            'dayDisplay': self.get_day_display(),
+            'timeDisplay': self.get_time_display(),
             'time': self.time,
             'dayNumber': self.day_index
         }
@@ -71,6 +72,13 @@ class Clock(models.Model):
         self.last_triggered_time = self.time
 
         return self  # for chaining
+
+    def advance_to_end_of_day(self):
+        if self.time >= SUNSET:
+            return self.advance(self.minutes_to_midnight)
+
+        if self.time < DAWN:
+            return self.advance(self.minutes_to_dawn)
 
     @property
     def minutes_to_midnight(self):
