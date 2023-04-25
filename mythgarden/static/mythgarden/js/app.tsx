@@ -2,6 +2,8 @@ import React, {SyntheticEvent} from 'react'
 import { TouchBackend } from 'react-dnd-touch-backend'
 import { DndProvider } from 'react-dnd'
 
+import RainbowText from "./rainbowText";
+
 import {type ActionData, ActionPillProps} from './action'
 import {AchievementData, AchievementsList} from "./achievementsList";
 import {ActivitiesList} from "./activitiesList";
@@ -18,7 +20,6 @@ import {ItemsList} from "./itemsList";
 import List from './list'
 import {Location, type LocationData} from './location'
 import {Message, type MessageProps} from './message'
-import RainbowText from "./rainbowText";
 import Section from './section'
 import {Sky} from './sky'
 import {Villager, VillagerData } from './villager'
