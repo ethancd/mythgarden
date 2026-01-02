@@ -15,14 +15,23 @@ jobs:
 
       - name: Check or Create Staging App
         run: |
-          if ! flyctl status -a django-mythgarden-staging >/dev/null 2>&1; then
+          # Check if app exists in the list of apps
+          if flyctl apps list | grep -q "django-mythgarden-staging"; then
+            echo "Staging app exists in apps list"
+            # Try to get status, if it fails the app might be in a bad state but we'll try to deploy anyway
+            if flyctl status -a django-mythgarden-staging >/dev/null 2>&1; then
+              echo "Staging app is healthy"
+            else
+              echo "Staging app exists but status check failed - will attempt deployment anyway"
+            fi
+          else
             echo "Creating staging app..."
             flyctl apps create django-mythgarden-staging
-            echo "Setting secrets for staging app..."
-            echo "${{ secrets.STAGING_SECRET_KEY }}" | flyctl secrets set SECRET_KEY=- -a django-mythgarden-staging
-          else
-            echo "Staging app already exists"
           fi
+
+          # Ensure SECRET_KEY is set (won't hurt if already set)
+          echo "Ensuring SECRET_KEY is configured..."
+          echo "${{ secrets.STAGING_SECRET_KEY }}" | flyctl secrets set SECRET_KEY=- -a django-mythgarden-staging
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
