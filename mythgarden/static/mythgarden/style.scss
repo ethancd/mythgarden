@@ -1061,7 +1061,7 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
 }
 
 #location {
-  height: calc(100% - 3rem); // want to be courteous of message-log
+  height: 100%;
   position: relative;
   width: 100%;
 
@@ -1410,23 +1410,124 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
   }
 }
 
-#message-log {
-  background-color: $parchment;
-  display: block;
-  width: 100%;
-  height: 3rem;
-  overflow-y: auto;
+/* Toast Notification System */
 
-  .message {
-    font-size: $med-small-text;
-    overflow: hidden;
-    width: 100%;
-    padding-bottom: $small-gutter;
-    margin-top: $small-gutter;
-    border-bottom: 1px solid darkgreen;
+.toast-container {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 100;
+  pointer-events: none;
+  max-width: 90%;
+}
+
+.toast {
+  background: rgba(252, 245, 239, 0.95);
+  border: 2px solid darkgreen;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: $smallish-text;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  pointer-events: auto;
+  animation: toast-appear 200ms ease-out;
+
+  &.error {
+    border-color: $mustard-brown;
+    color: $mustard-brown;
+  }
+}
+
+@keyframes toast-appear {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.history-button {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.5rem;
+  background: rgba(252, 245, 239, 0.8);
+  border: 1px solid darkgreen;
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  font-size: $small-text;
+  cursor: pointer;
+  z-index: 50;
+
+  &:hover {
+    background: rgba(252, 245, 239, 1);
+  }
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.message-history-modal {
+  background: $parchment;
+  border: 3px solid darkgreen;
+  border-radius: 12px;
+  max-width: 500px;
+  max-height: 70vh;
+  width: 90%;
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 2px solid darkgreen;
+
+    h3 {
+      margin: 0;
+      font-size: $medium-text;
+    }
+
+    .close-button {
+      background: none;
+      border: none;
+      font-size: $med-small-text;
+      cursor: pointer;
+
+      &:hover {
+        @include filter-brightness($hovered-brightness);
+      }
+    }
+  }
+
+  .modal-content {
+    padding: 1rem;
+    overflow-y: auto;
+    max-height: calc(70vh - 4rem);
+  }
+
+  .history-message {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(0, 100, 0, 0.2);
+    font-size: $smallish-text;
 
     &:last-child {
-      border: none;
+      border-bottom: none;
     }
 
     &.error {
@@ -1434,6 +1535,7 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
     }
   }
 }
+
 
 /* right-sidebar elements, villagers and dialogue*/
 

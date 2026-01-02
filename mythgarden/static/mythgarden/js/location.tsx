@@ -5,8 +5,11 @@ import {ImageFilterContext} from './lightColorLogic'
 import {ActivityData} from "./activitiesList";
 import {ArrowData} from "./arrowsList";
 import RainbowText from "./rainbowText";
+import ToastContainer from "./toastContainer";
+import HistoryButton from "./historyButton";
+import {type MessageProps} from "./message";
 
-export default function Location ({ name, imageUrl, children }: React.PropsWithChildren<LocationProps>): JSX.Element {
+export default function Location ({ name, imageUrl, messages, onShowHistory, children }: React.PropsWithChildren<LocationProps>): JSX.Element {
   const { backgroundColor, opacity } = useContext(ImageFilterContext)
 
   return (
@@ -19,6 +22,12 @@ export default function Location ({ name, imageUrl, children }: React.PropsWithC
             }}></div>
             <div className='darkness-filter'></div>
             <img className="landscape" src={imageUrl}></img>
+
+            {/* Toast notifications overlay */}
+            <ToastContainer messages={messages} />
+
+            {/* History button */}
+            <HistoryButton onClick={onShowHistory} />
 
             {children}
         </div>
@@ -33,6 +42,9 @@ interface LocationData {
   arrows: ArrowData[]
 }
 
-type LocationProps = Omit<LocationData, 'hasInventory'>
+type LocationProps = Omit<LocationData, 'hasInventory'> & {
+  messages: MessageProps[]
+  onShowHistory: () => void
+}
 
 export { Location, type LocationProps, type LocationData }

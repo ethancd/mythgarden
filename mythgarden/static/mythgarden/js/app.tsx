@@ -20,6 +20,7 @@ import {ItemsList} from "./itemsList";
 import List from './list'
 import {Location, type LocationData} from './location'
 import {Message, type MessageProps} from './message'
+import MessageHistory from './messageHistory'
 import Section from './section'
 import {Sky} from './sky'
 import {Villager, VillagerData } from './villager'
@@ -58,6 +59,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
       showGallery: false,
       showDialogue: false,
       showAchievementsList: false,
+      showMessageHistory: false,
       ephemerealMessage: undefined
     }
   }
@@ -71,17 +73,11 @@ class App extends React.Component<Partial<AppProps>, AppState> {
     const combinedProps = { ...this.state.combinedProps, dialogue: null, ...this.props }
 
     this.resetDialogueAsNeeded(combinedProps)
-    this.scrollToMessageBottom()
 
     if (!isDeepEqual(combinedProps, this.state.combinedProps)) {
       this.setState({ combinedProps })
     }
   }
-
-  componentDidMount (): void {
-    this.scrollToMessageBottom()
-  }
-
 
   resetDialogueAsNeeded (combinedProps: Partial<AppProps>) {
     const prevId = this.state.combinedProps.dialogue?.id
@@ -90,12 +86,6 @@ class App extends React.Component<Partial<AppProps>, AppState> {
     if (newId != null && prevId != newId) {
       this.setState({showDialogue: true})
     }
-  }
-
-  // might be nice to move this to a MessagesList component and just do it on render there
-  scrollToMessageBottom (): void {
-    const messageContainer = document.getElementById('message-log') as HTMLElement
-    messageContainer.scrollTop = messageContainer.scrollHeight
   }
 
   marshalActionDictionary (actions: ActionData[]): ActionRecord {
@@ -270,8 +260,12 @@ class App extends React.Component<Partial<AppProps>, AppState> {
     this.setState({ showAchievementsList: true })
   }
 
+  showMessageHistory (): void {
+    this.setState({ showMessageHistory: true })
+  }
+
   clearActiveUX (): void {
-    this.setState({ showGallery: false, showDialogue: false, showAchievementsList: false, ephemerealMessage: undefined })
+    this.setState({ showGallery: false, showDialogue: false, showAchievementsList: false, showMessageHistory: false, ephemerealMessage: undefined })
   }
 
   render (): JSX.Element {
@@ -292,7 +286,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
       speaker
     } = this.state.combinedProps
 
-    const { showGallery, showDialogue, showAchievementsList, ephemerealMessage } = this.state
+    const { showGallery, showDialogue, showAchievementsList, showMessageHistory, ephemerealMessage } = this.state
 
     const colorFilter = getColorFilterByTime(clock.time)
     const imageFilter = getImageFilter(colorFilter)
@@ -333,7 +327,14 @@ class App extends React.Component<Partial<AppProps>, AppState> {
             </section>
 
             <section id="center-col">
-              <Location {...{...place, colorFilter, actionDictionary}}>
+              <Location
+                {...{...place, colorFilter, actionDictionary}}
+                messages={[
+                  ...(messages || []),
+                  ...(ephemerealMessage ? [{text: ephemerealMessage, isError: true, id: EPHEMEREAL_MSG_ID}] : [])
+                ]}
+                onShowHistory={this.showMessageHistory.bind(this)}
+              >
                 <ActivitiesList activities={place.activities}
                                 actionDictionary={actionDictionary}
                 ></ActivitiesList>
@@ -360,10 +361,11 @@ class App extends React.Component<Partial<AppProps>, AppState> {
                 }
               </Location>
 
-              <List id='message-log' baseColor={colors.whiteYellow}>
-                {messages?.map(message => Message({ ...message }))}
-                {ephemerealMessage ? Message({text: ephemerealMessage, isError: true, id: EPHEMEREAL_MSG_ID}) : null}
-              </List>
+              <MessageHistory
+                messages={messages || []}
+                isOpen={showMessageHistory}
+                onClose={this.clearActiveUX.bind(this)}
+              />
             </section>
             <section id='far-sidebar'>
               <VillagersList villagers={villagerStates}
@@ -405,6 +407,7 @@ interface AppState {
   showGallery: boolean
   showDialogue: boolean
   showAchievementsList: boolean
+  showMessageHistory: boolean
   ephemerealMessage?: string
 }
 
