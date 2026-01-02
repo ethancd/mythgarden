@@ -18,7 +18,8 @@ RUN set -ex && \
 
 COPY . /code/
 
-RUN python manage.py collectstatic --noinput
+# Dummy SECRET_KEY for collectstatic during build (real key set at runtime via Fly secrets)
+RUN SECRET_KEY=build-only-dummy-key python manage.py collectstatic --noinput
 
 EXPOSE 8000
 
