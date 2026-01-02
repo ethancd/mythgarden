@@ -15,6 +15,7 @@ from .view_helpers import retrieve_session, ensure_state_objects_created, get_ho
 from .game_logic import ActionExecutor, EventOperator
 from .models import Session
 from .models import Achievement
+from .models import GameSettings
 
 @ensure_csrf_cookie
 def home(request):
@@ -124,3 +125,45 @@ def test_time(request, time, day):
 
     template_name = 'mythgarden/home.html'
     return render(request, template_name, context)
+
+
+def get_settings(request):
+    """Endpoint for retrieving game settings."""
+    session = get_object_or_404(Session, pk=request.session['session_key'])
+
+    # Ensure settings exist for the hero
+    game_settings, created = GameSettings.objects.get_or_create(hero=session.hero)
+
+    return JsonResponse(game_settings.serialize())
+
+
+def update_settings(request):
+    """Endpoint for updating draft game settings."""
+    if not request.method == 'POST':
+        return HttpResponseRedirect(reverse('mythgarden:home'))
+
+    session = get_object_or_404(Session, pk=request.session['session_key'])
+
+    try:
+        # Ensure settings exist for the hero
+        game_settings, created = GameSettings.objects.get_or_create(hero=session.hero)
+
+        new_settings = json.loads(request.body)
+
+        with transaction.atomic():
+            # Only allow updating draft settings
+            if 'draft_villagers_move' in new_settings:
+                game_settings.draft_villagers_move = new_settings['draft_villagers_move']
+            if 'draft_building_hours' in new_settings:
+                game_settings.draft_building_hours = new_settings['draft_building_hours']
+            if 'draft_advanced_crops' in new_settings:
+                game_settings.draft_advanced_crops = new_settings['draft_advanced_crops']
+            if 'draft_dynamic_shop' in new_settings:
+                game_settings.draft_dynamic_shop = new_settings['draft_dynamic_shop']
+
+            game_settings.save()
+    except (ValidationError, ValueError) as e:
+        error_message = str(e) if hasattr(e, 'message') else str(e)
+        return JsonResponse({'error': error_message})
+
+    return JsonResponse(game_settings.serialize())

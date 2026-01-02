@@ -30,6 +30,7 @@ import { isDeepEqual } from './staticUtils'
 import { FilterizeColorContext, ImageFilterContext, filterFuncFactory, getImageFilter, getColorFilterByTime } from './lightColorLogic'
 import colors from './_colors'
 import Gallery from "./gallery";
+import SettingsMenu from "./settingsMenu";
 import {postAction} from "./ajax";
 
 
@@ -58,6 +59,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
       showGallery: false,
       showDialogue: false,
       showAchievementsList: false,
+      showSettingsMenu: false,
       ephemerealMessage: undefined
     }
   }
@@ -270,8 +272,12 @@ class App extends React.Component<Partial<AppProps>, AppState> {
     this.setState({ showAchievementsList: true })
   }
 
+  showSettingsMenu (): void {
+    this.setState({ showSettingsMenu: true })
+  }
+
   clearActiveUX (): void {
-    this.setState({ showGallery: false, showDialogue: false, showAchievementsList: false, ephemerealMessage: undefined })
+    this.setState({ showGallery: false, showDialogue: false, showAchievementsList: false, showSettingsMenu: false, ephemerealMessage: undefined })
   }
 
   render (): JSX.Element {
@@ -292,7 +298,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
       speaker
     } = this.state.combinedProps
 
-    const { showGallery, showDialogue, showAchievementsList, ephemerealMessage } = this.state
+    const { showGallery, showDialogue, showAchievementsList, showSettingsMenu, ephemerealMessage } = this.state
 
     const colorFilter = getColorFilterByTime(clock.time)
     const imageFilter = getImageFilter(colorFilter)
@@ -311,6 +317,15 @@ class App extends React.Component<Partial<AppProps>, AppState> {
             <Hero {...hero} achievementsCount={achievements.length} totalAchievements={TOTAL_ACHIEVEMENTS}></Hero>
             <Gallery {...{show: showGallery, currentPortraitUrl: hero.imageUrl, portraitUrls} }></Gallery>
             <AchievementsList show={showAchievementsList} achievements={achievements} totalAchievements={TOTAL_ACHIEVEMENTS}></AchievementsList>
+            <button className="hamburger-button" onClick={() => this.showSettingsMenu()}>☰</button>
+            <SettingsMenu
+              show={showSettingsMenu}
+              onClose={() => this.clearActiveUX()}
+              currentPortraitUrl={hero.imageUrl}
+              portraitUrls={portraitUrls}
+              heroName={hero.name}
+              isDefaultName={hero.isDefaultName}
+            />
             <h1 id="logo"><RainbowText text={'Mythgarden'}></RainbowText></h1>
             <div className='column'>
               <Clock {...clock}></Clock>
@@ -405,6 +420,7 @@ interface AppState {
   showGallery: boolean
   showDialogue: boolean
   showAchievementsList: boolean
+  showSettingsMenu: boolean
   ephemerealMessage?: string
 }
 
