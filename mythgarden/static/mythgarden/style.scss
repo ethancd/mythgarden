@@ -610,8 +610,33 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
     align-items: center;
     color: $light-text;
 
-    &.empty-slot {
-      color: #999;
+    &.unclaimed {
+      opacity: 0.8;
+
+      .progress-container {
+        position: relative;
+        height: 16px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        margin-top: 4px;
+        overflow: hidden;
+      }
+
+      .progress-bar {
+        position: absolute;
+        height: 100%;
+        background: linear-gradient(90deg, #4a9eff, #a855f7);
+        border-radius: 8px;
+        transition: width 0.3s ease;
+      }
+
+      .progress-label {
+        position: relative;
+        z-index: 1;
+        font-size: 11px;
+        padding: 0 8px;
+        line-height: 16px;
+      }
     }
 
     .row {

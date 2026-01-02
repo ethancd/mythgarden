@@ -3,14 +3,14 @@ import RainbowText from "./rainbowText";
 
 function AchievementsList ({ achievements, totalAchievements, show }: AchievementsListProps): JSX.Element {
   if (show) {
-    const paddedAchievements = achievements.concat(Array(totalAchievements - achievements.length).fill(null))
+    const earnedCount = achievements.filter(a => a.isEarned).length
     return (
         <ul id='achievements'>
-          <li><h2>Achievements {`(${achievements.length} / ${totalAchievements})`}</h2></li>
-          {paddedAchievements.map((achievement, n) => {
-            return achievement == null
-            ? <EmptyAchievement key={`empty-slot-${n}`}></EmptyAchievement>
-            : <Achievement {...achievement} key={achievement.id}></Achievement>
+          <li><h2>Achievements {`(${earnedCount} / ${totalAchievements})`}</h2></li>
+          {achievements.map((achievement) => {
+            return achievement.isEarned
+            ? <Achievement {...achievement} key={achievement.id}></Achievement>
+            : <UnclaimedAchievement {...achievement} key={achievement.id}></UnclaimedAchievement>
           })
           }
         </ul>
@@ -47,14 +47,23 @@ function Achievement({name, description, emoji, unlockedKnowledge}: AchievementP
   )
 }
 
-function EmptyAchievement (): JSX.Element {
+function UnclaimedAchievement ({name, description, progress}: AchievementProps): JSX.Element {
   return (
-    <li className="achievement empty-slot">
+    <li className="achievement unclaimed">
       <div className='row'>
         <div className="icon">❓</div>
         <div className='column'>
-          <span className="title">Unknown</span>
-          <span className="description">Not yet unlocked...</span>
+          <span className="title">{name}</span>
+          <span className="description">{description}</span>
+          {progress && (
+            <div className="progress-container">
+              <div
+                className="progress-bar"
+                style={{ width: `${progress.percent * 100}%` }}
+              />
+              <span className="progress-label">{progress.label}</span>
+            </div>
+          )}
         </div>
       </div>
     </li>
@@ -63,12 +72,21 @@ function EmptyAchievement (): JSX.Element {
 
 type AchievementProps = AchievementData
 
+interface AchievementProgress {
+  current: number
+  target: number
+  label: string
+  percent: number
+}
+
 interface AchievementData {
   name: string
   description: string
-  emoji: string
   id: number
+  isEarned: boolean
+  emoji?: string
   unlockedKnowledge?: string[]
+  progress?: AchievementProgress
 }
 
 interface AchievementsListProps {

@@ -3,11 +3,67 @@ from typing import Iterable
 from django.core.validators import ValidationError
 
 from .game_logic import ActionGenerator, ActionValidator
-from .models import Session, FarmerPortrait
+from .models import Session, FarmerPortrait, Achievement
+
+
+def get_all_achievements_with_progress(session):
+    """
+    Returns all achievements (earned and unearned) with appropriate serialization.
+
+    Earned achievements include emoji and unlocked knowledge.
+    Unearned achievements include progress information.
+
+    Achievements are sorted by a fixed order based on type and villager name.
+    """
+    earned = set(session.hero.achievements.all())
+
+    # Define achievement type order for sorting
+    type_order = {
+        'HIGH_SCORE': 1,
+        'GROSS_INCOME': 2,
+        'FAST_CASH': 3,
+        'BALANCED_INCOME': 4,
+        'FARMING_INTAKE': 5,
+        'FISHING_INTAKE': 6,
+        'MINING_INTAKE': 7,
+        'FORAGING_INTAKE': 8,
+        'BEST_FRIENDS': 9,
+        'FAST_FRIENDS': 10,
+        'STEADFAST_FRIENDS': 11,
+        'MULTIPLE_BEST_FRIENDS': 12,
+        'ALL_VILLAGERS_HEARTS': 13,
+        'BESTEST_FRIENDS': 14,
+        'FASTEST_FRIENDS': 15,
+        'STEADFASTEST_FRIENDS': 16,
+        'DISCOVER_MYTHEGG': 17,
+        'FAST_MYTHEGG': 18,
+        'MULTIPLE_MYTHEGGS': 19,
+    }
+
+    all_achievements = list(Achievement.objects.select_related('villager', 'mythegg').all())
+
+    # Sort achievements by type order, then by villager/mythegg name
+    def sort_key(achievement):
+        type_rank = type_order.get(achievement.achievement_type, 999)
+        is_earned = achievement in earned
+        name = ''
+        if achievement.villager:
+            name = achievement.villager.name
+        elif achievement.mythegg:
+            name = achievement.mythegg.name
+        # Earned achievements come first within each type
+        return (not is_earned, type_rank, name)
+
+    all_achievements.sort(key=sort_key)
+
+    return [
+        a.serialize(session=session, is_earned=(a in earned))
+        for a in all_achievements
+    ]
 
 
 MODEL_LAMBDAS = {
-    'achievements': lambda session: session.hero.achievements.all(),
+    'achievements': lambda session: get_all_achievements_with_progress(session),
     'actions': lambda session: ActionGenerator().get_actions_for_session(session),
     'buildings': lambda session: session.location.buildings.all(),
     'clock': lambda session: session.clock,

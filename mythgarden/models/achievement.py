@@ -3,7 +3,10 @@ from django.db import models
 
 from .knowledge import Knowledge
 from ._constants import ACHIEVEMENT_TYPES, ACHIEVEMENT_TRIGGER_TYPES, GATHER, ACHIEVEMENT_EMOJIS, BEST_FRIENDS, \
-    FAST_FRIENDS, STEADFAST_FRIENDS
+    FAST_FRIENDS, STEADFAST_FRIENDS, HIGH_SCORE, GROSS_INCOME, FAST_CASH, BALANCED_INCOME, FARMING_INTAKE, \
+    FISHING_INTAKE, MINING_INTAKE, FORAGING_INTAKE, DISCOVER_MYTHEGG, FAST_MYTHEGG, MULTIPLE_MYTHEGGS, \
+    ALL_VILLAGERS_HEARTS, MULTIPLE_BEST_FRIENDS, BESTEST_FRIENDS, FASTEST_FRIENDS, STEADFASTEST_FRIENDS, \
+    KOIN_SIGN, DAYS_OF_WEEK
 
 
 class AchievementManager(models.Manager):
@@ -27,14 +30,184 @@ class Achievement(models.Model):
     def __str__(self):
         return f"{self.name}: {self.description}"
 
-    def serialize(self):
+    def get_progress(self, session):
+        """
+        Returns progress toward this achievement.
+
+        Returns:
+            {
+                'current': int,      # current progress value
+                'target': int,       # target value to earn achievement
+                'label': str,        # human-readable progress string
+                'percent': float,    # 0.0 to 1.0
+            }
+        """
+        current = 0
+        target = self.threshold or 1
+        label = ""
+
+        # Score-based achievements
+        if self.achievement_type == HIGH_SCORE:
+            current = session.hero_state.score
+            target = self.threshold
+            label = f"{current:,}/{target:,} pts"
+
+        # Income-based achievements
+        elif self.achievement_type == GROSS_INCOME:
+            current = session.hero_state.koin_earned
+            target = self.threshold
+            label = f"{current}/{target} {KOIN_SIGN} earned"
+
+        elif self.achievement_type == FAST_CASH:
+            current = session.hero_state.koin_earned
+            target = self.threshold
+            day_name = dict(DAYS_OF_WEEK)[DAYS_OF_WEEK[self.threshold_day_number][0]]
+            label = f"{current}/{target} {KOIN_SIGN} (by {day_name})"
+
+        elif self.achievement_type == BALANCED_INCOME:
+            current = min([
+                session.hero_state.farming_koin_earned,
+                session.hero_state.mining_koin_earned,
+                session.hero_state.fishing_koin_earned,
+                session.hero_state.foraging_koin_earned
+            ])
+            target = self.threshold
+            label = f"min {current}/{target} {KOIN_SIGN} across sources"
+
+        # Gathering-based achievements
+        elif self.achievement_type == FARMING_INTAKE:
+            current = session.hero_state.farming_intake
+            target = self.threshold
+            label = f"{current}/{target} {KOIN_SIGN} from farming"
+
+        elif self.achievement_type == FISHING_INTAKE:
+            current = session.hero_state.fishing_intake
+            target = self.threshold
+            label = f"{current}/{target} {KOIN_SIGN} from fishing"
+
+        elif self.achievement_type == MINING_INTAKE:
+            current = session.hero_state.mining_intake
+            target = self.threshold
+            label = f"{current}/{target} {KOIN_SIGN} from mining"
+
+        elif self.achievement_type == FORAGING_INTAKE:
+            current = session.hero_state.foraging_intake
+            target = self.threshold
+            label = f"{current}/{target} {KOIN_SIGN} from foraging"
+
+        # Villager relationship achievements
+        elif self.achievement_type == BEST_FRIENDS:
+            villager_state = session.get_villager_state(self.villager)
+            if villager_state:
+                current = villager_state.affinity_tier
+                target = villager_state.TOTAL_TIERS
+                label = f"{current}/{target} ❤️ with {self.villager.name}"
+            else:
+                label = f"0/{villager_state.TOTAL_TIERS if villager_state else 5} ❤️ with {self.villager.name if self.villager else 'Unknown'}"
+
+        elif self.achievement_type == FAST_FRIENDS:
+            villager_state = session.get_villager_state(self.villager)
+            if villager_state:
+                current = villager_state.affinity_tier
+                target = villager_state.TOTAL_TIERS
+                day_name = dict(DAYS_OF_WEEK)[DAYS_OF_WEEK[self.threshold_day_number][0]]
+                label = f"{current}/{target} ❤️ with {self.villager.name} (by {day_name})"
+            else:
+                day_name = dict(DAYS_OF_WEEK)[DAYS_OF_WEEK[self.threshold_day_number][0]]
+                label = f"0/5 ❤️ with {self.villager.name if self.villager else 'Unknown'} (by {day_name})"
+
+        elif self.achievement_type == STEADFAST_FRIENDS:
+            villager_state = session.get_villager_state(self.villager)
+            if villager_state:
+                current = villager_state.talked_to_count
+                target = self.threshold
+                label = f"{current}/{target} days talked to {self.villager.name}"
+            else:
+                label = f"0/{self.threshold} days talked to {self.villager.name if self.villager else 'Unknown'}"
+
+        elif self.achievement_type == ALL_VILLAGERS_HEARTS:
+            villager_states = session.villager_states.all()
+            if villager_states:
+                current = sum(1 for v in villager_states if v.affinity_tier >= self.threshold)
+                target = villager_states.count()
+                label = f"{current}/{target} villagers at {self.threshold}+ ❤️"
+            else:
+                label = f"0/6 villagers at {self.threshold}+ ❤️"
+
+        elif self.achievement_type == MULTIPLE_BEST_FRIENDS:
+            villager_states = session.villager_states.all()
+            current = sum(1 for v in villager_states if v.is_bestie)
+            target = self.threshold
+            label = f"{current}/{target} best friends"
+
+        # Meta-achievements (based on other achievements)
+        elif self.achievement_type == BESTEST_FRIENDS:
+            current = session.hero.achievements.filter(achievement_type=BEST_FRIENDS).count()
+            target = self.threshold
+            label = f"{current}/{target} best friend achievements"
+
+        elif self.achievement_type == FASTEST_FRIENDS:
+            current = session.hero.achievements.filter(achievement_type=FAST_FRIENDS).count()
+            target = self.threshold
+            label = f"{current}/{target} fast friend achievements"
+
+        elif self.achievement_type == STEADFASTEST_FRIENDS:
+            current = session.hero.achievements.filter(achievement_type=STEADFAST_FRIENDS).count()
+            target = self.threshold
+            label = f"{current}/{target} steadfast friend achievements"
+
+        # Mythegg achievements
+        elif self.achievement_type == DISCOVER_MYTHEGG:
+            if self.mythegg:
+                mythling_state = session.mythling_states.filter(mythling=self.mythegg).first()
+                current = 1 if (mythling_state and mythling_state.has_been_found) else 0
+                target = 1
+                label = f"{current}/{target} {self.mythegg.name} found"
+            else:
+                label = "0/1 mythegg found"
+
+        elif self.achievement_type == FAST_MYTHEGG:
+            if self.mythegg:
+                mythling_state = session.mythling_states.filter(mythling=self.mythegg).first()
+                current = 1 if (mythling_state and mythling_state.has_been_found) else 0
+                target = 1
+                day_name = dict(DAYS_OF_WEEK)[DAYS_OF_WEEK[self.threshold_day_number][0]]
+                label = f"{current}/{target} {self.mythegg.name} (by {day_name})"
+            else:
+                day_name = dict(DAYS_OF_WEEK)[DAYS_OF_WEEK[self.threshold_day_number][0]]
+                label = f"0/1 mythegg (by {day_name})"
+
+        elif self.achievement_type == MULTIPLE_MYTHEGGS:
+            current = session.hero_state.mytheggs_found
+            target = self.threshold
+            label = f"{current}/{target} mytheggs found"
+
+        # Calculate percentage
+        percent = min(current / target, 1.0) if target > 0 else 0.0
+
         return {
+            'current': current,
+            'target': target,
+            'label': label,
+            'percent': percent,
+        }
+
+    def serialize(self, session=None, is_earned=False):
+        data = {
             'name': self.name,
             'description': self.description,
-            'emoji': self.emoji,
             'id': self.id,
-            'unlockedKnowledge': self.unlocked_knowledge_names
+            'isEarned': is_earned,
         }
+
+        if is_earned:
+            data['emoji'] = self.emoji
+            data['unlockedKnowledge'] = self.unlocked_knowledge_names
+        else:
+            if session:
+                data['progress'] = self.get_progress(session)
+
+        return data
 
     @property
     def emoji(self):
