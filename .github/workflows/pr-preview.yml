@@ -13,21 +13,15 @@ jobs:
       - name: Setup Fly CLI
         uses: superfly/flyctl-actions/setup-flyctl@master
 
-      - name: Check or Create Staging App
+      - name: Verify Staging App Exists
         run: |
-          # Check if app exists in the list of apps
-          if flyctl apps list | grep -q "django-mythgarden-staging"; then
-            echo "Staging app exists in apps list"
-            # Try to get status, if it fails the app might be in a bad state but we'll try to deploy anyway
-            if flyctl status -a django-mythgarden-staging >/dev/null 2>&1; then
-              echo "Staging app is healthy"
-            else
-              echo "Staging app exists but status check failed - will attempt deployment anyway"
-            fi
-          else
-            echo "Creating staging app..."
-            flyctl apps create django-mythgarden-staging
+          echo "Checking for staging app..."
+          if ! flyctl apps list | grep -q "django-mythgarden-staging"; then
+            echo "Error: Staging app 'django-mythgarden-staging' does not exist."
+            echo "Please create it manually with: fly apps create django-mythgarden-staging"
+            exit 1
           fi
+          echo "Staging app exists"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
