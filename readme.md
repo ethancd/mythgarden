@@ -24,4 +24,29 @@ Mythgarden was built using a Django backend and a React frontend with Typescript
 - **New state is returned to browser**
   - [views.action](mythgarden/views.py)
 
+## Deployment
+
+### Production
+The production app is deployed to Fly.io at `django-mythgarden-fly`. Deployments happen automatically when changes are merged to the `main` or `master` branch via GitHub Actions.
+
+### Staging / PR Previews
+A staging environment (`django-mythgarden-staging`) is available for preview deployments. When you open or update a pull request, GitHub Actions will automatically deploy the PR changes to the staging server and post a comment with the staging URL.
+
+**Note:** The staging environment is shared across all PRs, so only the most recently updated PR will be deployed to staging at any given time.
+
+#### First-time Setup
+Before the staging deployment workflow can run, you need to:
+
+1. Create the staging app on Fly.io:
+   ```bash
+   flyctl apps create django-mythgarden-staging
+   ```
+
+2. Ensure the `FLY_API_TOKEN` secret is set in your GitHub repository settings (should already be configured for production deployments).
+
+3. Deploy the staging app for the first time:
+   ```bash
+   flyctl deploy --config fly.staging.toml
+   ```
+
 [ashkie]: https://mythgarden.ashkie.com
