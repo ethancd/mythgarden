@@ -35,13 +35,13 @@ const SETTING_OPTIONS: SettingOption[] = [
   {
     key: 'advanced_crops',
     label: 'Advanced crops',
-    description: 'Crops have variable growth times and watering requirements.',
+    description: 'Fantasy crops (Weedbulb, Cool Lettuce) with variable growth times. Disabled: classic crops (Parsnip, Potato) with 2-day growth.',
     bonus: 25,
   },
   {
     key: 'dynamic_shop',
     label: 'Dynamic shop inventory',
-    description: 'Shop stock changes throughout the week.',
+    description: 'Shop stock changes throughout the week. Disabled: fixed inventory of all seed types.',
     bonus: 25,
   },
 ]

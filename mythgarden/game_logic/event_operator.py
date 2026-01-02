@@ -130,6 +130,19 @@ class EventOperator:
 
         item_tokens = []
         blocked_item_types = []
+        settings = session.hero.settings if hasattr(session.hero, 'settings') else None
+        use_basic_crops = settings and not settings.advanced_crops
+
+        # Mapping from advanced seeds to basic seeds
+        SEED_MAPPING = {
+            'Weedbulb Seed': 'Parsnip Seed',
+            'Cool Lettuce Seed': 'Potato Seed',
+            'Spice Carrot Seed': 'Rhubarb Seed',
+            'Earth Yam Seed': 'Cauliflower Seed',
+            'Lightning Artichoke Seed': 'Melon Seed',
+            'Hallowed Pumpkin Seed': 'Pumpkin Seed',
+            'Mythfruit™ Seed': 'Mythfruit Seed',
+        }
 
         content_configs = json.loads(event.content_config_list)
 
@@ -139,10 +152,14 @@ class EventOperator:
             merch_type = content_config.get('merch_type', None)
 
             if item_name:
+                # Replace advanced seeds with basic seeds if using basic crops mode
+                if use_basic_crops and item_name in SEED_MAPPING:
+                    item_name = SEED_MAPPING[item_name]
+
                 item = Item.objects.get_by_natural_key(item_name)
             elif merch_type:
                 merch_slot = MerchSlot(merch_slot_type=merch_type)
-                item = self.__pick_item_given_merch_slot(merch_slot, blocked_item_types)
+                item = self.__pick_item_given_merch_slot(merch_slot, blocked_item_types, use_basic_crops)
                 blocked_item_types.append(item.item_type)
             else:
                 raise ValueError('Content config should have item_name or merch_type')
@@ -172,12 +189,20 @@ class EventOperator:
         if session.location.place_type == SHOP:
             session.mark_fresh('localItemTokens')
 
-    def __pick_item_given_merch_slot(self, merch_slot, blocked_item_types):
+    def __pick_item_given_merch_slot(self, merch_slot, blocked_item_types, use_basic_crops=False):
         allowed_item_types = list(set(merch_slot.potential_item_types) - set(blocked_item_types))
         item_type = random.choice(allowed_item_types)
         rarity = merch_slot.get_rarity(item_type)
 
-        item = Item.objects.filter(item_type=item_type, rarity=rarity).order_by('?').first()
+        # If picking a seed and using basic crops mode, filter to basic seeds
+        if item_type == SEED and use_basic_crops:
+            basic_seed_names = [
+                'Parsnip Seed', 'Potato Seed', 'Rhubarb Seed', 'Cauliflower Seed',
+                'Melon Seed', 'Pumpkin Seed', 'Mythfruit Seed'
+            ]
+            item = Item.objects.filter(name__in=basic_seed_names, rarity=rarity).order_by('?').first()
+        else:
+            item = Item.objects.filter(item_type=item_type, rarity=rarity).order_by('?').first()
 
         return item
 

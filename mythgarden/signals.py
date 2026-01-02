@@ -2,11 +2,12 @@ from django.core.validators import ValidationError
 from django.db.models.signals import post_save, m2m_changed
 from django.dispatch import receiver
 
-from .models._constants import MAX_ITEMS
+from .models._constants import MAX_ITEMS, SHOP
 from .models.clock import Clock
 from .models.hero import Hero, HeroState
 from .models.game_settings import GameSettings
 from .models.inventory import Inventory
+from .models.item import Item, ItemToken
 from .models.message import Message
 from .models.place import Place, PlaceState
 from .models.session import Session
@@ -41,6 +42,60 @@ def create_session_state(sender, instance, created, **kwargs):
 
         place_state_objects = instance.populate_place_states()
         instance.populate_villager_states(place_state_objects)
+
+        # If using fixed shop mode, populate initial shop inventory
+        if not game_settings.dynamic_shop:
+            _populate_initial_shop(instance, game_settings, place_state_objects)
+
+
+def _populate_initial_shop(session, game_settings, place_states):
+    """Populate shop with initial inventory when dynamic_shop is disabled."""
+    # Find the shop place state
+    shop_state = None
+    for state in place_states:
+        if state.place.place_type == SHOP:
+            shop_state = state
+            break
+
+    if not shop_state:
+        return
+
+    # Determine which seeds to stock based on advanced_crops setting
+    if game_settings.advanced_crops:
+        seed_names = [
+            'Weedbulb Seed',
+            'Cool Lettuce Seed',
+            'Spice Carrot Seed',
+            'Earth Yam Seed',
+            'Lightning Artichoke Seed',
+            'Hallowed Pumpkin Seed',
+            'Mythfruit™ Seed',
+        ]
+    else:
+        seed_names = [
+            'Parsnip Seed',
+            'Potato Seed',
+            'Rhubarb Seed',
+            'Cauliflower Seed',
+            'Melon Seed',
+            'Pumpkin Seed',
+            'Mythfruit Seed',
+        ]
+
+    # Create item tokens for all seeds (unlimited quantity = None)
+    item_tokens = []
+    for seed_name in seed_names:
+        try:
+            item = Item.objects.get(name=seed_name)
+            item_token = ItemToken.objects.create(session=session, item=item, quantity=None)
+            item_tokens.append(item_token)
+        except Item.DoesNotExist:
+            # Skip if seed doesn't exist yet (might not have run migration)
+            pass
+
+    # Set the shop inventory
+    if item_tokens:
+        shop_state.item_tokens.set(item_tokens)
 
 
 @receiver(post_save, sender=Hero)
