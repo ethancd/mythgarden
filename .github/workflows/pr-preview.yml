@@ -18,6 +18,8 @@ jobs:
           if ! flyctl status -a django-mythgarden-staging >/dev/null 2>&1; then
             echo "Creating staging app..."
             flyctl apps create django-mythgarden-staging
+            echo "Setting secrets for staging app..."
+            echo "${{ secrets.STAGING_SECRET_KEY }}" | flyctl secrets set SECRET_KEY=- -a django-mythgarden-staging
           else
             echo "Staging app already exists"
           fi
