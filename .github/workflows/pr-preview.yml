@@ -28,12 +28,26 @@ jobs:
             echo "Creating staging app..."
             flyctl apps create django-mythgarden-staging
           fi
-
-          # Ensure SECRET_KEY is set (won't hurt if already set)
-          echo "Ensuring SECRET_KEY is configured..."
-          echo "${{ secrets.STAGING_SECRET_KEY }}" | flyctl secrets set SECRET_KEY=- -a django-mythgarden-staging
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Set Staging Secrets
+        run: |
+          # Verify SECRET_KEY is available
+          if [ -z "$STAGING_SECRET_KEY" ]; then
+            echo "Error: STAGING_SECRET_KEY is not set in GitHub secrets"
+            exit 1
+          fi
+
+          echo "Setting secrets for staging..."
+          flyctl secrets set \
+            SECRET_KEY="$STAGING_SECRET_KEY" \
+            DEBUG=true \
+            SECURE_SSL_REDIRECT=false \
+            -a django-mythgarden-staging
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          STAGING_SECRET_KEY: ${{ secrets.STAGING_SECRET_KEY }}
 
       - name: Deploy to Staging
         run: flyctl deploy --config fly.staging.toml --remote-only
