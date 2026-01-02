@@ -110,9 +110,6 @@ class EventOperator:
         settings = session.hero.settings if hasattr(session.hero, 'settings') else None
 
         if event.event_type == ScheduledEvent.SHOP_POPULATES:
-            # Skip shop populate events if dynamic_shop is disabled
-            if settings and not settings.dynamic_shop:
-                return
             return self.populate_shop(event.populateshopevent, session, place_states)  # django forces PopulateShopEvent into populateshopevent
 
         if event.event_type == ScheduledEvent.VILLAGER_APPEARS:
@@ -132,6 +129,7 @@ class EventOperator:
         blocked_item_types = []
         settings = session.hero.settings if hasattr(session.hero, 'settings') else None
         use_basic_crops = settings and not settings.advanced_crops
+        use_dynamic_shop = not settings or settings.dynamic_shop  # Default to dynamic if no settings
 
         # Mapping from advanced seeds to basic seeds
         SEED_MAPPING = {
@@ -159,7 +157,7 @@ class EventOperator:
                 item = Item.objects.get_by_natural_key(item_name)
             elif merch_type:
                 merch_slot = MerchSlot(merch_slot_type=merch_type)
-                item = self.__pick_item_given_merch_slot(merch_slot, blocked_item_types, use_basic_crops)
+                item = self.__pick_item_given_merch_slot(merch_slot, blocked_item_types, use_basic_crops, use_dynamic_shop)
                 blocked_item_types.append(item.item_type)
             else:
                 raise ValueError('Content config should have item_name or merch_type')
@@ -189,10 +187,13 @@ class EventOperator:
         if session.location.place_type == SHOP:
             session.mark_fresh('localItemTokens')
 
-    def __pick_item_given_merch_slot(self, merch_slot, blocked_item_types, use_basic_crops=False):
+    def __pick_item_given_merch_slot(self, merch_slot, blocked_item_types, use_basic_crops=False, use_dynamic_shop=True):
         allowed_item_types = list(set(merch_slot.potential_item_types) - set(blocked_item_types))
         item_type = random.choice(allowed_item_types)
         rarity = merch_slot.get_rarity(item_type)
+
+        # Determine ordering - random for dynamic shop, alphabetical for fixed shop
+        order_by = '?' if use_dynamic_shop else 'name'
 
         # If picking a seed and using basic crops mode, filter to basic seeds
         if item_type == SEED and use_basic_crops:
@@ -200,9 +201,9 @@ class EventOperator:
                 'Parsnip Seed', 'Potato Seed', 'Rhubarb Seed', 'Cauliflower Seed',
                 'Melon Seed', 'Pumpkin Seed', 'Mythfruit Seed'
             ]
-            item = Item.objects.filter(name__in=basic_seed_names, rarity=rarity).order_by('?').first()
+            item = Item.objects.filter(name__in=basic_seed_names, rarity=rarity).order_by(order_by).first()
         else:
-            item = Item.objects.filter(item_type=item_type, rarity=rarity).order_by('?').first()
+            item = Item.objects.filter(item_type=item_type, rarity=rarity).order_by(order_by).first()
 
         return item
 
