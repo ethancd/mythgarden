@@ -92,7 +92,11 @@ def user_data(request):
     if not request.method == 'POST':
         return HttpResponseRedirect(reverse('mythgarden:home'))
 
-    session = get_object_or_404(Session, pk=request.session['session_key'])
+    session_key = request.session.get('session_key')
+    if not session_key:
+        return HttpResponseRedirect(reverse('mythgarden:home'))
+
+    session = get_object_or_404(Session, pk=session_key)
 
     try:
         hero = session.hero
