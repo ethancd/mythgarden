@@ -375,7 +375,10 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
 
   // Only show dev border when not in production
   &:not(.production) {
-    border: 8px solid magenta;
+    border-top: 8px solid #FF0080;     // magenta/pink
+    border-right: 8px solid #00D4FF;   // cyan
+    border-bottom: 8px solid #FFD700;  // gold
+    border-left: 8px solid #7FFF00;    // chartreuse
   }
 
   &.dark-mode {
