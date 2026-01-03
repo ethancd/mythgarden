@@ -183,10 +183,14 @@ class EventOperator:
             else:
                 item_tokens.insert(0, mythegg_token)
 
+        # Get item PKs before bulk_create for re-fetching
+        item_pks = [token.item_id for token in item_tokens]
         ItemToken.objects.bulk_create(item_tokens)
+        # Re-fetch to get objects with PKs (bulk_create doesn't return PKs on older SQLite)
+        created_tokens = ItemToken.objects.filter(session=session, item_id__in=item_pks)
 
         place_state = place_states.filter(place=event.shop).first()
-        place_state.item_tokens.set(item_tokens)
+        place_state.item_tokens.set(created_tokens)
 
         if session.location.place_type == SHOP:
             session.mark_fresh('localItemTokens')
