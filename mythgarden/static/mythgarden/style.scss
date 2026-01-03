@@ -1639,7 +1639,7 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
   }
 
   .deploy-time {
-    font-size: $tiny-text;
+    font-size: $fine-text;
     color: darken($dark-text, 10%);
   }
 }
