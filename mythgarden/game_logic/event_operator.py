@@ -190,6 +190,8 @@ class EventOperator:
         created_tokens = ItemToken.objects.filter(session=session, item_id__in=item_pks)
 
         place_state = place_states.filter(place=event.shop).first()
+        # Clear existing items before adding new ones to avoid MAX_ITEMS validation error
+        place_state.item_tokens.clear()
         place_state.item_tokens.set(created_tokens)
 
         if session.location.place_type == SHOP:
