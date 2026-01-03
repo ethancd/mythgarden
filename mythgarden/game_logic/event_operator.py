@@ -157,7 +157,7 @@ class EventOperator:
                 item = Item.objects.get_by_natural_key(item_name)
             elif merch_type:
                 merch_slot = MerchSlot(merch_slot_type=merch_type)
-                item = self.__pick_item_given_merch_slot(merch_slot, blocked_item_types, use_basic_crops, use_dynamic_shop)
+                item = self.__pick_item_given_merch_slot(merch_slot, blocked_item_types, use_basic_crops, use_dynamic_shop, event.day)
                 blocked_item_types.append(item.item_type)
             else:
                 raise ValueError('Content config should have item_name or merch_type')
@@ -187,13 +187,19 @@ class EventOperator:
         if session.location.place_type == SHOP:
             session.mark_fresh('localItemTokens')
 
-    def __pick_item_given_merch_slot(self, merch_slot, blocked_item_types, use_basic_crops=False, use_dynamic_shop=True):
+    def __pick_item_given_merch_slot(self, merch_slot, blocked_item_types, use_basic_crops=False, use_dynamic_shop=True, day_of_week=None):
         allowed_item_types = list(set(merch_slot.potential_item_types) - set(blocked_item_types))
-        item_type = random.choice(allowed_item_types)
-        rarity = merch_slot.get_rarity(item_type)
 
-        # Determine ordering - random for dynamic shop, alphabetical for fixed shop
-        order_by = '?' if use_dynamic_shop else 'name'
+        # For fixed shop, use day-seeded random; for dynamic shop, use true random
+        if use_dynamic_shop:
+            item_type = random.choice(allowed_item_types)
+        else:
+            # Use day of week to seed the random generator for consistent results
+            day_seed = DAY_TO_INDEX.get(day_of_week, 0) if day_of_week else 0
+            rng = random.Random(day_seed + hash(merch_slot.merch_slot_type))
+            item_type = rng.choice(allowed_item_types)
+
+        rarity = merch_slot.get_rarity(item_type)
 
         # If picking a seed and using basic crops mode, filter to basic seeds
         if item_type == SEED and use_basic_crops:
@@ -201,9 +207,18 @@ class EventOperator:
                 'Parsnip Seed', 'Potato Seed', 'Rhubarb Seed', 'Cauliflower Seed',
                 'Melon Seed', 'Pumpkin Seed', 'Mythfruit Seed'
             ]
-            item = Item.objects.filter(name__in=basic_seed_names, rarity=rarity).order_by(order_by).first()
+            items = list(Item.objects.filter(name__in=basic_seed_names, rarity=rarity).order_by('name'))
         else:
-            item = Item.objects.filter(item_type=item_type, rarity=rarity).order_by(order_by).first()
+            items = list(Item.objects.filter(item_type=item_type, rarity=rarity).order_by('name'))
+
+        # For fixed shop, use day-seeded random; for dynamic shop, use random ordering
+        if use_dynamic_shop:
+            item = random.choice(items) if items else None
+        else:
+            # Use day of week to seed for consistent item selection
+            day_seed = DAY_TO_INDEX.get(day_of_week, 0) if day_of_week else 0
+            rng = random.Random(day_seed + hash(f"{item_type}_{rarity}"))
+            item = rng.choice(items) if items else None
 
         return item
 

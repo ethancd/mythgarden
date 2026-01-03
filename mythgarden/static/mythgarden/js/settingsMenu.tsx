@@ -35,7 +35,7 @@ const SETTING_OPTIONS: SettingOption[] = [
   {
     key: 'advanced_crops',
     label: 'Advanced crops',
-    description: 'Fantasy crops (Weedbulb, Cool Lettuce) with variable growth times. Disabled: classic crops (Parsnip, Potato) with 2-day growth.',
+    description: 'Fantasy crops (Weedbulb, Cool Lettuce, Spice Carrot, Earth Yam, Lightning Artichoke, Hallowed Pumpkin, Mythfruit™) with variable growth times. Disabled: classic crops (Parsnip, Potato, Rhubarb, Cauliflower, Melon, Pumpkin, Mythfruit) with 2-day growth.',
     bonus: 25,
   },
   {
