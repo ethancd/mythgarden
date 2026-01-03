@@ -109,7 +109,9 @@ class Session(models.Model):
         for place in list(Place.objects.all()):
             place_states.append(PlaceState(session=self, place=place))
 
-        return PlaceState.objects.bulk_create(place_states)
+        PlaceState.objects.bulk_create(place_states)
+        # Re-fetch to get objects with PKs (bulk_create doesn't return PKs on older SQLite)
+        return list(PlaceState.objects.filter(session=self).select_related('place'))
 
     def populate_villager_states(self, place_states):
         villager_states = []
