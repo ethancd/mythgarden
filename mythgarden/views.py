@@ -1,5 +1,6 @@
 from sqlite3 import IntegrityError
 import json
+import os
 
 from django.core.validators import ValidationError
 from django.db import transaction
@@ -24,6 +25,15 @@ def home(request):
         home_models = get_home_models(session)
 
     context = {'ctx': {model_name: custom_serialize(data) for model_name, data in home_models.items()}}
+
+    # Add environment info for deploy badge and production styling
+    environment = os.environ.get('ENVIRONMENT', 'development')
+    context['ctx']['environment'] = environment
+
+    # Only add deploy info for non-production
+    if environment != 'production':
+        context['ctx']['branchName'] = os.environ.get('BRANCH_NAME', '')
+        context['ctx']['deployTime'] = os.environ.get('DEPLOY_TIME', '')
 
     print(Achievement.objects.all().count())
     template_name = 'mythgarden/home.html'

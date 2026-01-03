@@ -29,6 +29,23 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
+      - name: Set Deploy Info
+        run: |
+          # Extract branch name from ref
+          BRANCH_NAME="${{ github.head_ref }}"
+
+          # Generate Pacific time timestamp
+          DEPLOY_TIME=$(TZ=America/Los_Angeles date '+%Y-%m-%d %I:%M %p PST')
+
+          echo "Setting deploy info: $BRANCH_NAME at $DEPLOY_TIME"
+          flyctl secrets set \
+            ENVIRONMENT=staging \
+            BRANCH_NAME="$BRANCH_NAME" \
+            DEPLOY_TIME="$DEPLOY_TIME" \
+            -a django-mythgarden-staging
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
       - name: Deploy to Staging
         run: flyctl deploy --config fly.staging.toml --remote-only
         env:
