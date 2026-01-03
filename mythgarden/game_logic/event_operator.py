@@ -156,6 +156,10 @@ class EventOperator:
 
                 item = Item.objects.get_by_natural_key(item_name)
             elif merch_type:
+                # For fixed shop mode, skip random merchandise items entirely
+                if not use_dynamic_shop:
+                    continue
+
                 merch_slot = MerchSlot(merch_slot_type=merch_type)
                 item = self.__pick_item_given_merch_slot(merch_slot, blocked_item_types, use_basic_crops, use_dynamic_shop, event.day)
                 blocked_item_types.append(item.item_type)

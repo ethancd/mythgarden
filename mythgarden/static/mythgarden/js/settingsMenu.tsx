@@ -41,7 +41,7 @@ const SETTING_OPTIONS: SettingOption[] = [
   {
     key: 'dynamic_shop',
     label: 'Dynamic shop inventory',
-    description: 'Merchandise randomizes each run. Disabled: same predictable inventory pattern every run (Monday always has same items, etc.).',
+    description: 'Random merchandise items appear daily (fish, fossils, tech, magic, etc.). Disabled: only fixed items (seeds and gifts).',
     bonus: 25,
   },
 ]
