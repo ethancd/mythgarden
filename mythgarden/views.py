@@ -39,9 +39,13 @@ def action(request):
         return HttpResponseRedirect(reverse('mythgarden:home'))
 
     # load session based on django session key in request
-    # if session is missing, 404 -- we handle session creation in the GET home request
+    # if session is missing, redirect to home -- we handle session creation in the GET home request
+    session_key = request.session.get('session_key')
+    if not session_key:
+        return HttpResponseRedirect(reverse('mythgarden:home'))
+
     try:
-        session = load_session_with_related_data(request.session['session_key'])
+        session = load_session_with_related_data(session_key)
     except Session.DoesNotExist:
         return HttpResponseNotFound()
 
@@ -81,7 +85,11 @@ def action(request):
 def kys(request):
     """A shortcut to "kill your session" -- ie reset the game state to the start of the week.
     A staple for timeloop games everywhere."""
-    session = get_object_or_404(Session, pk=request.session['session_key'])
+    session_key = request.session.get('session_key')
+    if not session_key:
+        return HttpResponseRedirect(reverse('mythgarden:home'))
+
+    session = get_object_or_404(Session, pk=session_key)
 
     EventOperator().trigger_kys(session)
     return HttpResponseRedirect(reverse('mythgarden:home'))
@@ -133,7 +141,11 @@ def test_time(request, time, day):
 
 def get_settings(request):
     """Endpoint for retrieving game settings."""
-    session = get_object_or_404(Session, pk=request.session['session_key'])
+    session_key = request.session.get('session_key')
+    if not session_key:
+        return HttpResponseRedirect(reverse('mythgarden:home'))
+
+    session = get_object_or_404(Session, pk=session_key)
 
     # Ensure settings exist for the hero
     game_settings, created = GameSettings.objects.get_or_create(hero=session.hero)
@@ -146,7 +158,11 @@ def update_settings(request):
     if not request.method == 'POST':
         return HttpResponseRedirect(reverse('mythgarden:home'))
 
-    session = get_object_or_404(Session, pk=request.session['session_key'])
+    session_key = request.session.get('session_key')
+    if not session_key:
+        return HttpResponseRedirect(reverse('mythgarden:home'))
+
+    session = get_object_or_404(Session, pk=session_key)
 
     try:
         # Ensure settings exist for the hero
