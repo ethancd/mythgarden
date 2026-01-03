@@ -90,7 +90,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'mythsite.wsgi.application'
 
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+if DEBUG:
+    STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
+else:
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
