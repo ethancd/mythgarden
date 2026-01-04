@@ -26,9 +26,11 @@ RUN set -ex && \
 COPY . /code/
 
 # Build frontend bundle
-RUN npm install && \
-    npm run build && \
-    rm -rf node_modules
+RUN npm install
+RUN npm run build
+RUN echo "Build complete, cleaning up node_modules..." && \
+    rm -rf node_modules && \
+    echo "Cleanup complete"
 
 # Dummy SECRET_KEY for collectstatic during build (real key set at runtime via Fly secrets)
 RUN SECRET_KEY=build-only-dummy-key python manage.py collectstatic --noinput
