@@ -281,7 +281,7 @@ class GenAvailableActionsTests(TestCase):
         pub_building = create_building('the pub', self.town, SHOP)
 
         self.gen_actions(self.town)
-        self.ag.gen_enter_actions.assert_called_once_with([pub_building])
+        self.ag.gen_enter_actions.assert_called_once_with([pub_building], self.clock, None)
 
     def test_returns_enter_actions_when_place_has_buildings(self):
         """Returns enter actions when place has buildings"""
@@ -1005,6 +1005,8 @@ class GenGatherActionsTests(TestCase):
 class GenEnterActionsTests(TestCase):
     def setUp(self):
         self.ag = ActionGenerator()
+        self.clock = MagicMock(spec=Clock)
+        self.clock.time = 600  # 10:00 AM - buildings should be open
 
         self.beach = create_place(name='The Beach')
 
@@ -1021,7 +1023,7 @@ class GenEnterActionsTests(TestCase):
         """
         Returns a list
         """
-        actions = self.ag.gen_enter_actions(self.town_buildings)
+        actions = self.ag.gen_enter_actions(self.town_buildings, self.clock)
 
         self.assertIsInstance(actions, list)
 
@@ -1030,20 +1032,20 @@ class GenEnterActionsTests(TestCase):
         Throws an error if passed non-buildings
         """
         with self.assertRaises(TypeError):
-            self.ag.gen_enter_actions(self.farm)
+            self.ag.gen_enter_actions(self.farm, self.clock)
 
     def test_throws_an_error_if_passed_non_buildings(self):
         """
         Throws an error if passed non-buildings
         """
         with self.assertRaises(TypeError):
-            self.ag.gen_enter_actions([self.town, self.farm])
+            self.ag.gen_enter_actions([self.town, self.farm], self.clock)
 
     def test_returns_empty_list_if_no_buildings(self):
         """
         Returns an empty list if no buildings
         """
-        actions = self.ag.gen_enter_actions([])
+        actions = self.ag.gen_enter_actions([], self.clock)
 
         self.assertEqual(actions, [])
 
@@ -1051,7 +1053,7 @@ class GenEnterActionsTests(TestCase):
         """
         Returns one enter action for each building
         """
-        actions = self.ag.gen_enter_actions(self.town_buildings)
+        actions = self.ag.gen_enter_actions(self.town_buildings, self.clock)
 
         enter_actions = [a for a in actions if a.description.startswith('Enter')]
 
@@ -1061,7 +1063,7 @@ class GenEnterActionsTests(TestCase):
         """
         Returns an action with travel type (since entering a building is executed like a travel action)
         """
-        actions = self.ag.gen_enter_actions(self.town_buildings)
+        actions = self.ag.gen_enter_actions(self.town_buildings, self.clock)
 
         self.assertEqual(actions[0].action_type, Action.TRAVEL)
 
@@ -1069,7 +1071,7 @@ class GenEnterActionsTests(TestCase):
         """
         Returns an action with the correct description
         """
-        actions = self.ag.gen_enter_actions(self.farm_buildings)
+        actions = self.ag.gen_enter_actions(self.farm_buildings, self.clock)
 
         self.assertEqual(actions[0].description, 'Enter The Farmhouse')
 
@@ -1077,7 +1079,7 @@ class GenEnterActionsTests(TestCase):
         """
         Returns an action with the correct log statement
         """
-        actions = self.ag.gen_enter_actions(self.farm_buildings)
+        actions = self.ag.gen_enter_actions(self.farm_buildings, self.clock)
 
         self.assertEqual(actions[0].log_statement, 'You entered The Farmhouse.')
 
@@ -1085,7 +1087,7 @@ class GenEnterActionsTests(TestCase):
         """
         Returns an action with the correct target
         """
-        actions = self.ag.gen_enter_actions(self.farm_buildings)
+        actions = self.ag.gen_enter_actions(self.farm_buildings, self.clock)
 
         self.assertEqual(actions[0].target_object, self.farmhouse)
 
@@ -1093,7 +1095,7 @@ class GenEnterActionsTests(TestCase):
         """
         Returns an action with the correct cost amount
         """
-        actions = self.ag.gen_enter_actions(self.farm_buildings)
+        actions = self.ag.gen_enter_actions(self.farm_buildings, self.clock)
 
         self.assertEqual(actions[0].cost_amount, 5)
 

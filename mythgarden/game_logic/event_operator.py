@@ -4,7 +4,7 @@ import random
 from .mythegg_finder import MytheggFinder
 from .mythegg_powers import MytheggPowers
 from ..models import ScheduledEvent, VillagerState, PlaceState, Item, MerchSlot, ItemToken
-from ..models._constants import SHOP, FARM, SEED, SPROUT, DAWN, DAY_TO_INDEX, KYS_MESSAGE, FIRST_DAY, MAX_ITEMS, \
+from ..models._constants import SHOP, FARM, SEED, SPROUT, CROP, DAWN, DAY_TO_INDEX, KYS_MESSAGE, FIRST_DAY, MAX_ITEMS, \
     RAINBOW_BONUS_TIME
 
 
@@ -107,10 +107,16 @@ class EventOperator:
 
     def trigger_event(self, event, session, villager_states, place_states):
         """Triggers the given event based on the event_type"""
+        settings = session.hero.settings if hasattr(session.hero, 'settings') else None
+
         if event.event_type == ScheduledEvent.SHOP_POPULATES:
             return self.populate_shop(event.populateshopevent, session, place_states)  # django forces PopulateShopEvent into populateshopevent
 
         if event.event_type == ScheduledEvent.VILLAGER_APPEARS:
+            # Skip villager movement events if villagers_move is disabled, except for Trix
+            villager_name = event.villagerappearsevent.villager.name
+            if settings and not settings.villagers_move and villager_name != 'Trix':
+                return
             return self.villager_appears(event.villagerappearsevent, villager_states, place_states)
 
     def populate_shop(self, event, session, place_states):
@@ -121,6 +127,20 @@ class EventOperator:
 
         item_tokens = []
         blocked_item_types = []
+        settings = session.hero.settings if hasattr(session.hero, 'settings') else None
+        use_basic_crops = settings and not settings.advanced_crops
+        use_dynamic_shop = not settings or settings.dynamic_shop  # Default to dynamic if no settings
+
+        # Mapping from advanced seeds to basic seeds
+        SEED_MAPPING = {
+            'Weedbulb Seed': 'Parsnip Seed',
+            'Cool Lettuce Seed': 'Potato Seed',
+            'Spice Carrot Seed': 'Rhubarb Seed',
+            'Earth Yam Seed': 'Cauliflower Seed',
+            'Lightning Artichoke Seed': 'Melon Seed',
+            'Hallowed Pumpkin Seed': 'Pumpkin Seed',
+            'Mythfruit™ Seed': 'Mythfruit Seed',
+        }
 
         content_configs = json.loads(event.content_config_list)
 
@@ -130,10 +150,18 @@ class EventOperator:
             merch_type = content_config.get('merch_type', None)
 
             if item_name:
+                # Replace advanced seeds with basic seeds if using basic crops mode
+                if use_basic_crops and item_name in SEED_MAPPING:
+                    item_name = SEED_MAPPING[item_name]
+
                 item = Item.objects.get_by_natural_key(item_name)
             elif merch_type:
+                # For fixed shop mode, skip random merchandise items entirely
+                if not use_dynamic_shop:
+                    continue
+
                 merch_slot = MerchSlot(merch_slot_type=merch_type)
-                item = self.__pick_item_given_merch_slot(merch_slot, blocked_item_types)
+                item = self.__pick_item_given_merch_slot(merch_slot, blocked_item_types, use_basic_crops, use_dynamic_shop, event.day)
                 blocked_item_types.append(item.item_type)
             else:
                 raise ValueError('Content config should have item_name or merch_type')
@@ -155,20 +183,52 @@ class EventOperator:
             else:
                 item_tokens.insert(0, mythegg_token)
 
+        # Get item PKs before bulk_create for re-fetching
+        item_pks = [token.item_id for token in item_tokens]
         ItemToken.objects.bulk_create(item_tokens)
+        # Re-fetch to get objects with PKs (bulk_create doesn't return PKs on older SQLite)
+        created_tokens = ItemToken.objects.filter(session=session, item_id__in=item_pks)
 
         place_state = place_states.filter(place=event.shop).first()
-        place_state.item_tokens.set(item_tokens)
+        # Clear existing items before adding new ones to avoid MAX_ITEMS validation error
+        place_state.item_tokens.clear()
+        place_state.item_tokens.set(created_tokens)
 
         if session.location.place_type == SHOP:
             session.mark_fresh('localItemTokens')
 
-    def __pick_item_given_merch_slot(self, merch_slot, blocked_item_types):
+    def __pick_item_given_merch_slot(self, merch_slot, blocked_item_types, use_basic_crops=False, use_dynamic_shop=True, day_of_week=None):
         allowed_item_types = list(set(merch_slot.potential_item_types) - set(blocked_item_types))
-        item_type = random.choice(allowed_item_types)
+
+        # For fixed shop, use day-seeded random; for dynamic shop, use true random
+        if use_dynamic_shop:
+            item_type = random.choice(allowed_item_types)
+        else:
+            # Use day of week to seed the random generator for consistent results
+            day_seed = DAY_TO_INDEX.get(day_of_week, 0) if day_of_week else 0
+            rng = random.Random(day_seed + hash(merch_slot.merch_slot_type))
+            item_type = rng.choice(allowed_item_types)
+
         rarity = merch_slot.get_rarity(item_type)
 
-        item = Item.objects.filter(item_type=item_type, rarity=rarity).order_by('?').first()
+        # If picking a seed and using basic crops mode, filter to basic seeds
+        if item_type == SEED and use_basic_crops:
+            basic_seed_names = [
+                'Parsnip Seed', 'Potato Seed', 'Rhubarb Seed', 'Cauliflower Seed',
+                'Melon Seed', 'Pumpkin Seed', 'Mythfruit Seed'
+            ]
+            items = list(Item.objects.filter(name__in=basic_seed_names, rarity=rarity).order_by('name'))
+        else:
+            items = list(Item.objects.filter(item_type=item_type, rarity=rarity).order_by('name'))
+
+        # For fixed shop, use day-seeded random; for dynamic shop, use random ordering
+        if use_dynamic_shop:
+            item = random.choice(items) if items else None
+        else:
+            # Use day of week to seed for consistent item selection
+            day_seed = DAY_TO_INDEX.get(day_of_week, 0) if day_of_week else 0
+            rng = random.Random(day_seed + hash(f"{item_type}_{rarity}"))
+            item = rng.choice(items) if items else None
 
         return item
 
@@ -200,13 +260,21 @@ class EventOperator:
         item_tokens = farm_state.item_tokens.all()
         new_contents = []
         golden_mythegg_active = self.mythegg_powers.golden_active(session)
+        settings = session.hero.settings if hasattr(session.hero, 'settings') else None
+        use_basic_crops = settings and not settings.advanced_crops
 
         for token in item_tokens:
             if token.item_type not in [SEED, SPROUT] or not token.has_been_watered:
                 new_contents.append(token)
                 continue
 
-            new_item = token.item.get_next_growth_stage(token.days_growing, golden_mythegg_active)
+            if use_basic_crops:
+                # Basic crops mode: simple 2-day growth (SEED -> SPROUT -> CROP)
+                new_item = self.__get_next_growth_stage_basic(token, golden_mythegg_active)
+            else:
+                # Advanced crops mode: variable growth times based on item properties
+                new_item = token.item.get_next_growth_stage(token.days_growing, golden_mythegg_active)
+
             new_item_token = ItemToken.objects.create(
                 session=session, item=new_item, days_growing=token.days_growing + 1
             )
@@ -216,6 +284,26 @@ class EventOperator:
 
         if session.location.place_type == FARM:
             session.mark_fresh('localItemTokens')
+
+    def __get_next_growth_stage_basic(self, token, grow_golden_crops):
+        """Basic crops mode: all crops follow simple SEED -> SPROUT (day 1) -> CROP (day 2) pattern"""
+        # Determine next type based on current type
+        if token.item_type == SEED:
+            next_type = SPROUT
+        else:  # SPROUT
+            next_type = CROP
+
+        # Use the item's existing logic for name, price, and rarity
+        next_name = token.item.get_next_name(next_type, grow_golden_crops)
+        next_price = token.item.get_next_price(next_type, grow_golden_crops)
+        next_rarity = token.item.get_next_rarity(next_type, grow_golden_crops)
+
+        instance, created = Item.objects.get_or_create(
+            name=next_name, item_type=next_type, price=next_price,
+            rarity=next_rarity, growth_days=token.item.growth_days, effort_time=token.item.effort_time
+        )
+
+        return instance
 
     def conjure_mythegg_if_needed(self, session):
         mythegg, mythling_state = self.mythegg_finder.draw_for_new_day_mythegg(session) or (None, None)

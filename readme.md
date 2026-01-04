@@ -35,18 +35,16 @@ A staging environment (`django-mythgarden-staging`) is available for preview dep
 **Note:** The staging environment is shared across all PRs, so only the most recently updated PR will be deployed to staging at any given time.
 
 #### First-time Setup
-Before the staging deployment workflow can run, you need to:
+Before the staging deployment workflow can run, you need to set up GitHub secrets:
 
-1. Create the staging app on Fly.io:
-   ```bash
-   flyctl apps create django-mythgarden-staging
-   ```
+1. Ensure the `FLY_API_TOKEN` secret is set in your GitHub repository settings (should already be configured for production deployments).
 
-2. Ensure the `FLY_API_TOKEN` secret is set in your GitHub repository settings (should already be configured for production deployments).
+2. Add a `STAGING_SECRET_KEY` secret to your GitHub repository:
+   - Go to your repository settings → Secrets and variables → Actions
+   - Click "New repository secret"
+   - Name: `STAGING_SECRET_KEY`
+   - Value: Generate a secure random string (e.g., run `python -c "import secrets; print(secrets.token_urlsafe(50))"`)
 
-3. Deploy the staging app for the first time:
-   ```bash
-   flyctl deploy --config fly.staging.toml
-   ```
+The workflow will automatically create the staging app and configure it on the first PR deployment.
 
 [ashkie]: https://mythgarden.ashkie.com

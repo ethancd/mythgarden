@@ -30,6 +30,8 @@ import { isDeepEqual } from './staticUtils'
 import { FilterizeColorContext, ImageFilterContext, filterFuncFactory, getImageFilter, getColorFilterByTime } from './lightColorLogic'
 import colors from './_colors'
 import Gallery from "./gallery";
+import SettingsMenu from "./settingsMenu";
+import DeployInfo from "./deployInfo";
 import {postAction} from "./ajax";
 
 
@@ -58,6 +60,7 @@ class App extends React.Component<Partial<AppProps>, AppState> {
       showGallery: false,
       showDialogue: false,
       showAchievementsList: false,
+      showSettingsMenu: false,
       ephemerealMessage: undefined
     }
   }
@@ -270,8 +273,12 @@ class App extends React.Component<Partial<AppProps>, AppState> {
     this.setState({ showAchievementsList: true })
   }
 
+  showSettingsMenu (): void {
+    this.setState({ showSettingsMenu: true })
+  }
+
   clearActiveUX (): void {
-    this.setState({ showGallery: false, showDialogue: false, showAchievementsList: false, ephemerealMessage: undefined })
+    this.setState({ showGallery: false, showDialogue: false, showAchievementsList: false, showSettingsMenu: false, ephemerealMessage: undefined })
   }
 
   render (): JSX.Element {
@@ -289,10 +296,13 @@ class App extends React.Component<Partial<AppProps>, AppState> {
       messages,
       villagerStates,
       dialogue,
-      speaker
+      speaker,
+      environment,
+      branchName,
+      deployTime
     } = this.state.combinedProps
 
-    const { showGallery, showDialogue, showAchievementsList, ephemerealMessage } = this.state
+    const { showGallery, showDialogue, showAchievementsList, showSettingsMenu, ephemerealMessage } = this.state
 
     const colorFilter = getColorFilterByTime(clock.time)
     const imageFilter = getImageFilter(colorFilter)
@@ -301,16 +311,29 @@ class App extends React.Component<Partial<AppProps>, AppState> {
     const actionDictionary = this.marshalActionDictionary(actions)
     const giftReceiverIds = this.marshalGiftReceiverIds(actions)
 
+    const isProduction = environment === 'production'
+    const pageClassName = isProduction ? 'production' : ''
+
     return (
       <FilterizeColorContext.Provider value={ filterFn }>
         <ImageFilterContext.Provider value={imageFilter}>
         <DndProvider backend={TouchBackend} options={{enableMouseEvents: true}}>
-        <Section id="page" baseColor={colors.whiteYellow} handleClick={this.handleClick.bind(this)}>
+        <Section id="page" className={pageClassName} baseColor={colors.whiteYellow} handleClick={this.handleClick.bind(this)}>
 
           <Section id="top-bar" baseColor={colors.skyBlue}>
             <Hero {...hero} achievementsCount={achievements.length} totalAchievements={TOTAL_ACHIEVEMENTS}></Hero>
             <Gallery {...{show: showGallery, currentPortraitUrl: hero.imageUrl, portraitUrls} }></Gallery>
             <AchievementsList show={showAchievementsList} achievements={achievements} totalAchievements={TOTAL_ACHIEVEMENTS}></AchievementsList>
+            <button className="hamburger-button" onClick={() => this.showSettingsMenu()}>☰</button>
+            <DeployInfo branchName={branchName} deployTime={deployTime} />
+            <SettingsMenu
+              show={showSettingsMenu}
+              onClose={() => this.clearActiveUX()}
+              currentPortraitUrl={hero.imageUrl}
+              portraitUrls={portraitUrls}
+              heroName={hero.name}
+              isDefaultName={hero.isDefaultName}
+            />
             <h1 id="logo"><RainbowText text={'Mythgarden'}></RainbowText></h1>
             <div className='column'>
               <Clock {...clock}></Clock>
@@ -398,6 +421,9 @@ interface AppProps {
   wallet: string
   portraitUrls: string[]
   speaker: VillagerData | null
+  environment?: string
+  branchName?: string
+  deployTime?: string
 }
 
 interface AppState {
@@ -405,6 +431,7 @@ interface AppState {
   showGallery: boolean
   showDialogue: boolean
   showAchievementsList: boolean
+  showSettingsMenu: boolean
   ephemerealMessage?: string
 }
 

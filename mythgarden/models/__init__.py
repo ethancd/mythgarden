@@ -14,6 +14,7 @@ from .wallet import Wallet
 
 # imports from .farmer_portrait
 from .hero import Hero, HeroState
+from .game_settings import GameSettings
 # imports from .action, .clock, and .item
 from .place import Place, PlaceState, Building
 

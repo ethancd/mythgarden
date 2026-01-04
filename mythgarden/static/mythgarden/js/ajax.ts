@@ -53,13 +53,51 @@ async function postUserData (userData: UserData): Promise<void> {
     })
 }
 
+async function getSettings (): Promise<GameSettings> {
+  const csrfToken = Cookies.get('csrftoken') as string
+
+  return await new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('GET', '/settings')
+    xhr.setRequestHeader('X-CSRFToken', csrfToken)
+    xhr.send()
+
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        resolve(JSON.parse(xhr.responseText))
+      } else {
+        reject(xhr.responseText)
+      }
+    }
+  })
+}
+
+async function postSettings (settings: Partial<GameSettings>): Promise<GameSettings> {
+  return await post('/settings/update', settings) as Promise<GameSettings>
+}
+
 interface UserData {
   name?: string
   portraitPath?: string
 }
 
+export interface GameSettings {
+  villagers_move: boolean
+  building_hours: boolean
+  advanced_crops: boolean
+  dynamic_shop: boolean
+  draft_villagers_move: boolean
+  draft_building_hours: boolean
+  draft_advanced_crops: boolean
+  draft_dynamic_shop: boolean
+  score_multiplier: number
+  draft_score_multiplier: number
+}
+
 export {
   post,
   postAction,
-  postUserData
+  postUserData,
+  getSettings,
+  postSettings
 }

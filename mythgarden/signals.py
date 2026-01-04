@@ -4,7 +4,8 @@ from django.dispatch import receiver
 
 from .models._constants import MAX_ITEMS
 from .models.clock import Clock
-from .models.hero import HeroState
+from .models.hero import Hero, HeroState
+from .models.game_settings import GameSettings
 from .models.inventory import Inventory
 from .models.message import Message
 from .models.place import Place, PlaceState
@@ -28,6 +29,10 @@ def local_items_changed(sender, instance, action, **kwargs):
 @receiver(post_save, sender=Session)
 def create_session_state(sender, instance, created, **kwargs):
     if created and not instance.skip_post_save_signal:
+        # Apply draft settings for new run
+        game_settings, _ = GameSettings.objects.get_or_create(hero=instance.hero)
+        game_settings.apply_draft()
+
         HeroState.objects.create(session=instance, hero=instance.hero)
         Inventory.objects.create(session=instance)
         Clock.objects.create(session=instance)
@@ -36,3 +41,9 @@ def create_session_state(sender, instance, created, **kwargs):
 
         place_state_objects = instance.populate_place_states()
         instance.populate_villager_states(place_state_objects)
+
+
+@receiver(post_save, sender=Hero)
+def create_game_settings(sender, instance, created, **kwargs):
+    if created:
+        GameSettings.objects.create(hero=instance)

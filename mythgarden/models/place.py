@@ -16,7 +16,7 @@ class PlaceManager(models.Manager):
 
 class Place(models.Model):
     name = models.CharField(max_length=255, unique=True)
-    image_path = models.CharField(max_length=255, default='farm-unsplash.jpeg')
+    image_path = models.CharField(max_length=255, default='farm-kz.jpeg')
 
     place_type = models.CharField(max_length=8, choices=PLACE_TYPES, default=TOWN)
     has_inventory = models.BooleanField(default=False)
