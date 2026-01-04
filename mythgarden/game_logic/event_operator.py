@@ -139,7 +139,7 @@ class EventOperator:
             'Earth Yam Seed': 'Cauliflower Seed',
             'Lightning Artichoke Seed': 'Melon Seed',
             'Hallowed Pumpkin Seed': 'Pumpkin Seed',
-            'Mythfruit™ Seed': 'Mythfruit Seed',
+            'Mythfruit Seed': 'Mythfruit Seed',
         }
 
         content_configs = json.loads(event.content_config_list)
