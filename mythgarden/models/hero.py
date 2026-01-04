@@ -138,4 +138,10 @@ class HeroState(models.Model):
 
     @property
     def score(self):
-        return round(self.koin_earned * self.hearts_earned * 10 * (1 + self.mytheggs_found / 10))
+        base_score = round(self.koin_earned * self.hearts_earned * 10 * (1 + self.mytheggs_found / 10))
+
+        # Apply settings multiplier if settings exist
+        if hasattr(self.hero, 'settings'):
+            return round(base_score * self.hero.settings.score_multiplier)
+
+        return base_score

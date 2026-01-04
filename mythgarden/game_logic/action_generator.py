@@ -17,11 +17,11 @@ class ActionGenerator:
         clock = session.clock
         boost_level = session.hero.boost_level
 
-        actions = self.gen_available_actions(place, inventory, contents, villager_states, clock, boost_level)
+        actions = self.gen_available_actions(place, inventory, contents, villager_states, clock, boost_level, session)
 
         return actions
 
-    def gen_available_actions(self, place, inventory, contents, villager_states, clock, boost_level):
+    def gen_available_actions(self, place, inventory, contents, villager_states, clock, boost_level, session=None):
         """Returns a list of available actions for the hero in the current session, taking into account:
         - the current inventory
         - the location's current present items/occupants (contents and villagers)
@@ -43,7 +43,7 @@ class ActionGenerator:
             available_actions += self.gen_travel_actions(place, bridges)
 
         if len(buildings) > 0:
-            available_actions += self.gen_enter_actions(buildings, clock)
+            available_actions += self.gen_enter_actions(buildings, clock, session)
 
         if place.place_type == FARM:
             available_actions += self.gen_farming_actions(contents, inventory)
@@ -126,14 +126,22 @@ class ActionGenerator:
 
         return actions
 
-    def gen_enter_actions(self, buildings, clock):
+    def gen_enter_actions(self, buildings, clock, session=None):
         """Returns a list of enter actions: what buildings can be entered, based on the time of day"""
         guard_types(buildings, Building)
 
         actions = []
 
+        # Check if building hours setting is disabled
+        settings = None
+        if session and hasattr(session.hero, 'settings'):
+            settings = session.hero.settings
+
         for building in buildings:
-            if building.is_open(clock.time):
+            # If building_hours is disabled, all buildings are always open
+            if settings and not settings.building_hours:
+                actions.append(self.gen_enter_action(building))
+            elif building.is_open(clock.time):
                 actions.append(self.gen_enter_action(building))
 
         return actions

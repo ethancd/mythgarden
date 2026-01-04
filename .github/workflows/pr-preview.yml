@@ -7,36 +7,56 @@ on:
 jobs:
   deploy-preview:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup Fly CLI
         uses: superfly/flyctl-actions/setup-flyctl@master
 
-      - name: Check or Create Staging App
+      - name: Verify Staging App Exists
         run: |
-          # Check if app exists in the list of apps
-          if flyctl apps list | grep -q "django-mythgarden-staging"; then
-            echo "Staging app exists in apps list"
-            # Try to get status, if it fails the app might be in a bad state but we'll try to deploy anyway
-            if flyctl status -a django-mythgarden-staging >/dev/null 2>&1; then
-              echo "Staging app is healthy"
-            else
-              echo "Staging app exists but status check failed - will attempt deployment anyway"
-            fi
-          else
-            echo "Creating staging app..."
-            flyctl apps create django-mythgarden-staging
+          echo "Checking for staging app..."
+          if ! flyctl apps list | grep -q "django-mythgarden-staging"; then
+            echo "Error: Staging app 'django-mythgarden-staging' does not exist."
+            echo "Please create it manually with: fly apps create django-mythgarden-staging"
+            exit 1
           fi
-
-          # Ensure SECRET_KEY is set (won't hurt if already set)
-          echo "Ensuring SECRET_KEY is configured..."
-          echo "${{ secrets.STAGING_SECRET_KEY }}" | flyctl secrets set SECRET_KEY=- -a django-mythgarden-staging
+          echo "Staging app exists"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
       - name: Deploy to Staging
-        run: flyctl deploy --config fly.staging.toml --remote-only
+        run: |
+          echo "Starting deployment to staging..."
+          echo "Step 1: Building and deploying image..."
+          flyctl deploy --config fly.staging.toml --remote-only --detach
+          echo "Step 2: Deployment command completed, waiting for app to stabilize..."
+          sleep 15
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Wait for Deployment Health
+        run: |
+          echo "Waiting for app to become healthy..."
+          flyctl status --config fly.staging.toml
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Update Deploy Info
+        run: |
+          # Set deploy metadata (this triggers a quick restart, but deploy is done)
+          BRANCH_NAME="${{ github.head_ref }}"
+          DEPLOY_TIME=$(TZ=America/Los_Angeles date '+%Y-%m-%d %I:%M %p PST')
+
+          echo "Updating deploy info: $BRANCH_NAME at $DEPLOY_TIME"
+          flyctl secrets set \
+            BRANCH_NAME="$BRANCH_NAME" \
+            DEPLOY_TIME="$DEPLOY_TIME" \
+            -a django-mythgarden-staging
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 

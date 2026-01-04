@@ -7,6 +7,7 @@ processes = []
 
 [env]
   PORT = "8000"
+  ENVIRONMENT = "staging"
 
 [experimental]
   auto_rollback = true
@@ -32,10 +33,10 @@ processes = []
     port = 443
 
   [[services.tcp_checks]]
-    grace_period = "1s"
+    grace_period = "30s"
     interval = "15s"
     restart_limit = 0
-    timeout = "2s"
+    timeout = "10s"
 
 [[statics]]
   guest_path = "/app/public"

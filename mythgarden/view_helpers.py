@@ -44,14 +44,17 @@ def retrieve_session(request):
 
 
 def ensure_state_objects_created(session):
+    # populate_* methods create objects with session FK already set via bulk_create
+    # No need to call .set() - the relationship is established during creation
     if session.place_states.count() == 0:
-        session.place_states.set(session.populate_place_states())
+        session.populate_place_states()
 
     if session.villager_states.count() == 0:
-        session.villager_states.set(session.populate_villager_states(session.place_states.all()))
+        place_states = list(session.place_states.all())
+        session.populate_villager_states(place_states)
 
     if session.mythling_states.count() == 0:
-        session.mythling_states.set(session.populate_mythling_states())
+        session.populate_mythling_states()
 
     return session
 

@@ -454,7 +454,7 @@ MythlingPowerKnowledge,Trippy Rainbow Mythegg,Discover Rainbow Mythegg,stay up t
 ,,,,,,,,,,,,
 PopulateShopEvent,day,is_daily,time,content_config_list,,,,,,,,
 PopulateShopEvent,MON,False,361,"[{""item_name"":""Weedbulb Seed""}]",,,,,,,,
-PopulateShopEvent,TUE,False,360,"[{""item_name"":""Weedbulb Seed""}, {""item_name"":""Cool Lettuce Seed""}, {""item_name"":""Spice Carrot Seed""}, {""item_name"":""Earth Yam Seed""}, {""item_name"":""Lovely Postcard"",""quantity"":1}]",,,,,,,,
+PopulateShopEvent,TUE,False,360,"[{""item_name"":""Weedbulb Seed""}, {""item_name"":""Cool Lettuce Seed""}, {""item_name"":""Spice Carrot Seed""}, {""item_name"":""Lovely Postcard"",""quantity"":1}]",,,,,,,,
 PopulateShopEvent,WED,False,360,"[{""item_name"":""Cool Lettuce Seed""}, {""item_name"":""Spice Carrot Seed""}, {""item_name"":""Earth Yam Seed""},{""merch_type"":""MINOR"",""quantity"":3},{""item_name"":""Lovely Postcard"",""quantity"":3}]",,,,,,,,
 PopulateShopEvent,THU,False,360,"[{""item_name"":""Lightning Artichoke Seed""}, {""item_name"":""Hallowed Pumpkin Seed""}, {""merch_type"":""MINOR"",""quantity"":3},{""merch_type"":""MEDIUM"",""quantity"":3},{""item_name"":""Lovely Postcard"",""quantity"":3},{""item_name"":""Beautiful Painting"",""quantity"":1}]",,,,,,,,
 PopulateShopEvent,FRI,False,360,"[{""item_name"":""Mythfruit Seed""},{""merch_type"":""MINOR"",""quantity"":3},{""merch_type"":""MEDIUM"",""quantity"":3},{""merch_type"":""MAJOR"",""quantity"":2},{""item_name"":""Beautiful Painting"",""quantity"":3}]",,,,,,,,

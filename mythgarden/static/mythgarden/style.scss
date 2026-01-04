@@ -371,8 +371,15 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
   height: 100vh;
   background-color: $white-yellow;
   overflow: hidden;
-  border: 8px solid magenta;
   box-sizing: border-box;
+
+  // Only show dev border when not in production
+  &:not(.production) {
+    border-top: 8px solid #FF0080;     // magenta/pink
+    border-right: 8px solid #00D4FF;   // cyan
+    border-bottom: 8px solid #FFD700;  // gold
+    border-left: 8px solid #7FFF00;    // chartreuse
+  }
 
   &.dark-mode {
     color: $light-text;
@@ -1594,5 +1601,273 @@ $icon-dark-mode-drop-shadow-expression: drop-shadow(0 0 $fine-shadow-distance #f
 
   .dialogue-text {
     font-size: $smallish-text;
+  }
+}
+
+/* Settings Menu */
+
+.hamburger-button {
+  position: absolute;
+  top: $medium-gutter;
+  right: $medium-gutter;
+  background-color: rgba(255, 255, 255, 0.8);
+  border: 2px solid $dark-text;
+  border-radius: $small-curve;
+  font-size: $medium-text;
+  padding: $small-gutter $medium-gutter;
+  cursor: pointer;
+  z-index: 100;
+  transition: background-color 0.3s;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 1);
+  }
+}
+
+.deploy-info {
+  position: absolute;
+  top: calc($medium-gutter * 4);
+  right: $medium-gutter;
+  background-color: rgba(255, 200, 100, 0.9);
+  border: 2px solid $dark-text;
+  border-radius: $small-curve;
+  font-size: $small-text;
+  padding: $small-gutter;
+  z-index: 99;
+  max-width: 250px;
+
+  .branch-name {
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+  }
+
+  .deploy-time {
+    font-size: $fine-text;
+    color: darken($dark-text, 10%);
+  }
+}
+
+.settings-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.settings-modal {
+  background-color: $parchment;
+  border: $marker-thick solid $dark-text;
+  border-radius: $medium-gutter;
+  padding: $medium-gutter * 2;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  min-width: 600px;
+  box-shadow: 0 0 $medium-shadow-distance rgba(0, 0, 0, 0.5);
+
+  .close-button {
+    position: absolute;
+    top: $medium-gutter;
+    right: $medium-gutter;
+    background: none;
+    border: none;
+    font-size: $med-large-text;
+    cursor: pointer;
+    color: $dark-text;
+    line-height: 1;
+
+    &:hover {
+      color: $mustard-brown;
+    }
+  }
+
+  .tabs {
+    display: flex;
+    gap: $small-gutter;
+    margin-bottom: $medium-gutter * 2;
+    border-bottom: $pen-thinnish solid $off-white-gray;
+
+    button {
+      background: none;
+      border: none;
+      border-bottom: $marker-thick solid transparent;
+      padding: $medium-gutter;
+      font-size: $med-small-text;
+      cursor: pointer;
+      color: $dark-text;
+      transition: border-color 0.3s, color 0.3s;
+
+      &:hover {
+        color: $yellow-leather;
+      }
+
+      &.active {
+        border-bottom-color: $yellow-leather;
+        font-weight: bold;
+      }
+    }
+  }
+
+  .tab-content {
+    min-height: 400px;
+  }
+}
+
+.hero-tab {
+  @include column;
+  gap: $medium-gutter * 2;
+
+  .hero-name-section {
+    @include column;
+    gap: $small-gutter;
+
+    label {
+      font-size: $med-small-text;
+      font-weight: bold;
+    }
+
+    .name textarea {
+      font-size: $medium-text;
+      border: $pen-thinnish solid $off-white-gray;
+      border-radius: $small-curve;
+      padding: $small-gutter;
+      width: 100%;
+      max-width: 300px;
+      resize: none;
+      font-family: inherit;
+    }
+  }
+
+  .portrait-gallery {
+    @include column;
+    gap: $medium-gutter;
+
+    h3 {
+      font-size: $med-small-text;
+      font-weight: bold;
+    }
+
+    .portrait-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: $medium-gutter;
+
+      .portrait {
+        cursor: pointer;
+        border: $pen-thinnish solid transparent;
+        border-radius: $portrait-radius;
+        transition: all 0.3s;
+        overflow: hidden;
+
+        &.current {
+          border-color: $yellow-leather;
+          box-shadow: 0 0 $small-shadow-distance $yellow-leather;
+        }
+
+        &:hover {
+          transform: scale(1.05);
+        }
+
+        img {
+          width: 100%;
+          height: auto;
+          display: block;
+          border-radius: $portrait-radius;
+        }
+      }
+    }
+  }
+}
+
+.settings-tab {
+  @include column;
+  gap: $medium-gutter * 2;
+
+  h3 {
+    font-size: $med-large-text;
+    font-weight: bold;
+    margin-bottom: $medium-gutter;
+  }
+
+  .settings-list {
+    @include column;
+    gap: $medium-gutter * 1.5;
+  }
+
+  .setting-row {
+    @include column;
+    gap: $small-gutter;
+    padding: $medium-gutter;
+    background-color: rgba(255, 255, 255, 0.5);
+    border-radius: $small-curve;
+    border: $pencil-thin solid $off-white-gray;
+
+    .setting-checkbox {
+      @include row;
+      align-items: center;
+      gap: $medium-gutter;
+      cursor: pointer;
+      font-size: $med-small-text;
+
+      input[type="checkbox"] {
+        width: $medium-text;
+        height: $medium-text;
+        cursor: pointer;
+      }
+
+      .setting-label {
+        flex: 1;
+        font-weight: bold;
+      }
+
+      .setting-bonus {
+        color: $dollar-bill-green;
+        font-weight: bold;
+        font-size: $smallish-text;
+      }
+    }
+
+    .setting-description {
+      font-size: $small-text;
+      color: darken($dark-text, 10%);
+      margin-left: calc($medium-text + $medium-gutter);
+    }
+
+    .pending-notice {
+      font-size: $small-text;
+      color: $yellow-leather;
+      font-style: italic;
+      margin-left: calc($medium-text + $medium-gutter);
+      margin-top: $small-gutter;
+    }
+  }
+
+  .score-multiplier {
+    padding: $medium-gutter * 1.5;
+    background-color: rgba($yellow-leather, 0.2);
+    border: $pen-thinnish solid $yellow-leather;
+    border-radius: $small-curve;
+    text-align: center;
+
+    .multiplier-text {
+      font-size: $med-small-text;
+
+      strong {
+        font-size: $medium-text;
+      }
+
+      .draft-multiplier {
+        color: $yellow-leather;
+        font-weight: bold;
+        margin-left: $small-gutter;
+      }
+    }
   }
 }

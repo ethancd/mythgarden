@@ -1,5 +1,6 @@
 from sqlite3 import IntegrityError
 import json
+import os
 
 from django.core.validators import ValidationError
 from django.db import transaction
@@ -15,6 +16,7 @@ from .view_helpers import retrieve_session, ensure_state_objects_created, get_ho
 from .game_logic import ActionExecutor, EventOperator
 from .models import Session
 from .models import Achievement
+from .models import GameSettings
 
 @ensure_csrf_cookie
 def home(request):
@@ -23,6 +25,15 @@ def home(request):
         home_models = get_home_models(session)
 
     context = {'ctx': {model_name: custom_serialize(data) for model_name, data in home_models.items()}}
+
+    # Add environment info for deploy badge and production styling
+    environment = os.environ.get('ENVIRONMENT', 'development')
+    context['ctx']['environment'] = environment
+
+    # Only add deploy info for non-production
+    if environment != 'production':
+        context['ctx']['branchName'] = os.environ.get('BRANCH_NAME', '')
+        context['ctx']['deployTime'] = os.environ.get('DEPLOY_TIME', '')
 
     print(Achievement.objects.all().count())
     template_name = 'mythgarden/home.html'
@@ -38,9 +49,13 @@ def action(request):
         return HttpResponseRedirect(reverse('mythgarden:home'))
 
     # load session based on django session key in request
-    # if session is missing, 404 -- we handle session creation in the GET home request
+    # if session is missing, redirect to home -- we handle session creation in the GET home request
+    session_key = request.session.get('session_key')
+    if not session_key:
+        return HttpResponseRedirect(reverse('mythgarden:home'))
+
     try:
-        session = load_session_with_related_data(request.session['session_key'])
+        session = load_session_with_related_data(session_key)
     except Session.DoesNotExist:
         return HttpResponseNotFound()
 
@@ -80,7 +95,11 @@ def action(request):
 def kys(request):
     """A shortcut to "kill your session" -- ie reset the game state to the start of the week.
     A staple for timeloop games everywhere."""
-    session = get_object_or_404(Session, pk=request.session['session_key'])
+    session_key = request.session.get('session_key')
+    if not session_key:
+        return HttpResponseRedirect(reverse('mythgarden:home'))
+
+    session = get_object_or_404(Session, pk=session_key)
 
     EventOperator().trigger_kys(session)
     return HttpResponseRedirect(reverse('mythgarden:home'))
@@ -91,7 +110,11 @@ def user_data(request):
     if not request.method == 'POST':
         return HttpResponseRedirect(reverse('mythgarden:home'))
 
-    session = get_object_or_404(Session, pk=request.session['session_key'])
+    session_key = request.session.get('session_key')
+    if not session_key:
+        return HttpResponseRedirect(reverse('mythgarden:home'))
+
+    session = get_object_or_404(Session, pk=session_key)
 
     try:
         hero = session.hero
@@ -124,3 +147,53 @@ def test_time(request, time, day):
 
     template_name = 'mythgarden/home.html'
     return render(request, template_name, context)
+
+
+def get_settings(request):
+    """Endpoint for retrieving game settings."""
+    session_key = request.session.get('session_key')
+    if not session_key:
+        return HttpResponseRedirect(reverse('mythgarden:home'))
+
+    session = get_object_or_404(Session, pk=session_key)
+
+    # Ensure settings exist for the hero
+    game_settings, created = GameSettings.objects.get_or_create(hero=session.hero)
+
+    return JsonResponse(game_settings.serialize())
+
+
+def update_settings(request):
+    """Endpoint for updating draft game settings."""
+    if not request.method == 'POST':
+        return HttpResponseRedirect(reverse('mythgarden:home'))
+
+    session_key = request.session.get('session_key')
+    if not session_key:
+        return HttpResponseRedirect(reverse('mythgarden:home'))
+
+    session = get_object_or_404(Session, pk=session_key)
+
+    try:
+        # Ensure settings exist for the hero
+        game_settings, created = GameSettings.objects.get_or_create(hero=session.hero)
+
+        new_settings = json.loads(request.body)
+
+        with transaction.atomic():
+            # Only allow updating draft settings
+            if 'draft_villagers_move' in new_settings:
+                game_settings.draft_villagers_move = new_settings['draft_villagers_move']
+            if 'draft_building_hours' in new_settings:
+                game_settings.draft_building_hours = new_settings['draft_building_hours']
+            if 'draft_advanced_crops' in new_settings:
+                game_settings.draft_advanced_crops = new_settings['draft_advanced_crops']
+            if 'draft_dynamic_shop' in new_settings:
+                game_settings.draft_dynamic_shop = new_settings['draft_dynamic_shop']
+
+            game_settings.save()
+    except (ValidationError, ValueError) as e:
+        error_message = str(e) if hasattr(e, 'message') else str(e)
+        return JsonResponse({'error': error_message})
+
+    return JsonResponse(game_settings.serialize())
