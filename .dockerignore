@@ -4,3 +4,4 @@ fly.toml
 node_modules/
 venv/
 static/
+.env
